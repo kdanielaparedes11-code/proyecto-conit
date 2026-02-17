@@ -14,6 +14,16 @@ import { EmpresaModule } from './empresa/empresa.module';
 import { EvaluacionModule } from './evaluacion/evaluacion.module';
 import { ExamenModule } from './examen/examen.module';
 import { GrupoModule } from './grupo/grupo.module';
+import { AdministradorModule } from './administrador/administrador.module';
+import { AlumnoModule } from './alumno/alumno.module';
+import { MatriculaModule } from './matricula/matricula.module';
+import { MultimediaModule } from './multimedia/multimedia.module';
+import { PagoModule } from './pago/pago.module';
+import { PagoDocModule } from './pago-doc/pago-doc.module';
+import { RequisitoPrevioModule } from './requisito-previo/requisito-previo.module';
+import { SesionModule } from './sesion/sesion.module';
+import { TemarioModule } from './temario/temario.module';
+import { UnidadModule } from './unidad/unidad.module';
 
 
 @Module({
@@ -42,6 +52,16 @@ import { GrupoModule } from './grupo/grupo.module';
     EvaluacionModule,
     ExamenModule,
     GrupoModule,
+    AdministradorModule,
+    AlumnoModule,
+    MatriculaModule,
+    MultimediaModule,
+    PagoModule,
+    PagoDocModule,
+    RequisitoPrevioModule,
+    SesionModule,
+    TemarioModule,
+    UnidadModule,
   ],
 })
 export class AppModule {}
