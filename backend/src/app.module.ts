@@ -1,68 +1,26 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthModule } from './auth/auth.module';
-import { UsuarioModule } from './usuario/usuario.module';
-import { CategorizacionModule } from './categorizacion/categorizacion.module';
-import { CertificadoModule } from './certificado/certificado.module';
-import { ComprobantePagoModule } from './comprobante-pago/comprobante-pago.module';
-import { ContenidoModule } from './contenido/contenido.module';
-import { ControlAcademicoModule } from './control-academico/control-academico.module';
-import { CursoModule } from './curso/curso.module';
-import { DetalleMatriculaModule } from './detalle-matricula/detalle-matricula.module';
-import { DocenteModule } from './docente/docente.module';
-import { EmpresaModule } from './empresa/empresa.module';
-import { EvaluacionModule } from './evaluacion/evaluacion.module';
-import { ExamenModule } from './examen/examen.module';
-import { GrupoModule } from './grupo/grupo.module';
-import { AdministradorModule } from './administrador/administrador.module';
-import { AlumnoModule } from './alumno/alumno.module';
-import { MatriculaModule } from './matricula/matricula.module';
-import { MultimediaModule } from './multimedia/multimedia.module';
-import { PagoModule } from './pago/pago.module';
-import { PagoDocModule } from './pago-doc/pago-doc.module';
-import { RequisitoPrevioModule } from './requisito-previo/requisito-previo.module';
-import { SesionModule } from './sesion/sesion.module';
-import { TemarioModule } from './temario/temario.module';
-import { UnidadModule } from './unidad/unidad.module';
-
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5433,
-      username: 'postgres',
-      password: '1104',
-      database: 'postgres',
-      autoLoadEntities: true,
-      synchronize: false,
+    ConfigModule.forRoot({
+      isGlobal: true, // importante
     }),
-    AuthModule,
-    UsuarioModule,
-    CategorizacionModule,
-    CertificadoModule,
-    ComprobantePagoModule,
-    ContenidoModule,
-    ControlAcademicoModule,
-    CursoModule,
-    DetalleMatriculaModule,
-    DocenteModule,
-    EmpresaModule,
-    EvaluacionModule,
-    ExamenModule,
-    GrupoModule,
-    AdministradorModule,
-    AlumnoModule,
-    MatriculaModule,
-    MultimediaModule,
-    PagoModule,
-    PagoDocModule,
-    RequisitoPrevioModule,
-    SesionModule,
-    TemarioModule,
-    UnidadModule,
+
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'postgres',
+        host: config.get('DB_HOST'),
+        port: parseInt(config.get<string>('DB_PORT')!),
+        username: config.get('DB_USER'),
+        password: config.get('DB_PASSWORD'),
+        database: config.get('DB_NAME'),
+        autoLoadEntities: true,
+        synchronize: true, // solo desarrollo
+      }),
+    }),
   ],
 })
 export class AppModule {}
-
