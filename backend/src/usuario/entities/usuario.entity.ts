@@ -2,7 +2,6 @@ import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'Usuario' })
 export class Usuario {
-
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -21,7 +20,7 @@ export class Usuario {
   @Column({ type: 'varchar' })
   direccion: string;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', unique: true })
   correo: string;
 
   @Column({ type: 'integer' })
@@ -36,4 +35,3 @@ export class Usuario {
   @Column({ type: 'varchar' })
   rol: string;
 }
-
