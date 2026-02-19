@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { UsuarioModule } from './usuario/usuario.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -14,13 +16,16 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         type: 'postgres',
         host: config.get('DB_HOST'),
         port: parseInt(config.get<string>('DB_PORT')!),
-        username: config.get('DB_USER'),
+        username: config.get('DB_USERNAME'),
         password: config.get('DB_PASSWORD'),
         database: config.get('DB_NAME'),
         autoLoadEntities: true,
         synchronize: true, // solo desarrollo
       }),
     }),
+
+    UsuarioModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
