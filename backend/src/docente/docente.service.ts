@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { Docente } from './entities/docente.entity';
+import { Docente } from '../docente/entities/docente.entity';
 import { Usuario } from '../usuario/entities/usuario.entity';
-import { CreateDocenteDto } from './dto/create-docente.dto';
+import { CreateDocenteDto } from '../docente/dto/create-docente.dto';
 
 @Injectable()
 export class DocenteService {
@@ -17,11 +17,20 @@ export class DocenteService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async findAll() {
-    return await this.docenteRepository.find({
-      relations: ['usuario'],
-    });
-  }
+async findAll() {
+  const db = await this.docenteRepository.query('SELECT current_database()');
+  console.log('BASE ACTUAL:', db);
+
+  const tables = await this.docenteRepository.query(
+    "SELECT tablename FROM pg_tables WHERE schemaname = 'public'"
+  );
+  console.log('TABLAS EN ESTA BD:', tables);
+
+  const raw = await this.docenteRepository.query('SELECT * FROM docente');
+  console.log('RAW QUERY:', raw);
+
+  return raw;
+}
 
   async create(data: CreateDocenteDto) {
     return await this.dataSource.transaction(async (manager) => {
