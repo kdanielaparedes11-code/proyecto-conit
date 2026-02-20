@@ -11,7 +11,9 @@ import MisPagos from "./pages/MisPagos"
 
 import AdminLayout from "./admin/AdminLayout"
 import Dashboard from "./admin/Dashboard"
+import Docentes from "./admin/docentes"
 import Cursos from "./admin/Cursos"
+import Alumnos from "./admin/alumnos"
 import Usuarios from "./admin/Usuarios"
 import Pagos from "./admin/Pagos"
 
@@ -38,7 +40,9 @@ export default function App() {
       {/* ADMIN */}
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<Dashboard />} />
+        <Route path="docentes" element={<Docentes />} />
         <Route path="cursos" element={<Cursos />} />
+        <Route path="alumnos" element={<Alumnos />} />
         <Route path="usuarios" element={<Usuarios />} />
         <Route path="pagos" element={<Pagos />} />
       </Route>

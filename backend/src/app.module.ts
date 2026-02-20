@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsuarioModule } from './usuario/usuario.module';
 import { AuthModule } from './auth/auth.module';
+import { DocenteModule } from './docente/docente.module';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { AuthModule } from './auth/auth.module';
         type: 'postgres',
         host: config.get('DB_HOST'),
         port: parseInt(config.get<string>('DB_PORT')!),
-        username: config.get('DB_USERNAME'),
+        username: config.get('DB_USER'),
         password: config.get('DB_PASSWORD'),
         database: config.get('DB_NAME'),
         autoLoadEntities: true,
@@ -26,6 +27,7 @@ import { AuthModule } from './auth/auth.module';
 
     UsuarioModule,
     AuthModule,
+    DocenteModule,
   ],
 })
 export class AppModule {}

@@ -19,12 +19,17 @@ export default function AdminLayout() {
             Principal
           </Link>
 
-          <Link to="/admin/cursos" className="flex items-center gap-3 hover:bg-slate-800 p-2 rounded">
+          <Link to="/admin/docentes" className="flex items-center gap-3 hover:bg-slate-800 p-2 rounded">
             <BookOpen size={20}/>
             Docentes
           </Link>
 
-          <Link to="/admin/mis-sesiones" className="flex items-center gap-3 hover:bg-slate-800 p-2 rounded">
+          <Link to="/admin/cursos" className="flex items-center gap-3 hover:bg-slate-800 p-2 rounded">
+            <BookOpen size={20}/>
+            Cursos
+          </Link>
+
+          <Link to="/admin/alumnos" className="flex items-center gap-3 hover:bg-slate-800 p-2 rounded">
             <FileText size={20}/>
             Alumno
           </Link>

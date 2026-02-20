@@ -1,35 +1,40 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToOne,
+  JoinColumn,
+} from 'typeorm';
+import { Usuario } from '../../usuario/entities/usuario.entity';
 
-@Entity({ name: 'Docente' }) // Respeta el nombre exacto en BD
+@Entity()
 export class Docente {
-
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar' })
+  @Column()
   nombre: string;
 
-  @Column({ type: 'varchar' })
+  @Column()
   apellido: string;
 
-  @Column({ type: 'varchar' })
+  @Column()
   tipoDocumento: string;
 
-  @Column({ type: 'integer' })
-  telefono: number;
-
-  @Column({ type: 'varchar' })
-  direccion: string;
-
-  @Column({ type: 'varchar' })
-  correo: string;
-
-  @Column({ type: 'varchar' })
+  @Column()
   numDocumento: string;
 
-  @Column({ type: 'varchar' })
-  contrasenia: string;
+  @Column()
+  telefono: number;
 
-  @Column({ type: 'integer' })
-  idUsuario: number;
+  @Column()
+  direccion: string;
+
+  @Column()
+  correo: string;
+
+  // FK hacia Usuario
+  @OneToOne(() => Usuario, { nullable: true })
+  @JoinColumn()
+  usuario?: Usuario;
 }

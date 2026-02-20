@@ -8,7 +8,9 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
 
         <Card title="Usuarios" value="124" />
+        <Card title="Docentes" value="18" />
         <Card title="Cursos" value="18" />
+        <Card title="Alumnos" value="18" />
         <Card title="Pagos Hoy" value="S/ 3,450" />
         <Card title="Pendientes" value="12" />
 

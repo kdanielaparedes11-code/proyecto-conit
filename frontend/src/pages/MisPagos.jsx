@@ -62,47 +62,124 @@ export default function MisPagos() {
 
   // Logo
   const logo = "/logo.png";
-  doc.addImage(logo, "PNG", 20, 10, 30, 20);
+  doc.addImage(logo, "PNG", 20, 10, 45, 20);
 
-  // Título
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.text("BOLETA DE PAGO", 105, 30, null, null, "center");
+  // ------------------------------
+// CUADRO TOTALES (derecha)
+// ------------------------------
+doc.rect(140, 10, 50, 25);
+doc.setFontSize(10);
+doc.setFont("helvetica", "bold");
+doc.text("RUC: 20610017828", 165, 15, null, null, "center");
+doc.text("BOLETA", 165, 20, null, null, "center");
+doc.text("ELECTRÓNICA", 165, 25, null, null, "center");
+doc.text("B00000001", 165, 30, null, null, "center");
 
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "normal");
+doc.setFontSize(2);
+doc.setFont("helvetica", "normal");
 
   // Línea decorativa
   doc.line(20, 35, 190, 35);
 
-  // Información
-  doc.text(`Código de Boleta: ${pago.codigo}`, 20, 50);
-  doc.text(`Fecha de Pago: ${pago.fecha}`, 20, 60);
-  doc.text(`Curso: ${pago.curso}`, 20, 70);
-  doc.text(`Descripción: ${pago.descripcion}`, 20, 80);
-  doc.text(`Monto Pagado: S/ ${pago.monto}`, 20, 90);
+  // CONFIG INICIAL
+doc.setFont("helvetica", "normal");
+doc.setFontSize(10);
 
-  // Estado
-  doc.setTextColor(0, 128, 0);
-  doc.text("Estado: PAGADO - VERIFICADO", 20, 105);
-  doc.setTextColor(0, 0, 0);
+// ------------------------------
+// DATOS DEL CLIENTE (parte superior)
+// ------------------------------
+doc.text(`SEÑOR(ES): ${pago.alumno}`, 20, 40);
+doc.text(`DNI: ${pago.dni}`, 20, 48);
+doc.text(`FECHA DE EMISIÓN: ${pago.fecha}`, 20, 56);
+doc.text(`CURSO: ${pago.curso}`, 20, 64);
+doc.text(`MONEDA: SOLES`, 20, 72);
 
-  // QR
-  doc.addImage(qrImage, "PNG", 140, 50, 40, 40);
+// Línea separadora
+doc.line(20, 78, 190, 78);
 
-  // Pie institucional
+// ------------------------------
+// CABECERA TABLA
+// ------------------------------
+doc.setFont("helvetica", "bold");
+doc.text("CANT.", 20, 88);
+doc.text("DESCRIPCIÓN", 45, 88);
+doc.text("P. UNIT.", 130, 88);
+doc.text("DESC.", 155, 88);
+doc.text("IMPORTE", 175, 88);
+
+doc.setFont("helvetica", "normal");
+
+// Línea
+doc.line(20, 92, 190, 92);
+
+// ------------------------------
+// DETALLE
+// ------------------------------
+doc.text("1.00", 20, 102);
+doc.text(pago.descripcion, 45, 102);
+doc.text(`S/ ${pago.monto}`, 130, 102);
+doc.text("0.00", 155, 102);
+doc.text(`S/ ${pago.monto}`, 175, 102);
+
+// Línea inferior detalle
+doc.line(20, 110, 190, 110);
+
+// ------------------------------
+// CUADRO TOTALES (derecha)
+// ------------------------------
+doc.rect(120, 120, 70, 25);
+
+doc.text("Total Valor de Venta:", 125, 126);
+doc.text(`S/ ${pago.monto}`, 185, 126, { align: "right" });
+
+doc.text("IGV:", 125, 134);
+doc.text("0.00", 185, 134, { align: "right" });
+
+doc.setFont("helvetica", "bold");
+doc.text("Importe Total:", 125, 142);
+doc.text(`S/ ${pago.monto}`, 185, 142, { align: "right" });
+doc.setFont("helvetica", "normal");
+
+// ------------------------------
+// QR
+// ------------------------------
+doc.addImage(qrImage, "PNG", 85, 160, 35, 35);
+
+// ------------------------------
+// MONTO EN LETRAS
+// ------------------------------
+doc.text(
+  "SON: TRESCIENTOS CON 00/100 SOLES",
+  20,
+  134
+);
+
+// Pie institucional
   doc.setFontSize(10);
   doc.text(
     "Este comprobante ha sido generado automáticamente por el Sistema Universitario.",
-    20,
-    130
+    40,
+    215,
   );
 
   doc.text(
     "Para validar la autenticidad escanee el código QR.",
-    20,
-    138
+    65,
+    230,
   );
+
+  doc.line(20, 275, 190, 275);
+
+// ------------------------------
+// PIE LEGAL
+// ------------------------------
+doc.setFontSize(8);
+doc.text(
+  "Representación impresa de la Boleta de Venta Electrónica",
+  105,
+  280,
+  { align: "center" }
+);
 
   doc.line(20, 150, 190, 150);
 
@@ -110,7 +187,7 @@ export default function MisPagos() {
   doc.text(
     "© 2026 Universidad Virtual - Todos los derechos reservados.",
     105,
-    160,
+    285,
     null,
     null,
     "center"
