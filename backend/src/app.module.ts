@@ -17,7 +17,7 @@ import { DocenteModule } from './docente/docente.module';
         type: 'postgres',
         host: config.get('DB_HOST'),
         port: parseInt(config.get<string>('DB_PORT')!),
-        username: config.get('DB_USER'),
+        username: config.get('DB_USERNAME'),
         password: config.get('DB_PASSWORD'),
         database: config.get('DB_NAME'),
         autoLoadEntities: true,

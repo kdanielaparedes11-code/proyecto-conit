@@ -11,23 +11,28 @@ export class AuthService {
   ) {}
 
   async login(loginDto: LoginDto) {
-    const user = await this.usuarioService.findOneByCorreo(loginDto.correo);
+    const usuario = await this.usuarioService.findOneByCorreo(loginDto.correo);
 
-    if (!user) {
+    if (!usuario) {
       throw new UnauthorizedException('Usuario no encontrado');
     }
 
-    if (user.contrasenia !== loginDto.contrasenia) {
+    if (usuario.contrasenia !== loginDto.contrasenia) {
       throw new UnauthorizedException('Contraseña incorrecta');
     }
 
-    const payload = { sub: user.id, correo: user.correo, rol: user.rol };
+    const payload = {
+      sub: usuario.id,
+      correo: usuario.correo,
+      rol: usuario.rol,
+    };
     return {
       access_token: this.jwtService.sign(payload),
       usuario: {
-        id: user.id,
-        correo: user.correo,
-        rol: user.rol,
+        id: usuario.id,
+        correo: usuario.correo,
+        rol: usuario.rol,
+        idEmpresa: usuario.idEmpresa,
       },
     };
   }

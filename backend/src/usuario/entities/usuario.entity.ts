@@ -5,6 +5,9 @@ export class Usuario {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ type: 'varchar' })
+  correo: string;
+
   @Column({ type: 'integer' })
   idEmpresa: number;
 
@@ -13,8 +16,4 @@ export class Usuario {
 
   @Column({ type: 'varchar' })
   rol: string;
-  
-  @Column({ type: 'varchar', unique: true })
-  correo: string;
-
 }
