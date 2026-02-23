@@ -19,6 +19,15 @@ import Pagos from "./admin/Pagos"
 
 import Matricula from "./pages/Matricula"
 
+import DocenteDashboard from "./docente/DocenteDashboard"
+import DocenteLayout from "./docente/DocenteLayout"
+import DocentePerfil from "./docente/DocentePerfil"
+import DocenteCursos from "./docente/DocenteCursos"
+import CursoDetalle from "./docente/CursoDetalle"
+import DocenteNotas from "./docente/DocenteNotas"
+import DocenteResultados from "./docente/DocenteResultados"
+import DocenteHorario from "./docente/DocenteHorario"
+
 
 export default function App() {
   return (
@@ -45,6 +54,18 @@ export default function App() {
         <Route path="alumnos" element={<Alumnos />} />
         <Route path="usuarios" element={<Usuarios />} />
         <Route path="pagos" element={<Pagos />} />
+      </Route>
+
+      {/*DOCENTE */}
+      <Route path="/docente" element={<DocenteLayout />}>
+        <Route index element={<DocenteDashboard />} />
+        <Route path="docente-perfil" element={<DocentePerfil />} />
+        <Route path="docente-cursos" element={<DocenteCursos />} />
+        <Route path="cursos/:id" element={<CursoDetalle />} />
+        <Route path="docente-notas" element={<DocenteNotas />} />
+        <Route path="docente-resultados" element={<DocenteResultados />} />
+        <Route path="docente-horario" element={<DocenteHorario />} />
+        
       </Route>
 
     </Routes>
