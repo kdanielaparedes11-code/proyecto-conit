@@ -1,5 +1,7 @@
 import { Routes, Route } from "react-router-dom"
 
+import Login from "./pages/Login"
+
 import LayoutEstudiante from "./layouts/LayoutEstudiante"
 import HomePage from "./pages/HomePage"
 import MisCursos from "./pages/MisCursos"
@@ -31,6 +33,9 @@ import ListaAprobados from "./modules/docente/pages/ListaAprobados"
 export default function App() {
   return (
     <Routes>
+
+      {/*Login*/}
+      <Route path="/login" element={<Login />} />
 
       {/* ESTUDIANTE */}
       <Route path="/" element={<LayoutEstudiante />}>

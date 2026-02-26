@@ -1,12 +1,26 @@
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  MinLength,
+} from 'class-validator';
+
 export class CreateUsuarioDto {
-  nombre: string;
-  apellido: string;
-  tipoDocumento: string;
-  numDocumento: string;
-  telefono: number;
-  direccion: string;
+  @IsEmail()
+  @IsNotEmpty()
   correo: string;
-  contrasenia: string;
-  rol: string;
+
+  @IsNumber()
+  @IsNotEmpty()
   idEmpresa: number;
+
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  contrasenia: string;
+
+  @IsString()
+  @IsNotEmpty()
+  rol: string;
 }
