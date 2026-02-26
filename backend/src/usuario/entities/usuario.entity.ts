@@ -16,4 +16,7 @@ export class Usuario {
 
   @Column({ type: 'varchar' })
   rol: string;
+
+  @Column('text', { array: true, default: [] })
+  historialContrasenias: string[];
 }

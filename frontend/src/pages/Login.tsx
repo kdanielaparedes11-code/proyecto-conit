@@ -1,57 +1,55 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Loader2, LogIn } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 
 //Importamos lo que construimos en los pasos anteriores
 import { loginSchema, LoginFormValues } from "../validations/auth.validation";
 import { login } from "../services/auth.service";
 
 export default function Login() {
-    const [isLoading, setIsLoading] = useState(false);
-    const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
-    //Conectamos el formulario con react-hook-form y zod para la validación
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-    } = useForm<LoginFormValues>({
-        resolver: zodResolver(loginSchema),
-    });
+  //Conectamos el formulario con react-hook-form y zod para la validación
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+  });
 
-    const onSubmit = async (data: LoginFormValues) => {
-        try {
-            setIsLoading(true);
-            //Llamamos al backend para hacer login
-            const respuesta = await login(data);
-            //Si todo está bien, mostramos un mensaje de éxito
-            toast.success(`Inicio de sesión exitoso`);
-            //Redirigimos al dashboard
-            navigate("/admin");
-        } catch (error: any) {
-            //Si el backend rechaza el login, mostramos un mensaje de error
-            toast.error(error.message || "Error al iniciar sesión");
-        } finally {
-            setIsLoading(false);
-        }
-    };
+  const onSubmit = async (data: LoginFormValues) => {
+    try {
+      setIsLoading(true);
+      //Llamamos al backend para hacer login
+      const respuesta = await login(data);
+      //Si todo está bien, mostramos un mensaje de éxito
+      toast.success(`Inicio de sesión exitoso`);
+      //Redirigimos al dashboard
+      navigate("/admin");
+    } catch (error: any) {
+      //Si el backend rechaza el login, mostramos un mensaje de error
+      toast.error(error.message || "Error al iniciar sesión");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    return (
+  return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-300 to-slate-400 p-4">
-      
       {/* Contenedor */}
       <div className="w-full max-w-md p-10 bg-white/20 backdrop-blur-xl rounded-3xl border border-white/30 shadow-2xl relative overflow-hidden">
-        
         {/* Título */}
         <h2 className="text-3xl font-extrabold text-center text-[#141426] mb-10 tracking-tight uppercase drop-shadow-sm">
           Accede a tu aula virtual
         </h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
-          
           {/* Campo Correo */}
           <div className="relative">
             <input
@@ -59,13 +57,15 @@ export default function Login() {
               type="email"
               placeholder="Correo"
               className={`w-full py-4 px-6 bg-[#1b2751] text-white placeholder-gray-400 rounded-full shadow-inner focus:outline-none focus:ring-2 focus:ring-[#5573b3] transition-all duration-300 ${
-                errors.correo ? 'ring-2 ring-[#894329]' : ''
+                errors.correo ? "ring-2 ring-[#894329]" : ""
               }`}
-              {...register('correo')}
+              {...register("correo")}
             />
             {/* Mensaje de error */}
             {errors.correo && (
-              <p className="text-[#894329] text-sm mt-2 ml-4 font-bold drop-shadow-sm">{errors.correo.message}</p>
+              <p className="text-[#894329] text-sm mt-2 ml-4 font-bold drop-shadow-sm">
+                {errors.correo.message}
+              </p>
             )}
           </div>
 
@@ -73,24 +73,34 @@ export default function Login() {
           <div className="relative">
             <input
               id="contrasenia"
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Contraseña"
-              className={`w-full py-4 px-6 bg-[#1b2751] text-white placeholder-gray-400 rounded-full shadow-inner focus:outline-none focus:ring-2 focus:ring-[#5573b3] transition-all duration-300 ${
-                errors.contrasenia ? 'ring-2 ring-[#894329]' : ''
+              className={`w-full py-4 pl-6 pr-12 bg-[#1b2751] text-white placeholder-gray-400 rounded-full shadow-inner focus:outline-none focus:ring-2 focus:ring-[#5573b3] transition-all duration-300 ${
+                errors.contrasenia ? "ring-2 ring-[#894329]" : ""
               }`}
-              {...register('contrasenia')}
+              {...register("contrasenia")}
             />
-            {/* Mensaje de error */}
-            {errors.contrasenia && (
-              <p className="text-[#894329] text-sm mt-2 ml-4 font-bold drop-shadow-sm">{errors.contrasenia.message}</p>
-            )}
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
           </div>
+          {/* Mensaje de error */}
+          {errors.contrasenia && (
+            <p className="text-[#894329] text-sm mt-2 ml-4 font-bold drop-shadow-sm">
+              {errors.contrasenia.message}
+            </p>
+          )}
 
           {/* Botón Iniciar sesión */}
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-4 px-6 bg-[#5573b3] hover:bg-[#344c92] text-white text-lg font-bold rounded-full shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 flex justify-center items-center disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+            className="w-full py-4 pl-6 bg-[#5573b3] hover:bg-[#344c92] text-white text-lg font-bold rounded-full shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 flex justify-center items-center disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
           >
             {isLoading ? (
               <>
@@ -98,9 +108,19 @@ export default function Login() {
                 Iniciando...
               </>
             ) : (
-              'Iniciar sesión'
+              "Iniciar sesión"
             )}
           </button>
+
+          {/* Enlace a Olvidé mi contraseña */}
+          <div className="text-center mt-6">
+            <Link
+              to="/forgot-password"
+              className="text-[#141426] hover:text-[#5573b3] italic font-medium transition-colors text-sm drop-shadow-sm"
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
         </form>
       </div>
     </div>

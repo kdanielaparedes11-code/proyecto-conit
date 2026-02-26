@@ -1,3 +1,6 @@
+import { data } from "react-router-dom";
+import { th } from "zod/locales";
+
 //Definimos que le enviamos al backend para iniciar sesión, que es el correo y la contraseña del usuario.
 export interface LoginCredentials {
   correo: string;
@@ -48,4 +51,43 @@ export const login = async (
 export const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("usuario");
+};
+
+//Conecta el endpoint de forgot-password del backend para solicitar el restablecimiento de contraseña, enviando el correo del usuario
+export const forgotPassword = async (data: { correo: string }) => {
+  const response = await fetch("http://localhost:3000/auth/forgot-password", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      errorData.message || "Error al solicitar restablecimiento de contraseña",
+    );
+  }
+
+  return response.json();
+};
+
+//Conecta con el endpoint para cambiar la contraseña, enviando el token
+export const resetPassword = async (data: {
+  token: string;
+  contrasenia: string;
+}) => {
+  const response = await fetch("http://localhost:3000/auth/reset-password", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Error al restablecer contraseña");
+  }
+  return response.json();
 };
