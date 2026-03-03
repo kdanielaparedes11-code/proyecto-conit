@@ -27,6 +27,10 @@ export const forgotPasswordSchema = z.object({
 export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 export const resetPasswordSchema = z.object({
+  codigoSeguridad: z
+    .string()
+    .min(1, { message: "El código de seguridad es obligatorio" })
+    .length(6, { message: "El código de seguridad debe tener exactamente 6 caracteres" }),
   contrasenia: z
     .string()
     .min(1, { message: "La contraseña es obligatoria" })

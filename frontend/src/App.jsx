@@ -79,6 +79,8 @@ export default function App() {
             <Route path="horario" element={<HorarioDocente />} />
           </Route>
         </Route>
+        {/*Ruta Comodín*/}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </>
   );

@@ -40,10 +40,10 @@ export class UsuarioService {
     }
     //Garantizamos que sea un Array de JavaScript
     let historial: string[] = [];
-    if (Array.isArray(usuario.historialContrasenias)) {
-      historial = usuario.historialContrasenias;
-    } else if (typeof usuario.historialContrasenias === 'string') {
-      historial = (usuario.historialContrasenias as string)
+    if (Array.isArray(usuario.historialcontrasenias)) {
+      historial = usuario.historialcontrasenias;
+    } else if (typeof usuario.historialcontrasenias === 'string') {
+      historial = (usuario.historialcontrasenias as string)
         .replace(/^{|}$/g, '')
         .split(',');
     }
@@ -63,7 +63,7 @@ export class UsuarioService {
     //Guardamos la nueva contraseña y el nuevo historial en la base de datos
     await this.usuarioRepository.update(id, {
       contrasenia: contrasenia,
-      historialContrasenias: nuevoHistorial,
+      historialcontrasenias: nuevoHistorial,
     });
   }
 }

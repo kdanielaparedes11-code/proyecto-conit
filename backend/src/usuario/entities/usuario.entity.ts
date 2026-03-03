@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity({ name: 'Usuario' })
+@Entity({ name: 'usuario' })
 export class Usuario {
   @PrimaryGeneratedColumn()
   id: number;
@@ -9,7 +9,7 @@ export class Usuario {
   correo: string;
 
   @Column({ type: 'integer' })
-  idEmpresa: number;
+  idempresa: number;
 
   @Column({ type: 'varchar' })
   contrasenia: string;
@@ -18,5 +18,5 @@ export class Usuario {
   rol: string;
 
   @Column('text', { array: true, default: [] })
-  historialContrasenias: string[];
+  historialcontrasenias: string[];
 }

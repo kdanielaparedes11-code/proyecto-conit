@@ -77,6 +77,7 @@ export const forgotPassword = async (data: { correo: string }) => {
 export const resetPassword = async (data: {
   token: string;
   contrasenia: string;
+  codigoSeguridad: string;
 }) => {
   const response = await fetch("http://localhost:3000/auth/reset-password", {
     method: "POST",

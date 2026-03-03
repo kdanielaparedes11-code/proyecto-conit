@@ -1,21 +1,24 @@
-import { useEffect, useMemo, useRef, useState } from "react"
-import { getCursosDocente, getHorarioDocente } from "../services/docenteService"
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  getCursosDocente,
+  getHorarioDocente,
+} from "../services/docenteService";
 
 // ===== Helpers horario =====
 const parseRangeToMinutes = (range) => {
-  if (!range) return { startMinutes: 0, endMinutes: 0 }
-  const [ini, fin] = range.split("-").map((s) => s.trim())
+  if (!range) return { startMinutes: 0, endMinutes: 0 };
+  const [ini, fin] = range.split("-").map((s) => s.trim());
   const toMin = (hhmm) => {
-    const [h, m] = hhmm.split(":").map(Number)
-    return h * 60 + m
-  }
-  return { startMinutes: toMin(ini), endMinutes: toMin(fin) }
-}
+    const [h, m] = hhmm.split(":").map(Number);
+    return h * 60 + m;
+  };
+  return { startMinutes: toMin(ini), endMinutes: toMin(fin) };
+};
 
 const minutesNow = () => {
-  const d = new Date()
-  return d.getHours() * 60 + d.getMinutes()
-}
+  const d = new Date();
+  return d.getHours() * 60 + d.getMinutes();
+};
 
 const dayLabelToday = () => {
   const map = [
@@ -26,77 +29,80 @@ const dayLabelToday = () => {
     "Jueves",
     "Viernes",
     "Sábado",
-  ]
-  return map[new Date().getDay()]
-}
+  ];
+  return map[new Date().getDay()];
+};
 
 function PerfilDocente() {
   // ===== Datos base (mock por ahora) =====
-  const [estado, setEstado] = useState("Activo")
+  const [estado, setEstado] = useState("Activo");
 
-  const [nombre, setNombre] = useState("José Díaz Ramírez")
-  const [correo, setCorreo] = useState("docente@email.com")
-  const [telefono, setTelefono] = useState("987654321")
+  const [nombre, setNombre] = useState("José Díaz Ramírez");
+  const [correo, setCorreo] = useState("docente@email.com");
+  const [telefono, setTelefono] = useState("987654321");
 
-  const [titulo, setTitulo] = useState("Docente")
-  const [especialidad, setEspecialidad] = useState("Desarrollo Web")
-  const [experiencia, setExperiencia] = useState("3 años")
-  const [bio, setBio] = useState("")
+  const [titulo, setTitulo] = useState("Docente");
+  const [especialidad, setEspecialidad] = useState("Desarrollo Web");
+  const [experiencia, setExperiencia] = useState("3 años");
+  const [bio, setBio] = useState("");
 
-  const [passActual, setPassActual] = useState("")
-  const [passNueva, setPassNueva] = useState("")
-  const [passConfirm, setPassConfirm] = useState("")
+  const [passActual, setPassActual] = useState("");
+  const [passNueva, setPassNueva] = useState("");
+  const [passConfirm, setPassConfirm] = useState("");
 
   // ===== Nombre solo 1 vez (frontend) =====
-  const NAME_LOCK_KEY = "docente_name_locked_v1"
-  const [nombreBloqueado, setNombreBloqueado] = useState(false)
+  const NAME_LOCK_KEY = "docente_name_locked_v1";
+  
+  // 1. Le pasamos una función a useState para que lea el localStorage desde el principio
+  const [nombreBloqueado, setNombreBloqueado] = useState(() => {
+    return localStorage.getItem(NAME_LOCK_KEY) === "true";
+  });
 
-  useEffect(() => {
-    setNombreBloqueado(localStorage.getItem(NAME_LOCK_KEY) === "true")
-  }, [])
+  // 2. ¡ELIMINA por completo el useEffect que estaba aquí!
+  // useEffect(() => { ... }) ya no es necesario.
 
   const confirmarNombre = () => {
-    localStorage.setItem(NAME_LOCK_KEY, "true")
-    setNombreBloqueado(true)
-    alert("Nombre confirmado. Ya no podrás editarlo nuevamente.")
-  }
+    localStorage.setItem(NAME_LOCK_KEY, "true");
+    setNombreBloqueado(true);
+    alert("Nombre confirmado. Ya no podrás editarlo nuevamente.");
+  };
 
   // ===== Foto perfil =====
-  const [fotoUrl, setFotoUrl] = useState("")
-  const inputFotoRef = useRef(null)
+  const [fotoUrl, setFotoUrl] = useState("");
+  const inputFotoRef = useRef(null);
 
-  const onElegirFoto = () => inputFotoRef.current?.click()
+  const onElegirFoto = () => inputFotoRef.current?.click();
 
   const onFotoSeleccionada = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const url = URL.createObjectURL(file)
-    setFotoUrl(url)
-  }
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setFotoUrl(url);
+  };
 
   // ===== Stats / cursos / horario =====
-  const [cursos, setCursos] = useState([])
-  const [horario, setHorario] = useState([])
+  const [cursos, setCursos] = useState([]);
+  const [horario, setHorario] = useState([]);
 
   useEffect(() => {
-    getCursosDocente().then(setCursos)
-    getHorarioDocente().then(setHorario)
-  }, [])
+    getCursosDocente().then(setCursos);
+    getHorarioDocente().then(setHorario);
+  }, []);
 
-  const cursosActivos = cursos.length
+  const cursosActivos = cursos.length;
 
   // mock alumnos total (luego viene del backend)
-  const alumnosTotal = 85
+  const alumnosTotal = 85;
 
   // mock promedio (luego viene del backend)
-  const promedioGeneral = 14.8
+  const promedioGeneral = 14.8;
 
   // ===== Próxima clase (para PERFIL) =====
   const proximaClase = useMemo(() => {
-    if (!horario?.length) return null
+    if (!horario?.length) return null;
 
-    const hoy = dayLabelToday()
-    const now = minutesNow()
+    const hoy = dayLabelToday();
+    const now = minutesNow();
 
     const clasesHoy = horario
       .filter((h) => h.dia === hoy)
@@ -104,27 +110,29 @@ function PerfilDocente() {
       .sort(
         (a, b) =>
           parseRangeToMinutes(a.hora).startMinutes -
-          parseRangeToMinutes(b.hora).startMinutes
-      )
+          parseRangeToMinutes(b.hora).startMinutes,
+      );
 
     const futuras = clasesHoy.filter(
-      (c) => parseRangeToMinutes(c.hora).endMinutes > now
-    )
+      (c) => parseRangeToMinutes(c.hora).endMinutes > now,
+    );
 
-    return futuras.length ? futuras[0] : null
-  }, [horario])
+    return futuras.length ? futuras[0] : null;
+  }, [horario]);
 
   const guardarCambios = () => {
     // Aquí después irá API (backend).
     // Por ahora solo mostramos un feedback.
     if (passNueva || passConfirm || passActual) {
-      if (!passActual) return alert("Ingresa tu contraseña actual.")
-      if (passNueva.length < 6) return alert("La nueva contraseña debe tener al menos 6 caracteres.")
-      if (passNueva !== passConfirm) return alert("La confirmación no coincide.")
+      if (!passActual) return alert("Ingresa tu contraseña actual.");
+      if (passNueva.length < 6)
+        return alert("La nueva contraseña debe tener al menos 6 caracteres.");
+      if (passNueva !== passConfirm)
+        return alert("La confirmación no coincide.");
     }
 
-    alert("Cambios guardados (mock). Luego se conectará al backend.")
-  }
+    alert("Cambios guardados (mock). Luego se conectará al backend.");
+  };
 
   return (
     <div className="space-y-6">
@@ -400,7 +408,7 @@ function PerfilDocente() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function StatCard({ label, value }) {
@@ -411,7 +419,7 @@ function StatCard({ label, value }) {
       </div>
       <div className="text-xl font-bold mt-1">{value}</div>
     </div>
-  )
+  );
 }
 
-export default PerfilDocente
+export default PerfilDocente;

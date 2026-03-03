@@ -3,6 +3,11 @@ import { jsPDF } from "jspdf";
 import QRCode from "qrcode";
 import PagoModal from "../components/PagosModal";
 
+const generarCodigoBoleta = () => {
+  const random = Math.floor(Math.random() * 10000);
+  return `BOL-2026-${random}`;
+};
+
 export default function MisPagos() {
 
   const [activeTab, setActiveTab] = useState("pendientes");
@@ -23,11 +28,6 @@ export default function MisPagos() {
       codigo: "BOL-2025-0001"
     }
   ]);
-
-  const generarCodigoBoleta = () => {
-    const random = Math.floor(Math.random() * 10000);
-    return `BOL-2026-${random}`;
-  };
 
   const confirmarPago = () => {
     const fechaActual = new Date().toLocaleDateString();

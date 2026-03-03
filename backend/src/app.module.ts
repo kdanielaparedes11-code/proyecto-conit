@@ -14,22 +14,22 @@ import { join } from 'path';
 @Module({
   imports: [
     ConfigModule.forRoot({
-  isGlobal: true,
-  envFilePath: join(__dirname, '..', '.env'),
-}),
+      isGlobal: true,
+      envFilePath: join(__dirname, '..', '.env'),
+    }),
 
     TypeOrmModule.forRootAsync({
-  inject: [ConfigService],
-  useFactory: (config: ConfigService) => ({
-    type: 'postgres',
-    url: config.get<string>('DATABASE_URL'),
-    ssl: {
-      rejectUnauthorized: false,
-    },
-    autoLoadEntities: true,
-    synchronize: false,
-  }),
-}),
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'postgres',
+        url: 'postgresql://postgres:jcmkd2118110497@db.bwnuvmawjpettbqogmgk.supabase.co:5432/postgres',
+        ssl: {
+          rejectUnauthorized: false, // Esto funcionará perfecto con Supabase
+        },
+        autoLoadEntities: true,
+        synchronize: false,
+      }),
+    }),
     MailerModule.forRoot({
       transport: {
         host: 'smtp.ethereal.email',

@@ -4,6 +4,7 @@ import {
   MinLength,
   MaxLength,
   Matches,
+  Length,
 } from 'class-validator';
 
 export class ResetPasswordDto {
@@ -23,4 +24,9 @@ export class ResetPasswordDto {
       'La contraseña debe contener al menos una letra mayúscula, una letra minúscula, un número y un carácter especial',
   })
   contrasenia: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @Length(6, 6, { message: 'El código de seguridad debe tener 6 digitos' })
+  codigoSeguridad: string;
 }

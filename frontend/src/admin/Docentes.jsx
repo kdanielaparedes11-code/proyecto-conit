@@ -13,17 +13,18 @@ export default function Docentes() {
     especialidad: "",
   });
 
-  useEffect(() => {
-    obtenerDocentes();
-  }, []);
-
+  // 1. Declaramos la función primero
   const obtenerDocentes = () => {
     axios
       .get("http://localhost:3000/docentes")
       .then((res) => setDocentes(res.data))
       .catch((err) => console.error(err));
   };
-  
+
+  // 2. La llamamos en el useEffect después
+  useEffect(() => {
+    obtenerDocentes();
+  }, []);
 
   const crearDocente = async () => {
     try {
@@ -37,7 +38,7 @@ export default function Docentes() {
   };
 
   const docentesFiltrados = docentes.filter((doc) =>
-    doc.nombre?.toLowerCase().includes(busqueda.toLowerCase())
+    doc.nombre?.toLowerCase().includes(busqueda.toLowerCase()),
   );
 
   return (
@@ -55,7 +56,8 @@ export default function Docentes() {
 
         <button
           onClick={() => setMostrarModal(true)}
-          className="bg-blue-600 text-white px-5 py-2 rounded-lg" >
+          className="bg-blue-600 text-white px-5 py-2 rounded-lg"
+        >
           + Nuevo Docente
         </button>
       </div>

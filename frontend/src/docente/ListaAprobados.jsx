@@ -25,10 +25,8 @@ function ListaAprobados() {
   // Cargar alumnos cuando elijo curso
   useEffect(() => {
     if (!cursoSeleccionado?.id) {
-      setAlumnos([])
-      return
+      getAlumnosByCurso(cursoSeleccionado.id).then(setAlumnos)
     }
-    getAlumnosByCurso(cursoSeleccionado.id).then(setAlumnos)
   }, [cursoSeleccionado])
 
   // Cerrar sugerencias al click fuera
@@ -61,6 +59,7 @@ function ListaAprobados() {
     setCursoSeleccionado(c)
     setQuery(c.nombre)
     setOpenSug(false)
+    setAlumnos([]) // limpiar alumnos previos mientras carga nuevos
   }
 
   const limpiarCurso = () => {

@@ -3,15 +3,20 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, AlertTriangle } from "lucide-react";
 
 //Importamos lo que construimos en los pasos anteriores
 import { loginSchema, LoginFormValues } from "../validations/auth.validation";
 import { login } from "../services/auth.service";
 
+//Importamos componente reCaptcha
+import ReCAPTCHA from "react-google-recaptcha";
+
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [capsLockOn, setCapsLockOn] = useState(false);
   const navigate = useNavigate();
 
   //Conectamos el formulario con react-hook-form y zod para la validación
@@ -23,11 +28,31 @@ export default function Login() {
     resolver: zodResolver(loginSchema),
   });
 
+  const verificarMayusculas = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if(e.getModifierState("CapsLock")){
+      setCapsLockOn(true);
+    } else {
+      setCapsLockOn(false);
+    }
+  };
+
   const onSubmit = async (data: LoginFormValues) => {
+    //Validamos que el usuario haya completado el reCAPTCHA antes de enviar el formulario
+    if(!captchaToken){
+      toast.error("Por favor completa el reCAPTCHA");
+      return;
+    }
     try {
       setIsLoading(true);
-      //Llamamos al backend para hacer login
-      const respuesta = await login(data);
+      //Combinamos los datos del formulario con el token del reCAPTCHA para enviar al backend
+      const loginData = {
+        ...data,
+        recaptchaToken: captchaToken,
+      };
+      //Llamamos al backend pasando los datos completos, incluyendo el token del reCAPTCHA
+      const respuesta = await login(loginData);
+      //Guardamos el token en el navegador
+      localStorage.setItem("token", respuesta.accessToken);
       //Si todo está bien, mostramos un mensaje de éxito
       toast.success(`Inicio de sesión exitoso`);
       //Redirigimos al dashboard
@@ -42,9 +67,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-300 to-slate-400 p-4">
-      {/* Contenedor */}
       <div className="w-full max-w-md p-10 bg-white/20 backdrop-blur-xl rounded-3xl border border-white/30 shadow-2xl relative overflow-hidden">
-        {/* Título */}
         <h2 className="text-3xl font-extrabold text-center text-[#141426] mb-10 tracking-tight uppercase drop-shadow-sm">
           Accede a tu aula virtual
         </h2>
@@ -61,7 +84,6 @@ export default function Login() {
               }`}
               {...register("correo")}
             />
-            {/* Mensaje de error */}
             {errors.correo && (
               <p className="text-[#894329] text-sm mt-2 ml-4 font-bold drop-shadow-sm">
                 {errors.correo.message}
@@ -79,6 +101,7 @@ export default function Login() {
                 errors.contrasenia ? "ring-2 ring-[#894329]" : ""
               }`}
               {...register("contrasenia")}
+              onKeyUp={verificarMayusculas}
             />
             <button
               type="button"
@@ -89,12 +112,26 @@ export default function Login() {
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
-          {/* Mensaje de error */}
+          {/* Mostramos mensaje de mayusculas activadas */}
+          {capsLockOn && (
+            <p className="text-amber-600 text-sm mt-1 ml-4 font-semibold flex items-center gap-1">
+              <AlertTriangle size={16} /> Mayusculas activadas
+            </p>
+          )}
+
           {errors.contrasenia && (
             <p className="text-[#894329] text-sm mt-2 ml-4 font-bold drop-shadow-sm">
               {errors.contrasenia.message}
             </p>
           )}
+
+          {/* Widget de reCAPTCHA */}
+          <div className="flex justify-center mt-2 mb-2">
+            <ReCAPTCHA
+              sitekey="6LeBVX0sAAAAABptVURftyu-3F1crVMQnOr2uDoC" 
+              onChange={(token: string | null) => setCaptchaToken(token)}
+            />
+          </div>
 
           {/* Botón Iniciar sesión */}
           <button
@@ -112,7 +149,6 @@ export default function Login() {
             )}
           </button>
 
-          {/* Enlace a Olvidé mi contraseña */}
           <div className="text-center mt-6">
             <Link
               to="/forgot-password"

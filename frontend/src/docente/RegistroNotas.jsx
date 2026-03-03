@@ -63,31 +63,25 @@ export default function RegistroNotas() {
   }, [])
 
   useEffect(() => {
-    if (!cursoId) {
-      setAlumnos([])
-      setDraft({})
-      setOriginal({})
-      setDirty(false)
-      return
-    }
+    if (!cursoId) return;
 
     getAlumnosByCurso(cursoId).then((data) => {
-      const list = data || []
-      setAlumnos(list)
+      const list = data || [];
+      setAlumnos(list);
 
-      const base = {}
+      const base = {};
       list.forEach((a) => {
         base[a.id] = {
           nota1: a.nota1 ?? "",
           nota2: a.nota2 ?? "",
           nota3: a.nota3 ?? "",
-        }
-      })
-      setDraft(base)
-      setOriginal(base)
-      setDirty(false)
-    })
-  }, [cursoId])
+        };
+      });
+      setDraft(base);
+      setOriginal(base);
+      setDirty(false);
+    });
+  }, [cursoId]);
 
   const cursoSeleccionado = useMemo(() => {
     return cursos.find((c) => String(c.id) === String(cursoId)) || null
@@ -313,9 +307,20 @@ export default function RegistroNotas() {
             <select
               value={cursoId}
               onChange={(e) => {
-                setCursoId(e.target.value)
-                const found = cursos.find((c) => String(c.id) === String(e.target.value))
-                if (found) setQuery(found.nombre)
+                const val = e.target.value
+                setCursoId(val)
+                if (!val){
+                  setAlumnos([]);
+                  setDraft({});
+                  setOriginal({});
+                  setDirty(false);
+                  setQuery("");
+                } else { 
+                  const found = cursos.find((c) => String(c.id) === String(val))
+                  if (found) {
+                    setQuery(found.nombre)
+                  }
+                }
               }}
               className="border rounded px-3 py-2 w-full"
             >
