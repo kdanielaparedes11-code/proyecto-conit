@@ -77,7 +77,10 @@ export const forgotPassword = async (data: { correo: string }) => {
 export const resetPassword = async (data: {
   token: string;
   contrasenia: string;
+<<<<<<< HEAD
   codigoSeguridad: string;
+=======
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 }) => {
   const response = await fetch("http://localhost:3000/auth/reset-password", {
     method: "POST",

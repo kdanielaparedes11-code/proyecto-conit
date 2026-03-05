@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +17,9 @@ export default function MisCursos() {
       });
   }, []);
 
+=======
+export default function MisCursos() {
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
   return (
     <div className="flex gap-8 h-full">
 
@@ -24,6 +28,7 @@ export default function MisCursos() {
 
         <div className="grid grid-cols-3 gap-6">
 
+<<<<<<< HEAD
           {cursos.length === 0 ? (
             <p className="col-span-3 text-center text-gray-400">
               No tienes cursos registrados
@@ -42,6 +47,19 @@ export default function MisCursos() {
               </div>
             ))
           )}
+=======
+          {[...Array(9)].map((_, i) => (
+            <div
+              key={i}
+              className="border-2 border-dashed border-gray-300 p-6 flex flex-col items-center justify-center hover:bg-gray-50 transition"
+            >
+              <div className="w-20 h-20 bg-gray-200 rounded-full mb-4" />
+              <p className="text-sm tracking-widest">
+                MATEMÁTICA
+              </p>
+            </div>
+          ))}
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 
         </div>
       </div>
@@ -65,15 +83,24 @@ export default function MisCursos() {
           <h2 className="text-xl font-bold">VIERNES</h2>
           <p className="text-lg font-semibold mt-2">13/02/2026</p>
           <p className="text-sm mt-6">TUS CURSOS DE HOY</p>
+<<<<<<< HEAD
 
           {cursos.length > 0 && (
             <p className="font-medium mt-2">
               {cursos[0].nombre}
             </p>
           )}
+=======
+          <p className="font-medium mt-2">Matemática</p>
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
         </div>
 
       </div>
     </div>
+<<<<<<< HEAD
   );
 }
+=======
+  )
+}
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5

@@ -1,8 +1,14 @@
+<<<<<<< HEAD
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany  } from 'typeorm';
 import { Sesion } from '../../sesion/entities/sesion.entity';
 import { Temario } from '../../temario/entities/temario.entity';
 
 @Entity({ name: 'unidad' })
+=======
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+
+@Entity({ name: 'Unidad' }) // Respeta el nombre exacto en BD
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 export class Unidad {
 
   @PrimaryGeneratedColumn()
@@ -12,6 +18,7 @@ export class Unidad {
   descripcion: string;
 
   @Column({ type: 'varchar' })
+<<<<<<< HEAD
   nombreunidad: string;
 
   @ManyToOne(
@@ -26,3 +33,13 @@ export class Unidad {
   @JoinColumn({ name: 'idsesion' })
   sesion?: Sesion;
 }
+=======
+  nombreUnidad: string;
+
+  @Column({ type: 'integer' })
+  idTemario: number;
+
+  @Column({ type: 'integer' })
+  idSesion: number;
+}
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5

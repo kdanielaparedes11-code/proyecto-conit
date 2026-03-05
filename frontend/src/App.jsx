@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { Routes, Route, Navigate } from "react-router-dom";
+=======
+import { Routes, Route } from "react-router-dom";
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 import { Toaster } from "react-hot-toast";
 
 import Login from "./pages/Login";
@@ -10,12 +14,19 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import LayoutEstudiante from "./layouts/LayoutEstudiante";
 import HomePage from "./pages/HomePage";
 import MisCursos from "./pages/MisCursos";
+<<<<<<< HEAD
 import CursoDetalle from "./pages/CursoDetalle";
+=======
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 import MisSesiones from "./pages/MisSesiones";
 import MisCertificados from "./pages/MisCertificados";
 import Biblioteca from "./pages/Biblioteca";
 import MiPerfil from "./pages/MiPerfil";
 import MisPagos from "./pages/MisPagos";
+<<<<<<< HEAD
+=======
+
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 import AdminLayout from "./admin/AdminLayout";
 import Dashboard from "./admin/Dashboard";
 import Docentes from "./admin/docentes";
@@ -26,6 +37,7 @@ import Pagos from "./admin/Pagos";
 
 import Matricula from "./pages/Matricula";
 
+<<<<<<< HEAD
 import DocenteLayout from "./docente/DocenteLayout"
 import PerfilDocente from "./docente/PerfilDocente"
 import MisCursosDocente from "./docente/MisCursos"
@@ -34,6 +46,8 @@ import CursoDetalleDocente from "./docente/CursoDetalleDocente"
 import RegistroNotas from "./docente/RegistroNotas"
 import ListaAprobados from "./docente/ListaAprobados"
 
+=======
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 export default function App() {
   return (
     <>
@@ -51,7 +65,10 @@ export default function App() {
           <Route path="/" element={<LayoutEstudiante />}>
             <Route index element={<HomePage />} />
             <Route path="mis-cursos" element={<MisCursos />} />
+<<<<<<< HEAD
             <Route path="/curso/:id" element={<CursoDetalle />} />
+=======
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
             <Route path="mis-sesiones" element={<MisSesiones />} />
             <Route path="mis-certificados" element={<MisCertificados />} />
             <Route path="biblioteca" element={<Biblioteca />} />
@@ -69,6 +86,7 @@ export default function App() {
             <Route path="usuarios" element={<Usuarios />} />
             <Route path="pagos" element={<Pagos />} />
           </Route>
+<<<<<<< HEAD
 
           {/* DOCENTE */}
           <Route path="/docente" element={<DocenteLayout />}>
@@ -82,6 +100,9 @@ export default function App() {
         </Route>
         {/*Ruta Comodín*/}
         <Route path="*" element={<Navigate to="/login" replace />} />
+=======
+        </Route>
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
       </Routes>
     </>
   );

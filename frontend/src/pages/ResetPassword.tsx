@@ -3,7 +3,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
+<<<<<<< HEAD
 import { Loader2, Eye, EyeOff, AlertTriangle } from "lucide-react";
+=======
+import { Loader2, Eye, EyeOff } from "lucide-react";
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 
 import {
   resetPasswordSchema,
@@ -15,10 +19,13 @@ export default function ResetPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+<<<<<<< HEAD
   const [capsLockOn, setCapsLockOn] = useState(false);
   const [campoActivo, setCampoActivo] = useState<
     "contrasenia" | "confirmarContrasenia" | null
   >(null);
+=======
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 
   const navigate = useNavigate();
   //Extraemos el "token" de la URL para validar que el enlace es correcto y para enviarlo al backend junto con la nueva contraseña
@@ -33,6 +40,7 @@ export default function ResetPassword() {
     resolver: zodResolver(resetPasswordSchema),
   });
 
+<<<<<<< HEAD
   const verificarMayusculas = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.getModifierState("CapsLock")) {
       setCapsLockOn(true);
@@ -41,6 +49,8 @@ export default function ResetPassword() {
     }
   };
 
+=======
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
   const onSubmit = async (data: ResetPasswordFormValues) => {
     //Si alguien entra a la página sin un token en la URL, lo bloqueamos
     if (!token) {
@@ -60,7 +70,10 @@ export default function ResetPassword() {
       await resetPassword({
         token: token,
         contrasenia: data.contrasenia,
+<<<<<<< HEAD
         codigoSeguridad: data.codigoSeguridad,
+=======
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
       });
 
       toast.success("¡Tu contraseña ha sido actualizada!", {
@@ -94,11 +107,16 @@ export default function ResetPassword() {
             Nueva Contraseña
           </h2>
           <p className="mt-4 text-[#1b2751] font-medium drop-shadow-sm">
+<<<<<<< HEAD
             Ingresa el código que enviamos a tu correo y tu nueva contraseña.
+=======
+            Ingresa y confirma tu nueva contraseña de acceso.
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
           </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
+<<<<<<< HEAD
           {/* CÓDIGO DE SEGURIDAD */}
           <div>
             <div className="relative">
@@ -189,12 +207,63 @@ export default function ResetPassword() {
               </p>
             )}
             {/* Mensaje de error Zod */}
+=======
+          {/* Input: Nueva Contraseña */}
+          <div className="relative">
+            <input
+              id="contrasenia"
+              type={showPassword ? "text" : "password"}
+              placeholder="Nueva contraseña"
+              className={`w-full py-4 pl-6 pr-12 bg-[#1b2751] text-white placeholder-gray-400 rounded-full shadow-inner focus:outline-none focus:ring-2 focus:ring-[#5573b3] transition-all duration-300 ${
+                errors.contrasenia ? "ring-2 ring-[#894329]" : ""
+              }`}
+              {...register("contrasenia")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+              tabIndex={-1} //Para que al usar la tecla 'Tab', no se detenga en el ojito
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
+          {errors.contrasenia && (
+            <p className="text-[#894329] text-sm mt-2 ml-4 font-bold drop-shadow-sm">
+              {errors.contrasenia.message}
+            </p>
+          )}
+
+          {/* Input: Confirmar Contraseña */}
+          <div className="relative">
+            <input
+              id="confirmarContrasenia"
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Confirma tu contraseña"
+              className={`w-full py-4 pl-6 pr-12 bg-[#1b2751] text-white placeholder-gray-400 rounded-full shadow-inner focus:outline-none focus:ring-2 focus:ring-[#5573b3] transition-all duration-300 ${
+                errors.confirmarContrasenia ? "ring-2 ring-[#894329]" : ""
+              }`}
+              {...register("confirmarContrasenia")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+              tabIndex={-1} //Para que al usar la tecla 'Tab', no se detenga en el ojito
+            >
+              {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+            </div>
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
             {errors.confirmarContrasenia && (
               <p className="text-[#894329] text-sm mt-2 ml-4 font-bold drop-shadow-sm">
                 {errors.confirmarContrasenia.message}
               </p>
             )}
+<<<<<<< HEAD
           </div>
+=======
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 
           <button
             type="submit"

@@ -13,18 +13,29 @@ export default function Docentes() {
     especialidad: "",
   });
 
+<<<<<<< HEAD
   // 1. Declaramos la función primero
+=======
+  useEffect(() => {
+    obtenerDocentes();
+  }, []);
+
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
   const obtenerDocentes = () => {
     axios
       .get("http://localhost:3000/docentes")
       .then((res) => setDocentes(res.data))
       .catch((err) => console.error(err));
   };
+<<<<<<< HEAD
 
   // 2. La llamamos en el useEffect después
   useEffect(() => {
     obtenerDocentes();
   }, []);
+=======
+  
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 
   const crearDocente = async () => {
     try {
@@ -38,7 +49,11 @@ export default function Docentes() {
   };
 
   const docentesFiltrados = docentes.filter((doc) =>
+<<<<<<< HEAD
     doc.nombre?.toLowerCase().includes(busqueda.toLowerCase()),
+=======
+    doc.nombre?.toLowerCase().includes(busqueda.toLowerCase())
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
   );
 
   return (
@@ -56,8 +71,12 @@ export default function Docentes() {
 
         <button
           onClick={() => setMostrarModal(true)}
+<<<<<<< HEAD
           className="bg-blue-600 text-white px-5 py-2 rounded-lg"
         >
+=======
+          className="bg-blue-600 text-white px-5 py-2 rounded-lg" >
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
           + Nuevo Docente
         </button>
       </div>
@@ -92,4 +111,8 @@ export default function Docentes() {
       )}
     </div>
   );
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
