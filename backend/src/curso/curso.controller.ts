@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { CursoService } from './curso.service';
 import { Curso } from './entities/curso.entity'; 
@@ -19,9 +18,4 @@ export class CursoController {
     return this.cursoService.obtenerUnoCursoAlumno(id);
   }
 }
-=======
-import { Controller } from '@nestjs/common';
 
-@Controller('curso')
-export class CursoController {}
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5

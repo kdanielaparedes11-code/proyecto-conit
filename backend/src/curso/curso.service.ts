@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-<<<<<<< HEAD
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Curso } from './entities/curso.entity';
@@ -59,8 +58,3 @@ async obtenerUnoCursoAlumno(id: number): Promise<Curso | null> {
 }
 
 }
-=======
-
-@Injectable()
-export class CursoService {}
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
