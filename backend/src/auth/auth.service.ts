@@ -9,10 +9,7 @@ import { UsuarioService } from '../usuario/usuario.service';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-<<<<<<< HEAD
 import * as bcrypt from 'bcrypt';
-=======
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 
 @Injectable()
 export class AuthService {
@@ -23,7 +20,6 @@ export class AuthService {
   ) {}
 
   async login(loginDto: LoginDto) {
-<<<<<<< HEAD
     //Validacion del token de reCaptcha
     if (!loginDto.recaptchaToken) {
       throw new UnauthorizedException('Falta el token de reCaptcha');
@@ -48,8 +44,6 @@ export class AuthService {
       throw new UnauthorizedException('Error al verificar reCaptcha');
     }
 
-=======
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
     const usuario = await this.usuarioService.findOneByCorreo(loginDto.correo);
 
     if (!usuario) {
@@ -71,11 +65,7 @@ export class AuthService {
         id: usuario.id,
         correo: usuario.correo,
         rol: usuario.rol,
-<<<<<<< HEAD
         idEmpresa: usuario.idempresa,
-=======
-        idEmpresa: usuario.idEmpresa,
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
       },
     };
   }
@@ -91,7 +81,6 @@ export class AuthService {
           'Si el correo existe, se enviará un enlace de restablecimiento',
       };
     }
-<<<<<<< HEAD
     const caracteres =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*';
     let codigoSeguridad = '';
@@ -102,18 +91,13 @@ export class AuthService {
       );
     }
     const hashedCode = await bcrypt.hash(codigoSeguridad, 10);
-=======
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 
     //Creamos un token JWT con la información del usuario que expira en 5 minutos
     const payload = {
       sub: usuario.id,
       correo: usuario.correo,
       rol: usuario.rol,
-<<<<<<< HEAD
       code: hashedCode,
-=======
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
     };
     const token = this.jwtService.sign(payload, { expiresIn: '5m' });
 
@@ -125,7 +109,6 @@ export class AuthService {
       html: `<div style="font-family: Arial, sans-serif; padding: 20px; color: #141426;">
           <h2 style="color: #344c92;">Recuperación de contraseña</h2>
           <p>Hola,</p>
-<<<<<<< HEAD
           <p>Hemos recibido una solicitud para restablecer tu contraseña en el Aula Virtual.</p>
           
           <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0;">
@@ -137,13 +120,6 @@ export class AuthService {
           <a href="${resetLink}" style="display: inline-block; padding: 10px 20px; background-color: #5573b3; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Restablecer mi contraseña</a>
           <p style="margin-top: 20px; font-size: 12px; color: #8a9585;">Si tú no solicitaste esto, simplemente ignora este correo.</p>
         </div>
-=======
-          <p>Hemos recibido una solicitud para restablecer tu contraseña en el Aula Virtual</p>
-          <p>Haz clic en el siguiente enlace para crear una nueva (este enlace <b>expira en 5 minutos</b>):</p>
-          <a href="${resetLink}" style="display: inline-block; padding: 10px 20px; background-color: #5573b3; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Restablecer mi contraseña</a>
-          <p style="margin-top: 20px; font-size: 12px; color: #8a9585;">Si tú no solicitaste esto, simplemente ignora este correo.</p>
-        </div>,
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
       `,
     });
     //Enviamos el correo con el enlace de restablecimiento
@@ -156,7 +132,6 @@ export class AuthService {
   async resetPassword(resetPasswordDto: ResetPasswordDto) {
     try {
       //Verificamos el token. Si expiró o es inválido, lanzamos un error
-<<<<<<< HEAD
       const payload = this.jwtService.verify<{ correo: string; code: string }>(
         resetPasswordDto.token,
       );
@@ -169,12 +144,6 @@ export class AuthService {
         throw new BadRequestException('Código de seguridad inválido');
       }
 
-=======
-      const payload = this.jwtService.verify<{ correo: string }>(
-        resetPasswordDto.token,
-      );
-
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
       //Buscamos al usuario en la base de datos
       const usuario = await this.usuarioService.findOneByCorreo(payload.correo);
       if (!usuario) {

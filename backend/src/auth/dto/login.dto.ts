@@ -8,11 +8,8 @@ export class LoginDto {
   @IsNotEmpty({ message: 'La contraseña es obligatoria' })
   @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres' })
   contrasenia: string;
-<<<<<<< HEAD
 
   @IsString()
   @IsNotEmpty({ message: 'El reCaptcha es obligatorio' })
   recaptchaToken: string;
-=======
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 }

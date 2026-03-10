@@ -40,17 +40,10 @@ export class UsuarioService {
     }
     //Garantizamos que sea un Array de JavaScript
     let historial: string[] = [];
-<<<<<<< HEAD
     if (Array.isArray(usuario.historialcontrasenias)) {
       historial = usuario.historialcontrasenias;
     } else if (typeof usuario.historialcontrasenias === 'string') {
       historial = (usuario.historialcontrasenias as string)
-=======
-    if (Array.isArray(usuario.historialContrasenias)) {
-      historial = usuario.historialContrasenias;
-    } else if (typeof usuario.historialContrasenias === 'string') {
-      historial = (usuario.historialContrasenias as string)
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
         .replace(/^{|}$/g, '')
         .split(',');
     }
@@ -70,11 +63,7 @@ export class UsuarioService {
     //Guardamos la nueva contraseña y el nuevo historial en la base de datos
     await this.usuarioRepository.update(id, {
       contrasenia: contrasenia,
-<<<<<<< HEAD
       historialcontrasenias: nuevoHistorial,
-=======
-      historialContrasenias: nuevoHistorial,
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
     });
   }
 }

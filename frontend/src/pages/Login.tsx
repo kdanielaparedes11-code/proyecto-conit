@@ -3,17 +3,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
-<<<<<<< HEAD
 import { Loader2, Eye, EyeOff, AlertTriangle } from "lucide-react";
-=======
-import { Loader2, Eye, EyeOff } from "lucide-react";
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 
 //Importamos lo que construimos en los pasos anteriores
 import { loginSchema, LoginFormValues } from "../validations/auth.validation";
 import { login } from "../services/auth.service";
 
-<<<<<<< HEAD
 //Importamos componente reCaptcha
 import ReCAPTCHA from "react-google-recaptcha";
 
@@ -22,11 +17,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [capsLockOn, setCapsLockOn] = useState(false);
-=======
-export default function Login() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
   const navigate = useNavigate();
 
   //Conectamos el formulario con react-hook-form y zod para la validación
@@ -38,7 +28,6 @@ export default function Login() {
     resolver: zodResolver(loginSchema),
   });
 
-<<<<<<< HEAD
   const verificarMayusculas = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if(e.getModifierState("CapsLock")){
       setCapsLockOn(true);
@@ -64,13 +53,6 @@ export default function Login() {
       const respuesta = await login(loginData);
       //Guardamos el token en el navegador
       localStorage.setItem("token", respuesta.accessToken);
-=======
-  const onSubmit = async (data: LoginFormValues) => {
-    try {
-      setIsLoading(true);
-      //Llamamos al backend para hacer login
-      const respuesta = await login(data);
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
       //Si todo está bien, mostramos un mensaje de éxito
       toast.success(`Inicio de sesión exitoso`);
       //Redirigimos al dashboard
@@ -85,13 +67,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-300 to-slate-400 p-4">
-<<<<<<< HEAD
       <div className="w-full max-w-md p-10 bg-white/20 backdrop-blur-xl rounded-3xl border border-white/30 shadow-2xl relative overflow-hidden">
-=======
-      {/* Contenedor */}
-      <div className="w-full max-w-md p-10 bg-white/20 backdrop-blur-xl rounded-3xl border border-white/30 shadow-2xl relative overflow-hidden">
-        {/* Título */}
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
         <h2 className="text-3xl font-extrabold text-center text-[#141426] mb-10 tracking-tight uppercase drop-shadow-sm">
           Accede a tu aula virtual
         </h2>
@@ -108,10 +84,6 @@ export default function Login() {
               }`}
               {...register("correo")}
             />
-<<<<<<< HEAD
-=======
-            {/* Mensaje de error */}
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
             {errors.correo && (
               <p className="text-[#894329] text-sm mt-2 ml-4 font-bold drop-shadow-sm">
                 {errors.correo.message}
@@ -129,10 +101,7 @@ export default function Login() {
                 errors.contrasenia ? "ring-2 ring-[#894329]" : ""
               }`}
               {...register("contrasenia")}
-<<<<<<< HEAD
               onKeyUp={verificarMayusculas}
-=======
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
             />
             <button
               type="button"
@@ -143,7 +112,6 @@ export default function Login() {
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
-<<<<<<< HEAD
           {/* Mostramos mensaje de mayusculas activadas */}
           {capsLockOn && (
             <p className="text-amber-600 text-sm mt-1 ml-4 font-semibold flex items-center gap-1">
@@ -151,16 +119,12 @@ export default function Login() {
             </p>
           )}
 
-=======
-          {/* Mensaje de error */}
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
           {errors.contrasenia && (
             <p className="text-[#894329] text-sm mt-2 ml-4 font-bold drop-shadow-sm">
               {errors.contrasenia.message}
             </p>
           )}
 
-<<<<<<< HEAD
           {/* Widget de reCAPTCHA */}
           <div className="flex justify-center mt-2 mb-2">
             <ReCAPTCHA
@@ -169,8 +133,6 @@ export default function Login() {
             />
           </div>
 
-=======
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
           {/* Botón Iniciar sesión */}
           <button
             type="submit"
@@ -187,10 +149,6 @@ export default function Login() {
             )}
           </button>
 
-<<<<<<< HEAD
-=======
-          {/* Enlace a Olvidé mi contraseña */}
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
           <div className="text-center mt-6">
             <Link
               to="/forgot-password"

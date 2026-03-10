@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -13,23 +12,6 @@ export default function MiPerfil() {
   const [guardando, setGuardando] = useState(false);
 
   const [nombreBloqueado, setNombreBloqueado] = useState(false);
-=======
-import { useState, useEffect } from "react"
-import axios from "axios"
-
-export default function MiPerfil() {
-
-  const [foto, setFoto] = useState(null)
-
-  const [editando, setEditando] = useState(false)
-
-  const [setNombre] = useState("")
-
-  const [cargando, setCargando] = useState(true)
-  const [guardando, setGuardando] = useState(false)
-
-  const [nombreBloqueado, setNombreBloqueado] = useState(false)
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 
   const [datos, setDatos] = useState({
     nombre: "",
@@ -41,7 +23,6 @@ export default function MiPerfil() {
     direccion: "",
     estadoCivil: "",
     correo: "",
-<<<<<<< HEAD
     telefono: "",
   });
 
@@ -51,18 +32,6 @@ export default function MiPerfil() {
 
       const nombreBackend = partes[0];
       const apellidoBackend = partes.slice(1).join(" ");
-=======
-    telefono: ""
-  })
-
-  const guardarCambios = async () => {
-    try {
-
-      const partes = nombre.split(" ")
-
-      const nombreBackend = partes[0]
-      const apellidoBackend = partes.slice(1).join(" ")
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 
       await axios.put("http://localhost:3000/alumno/1", {
         nombre: datos.nombre,
@@ -71,7 +40,6 @@ export default function MiPerfil() {
         direccion: datos.direccion,
         correo: datos.email,
         tipodocumento: "DNI",
-<<<<<<< HEAD
         numdocumento: "12345678",
       });
 
@@ -81,29 +49,12 @@ export default function MiPerfil() {
       alert(error.response?.data?.message || "Error");
     }
   };
-=======
-        numdocumento: "12345678"
-      })
-
-      alert("Actualizado correctamente")
-
-    } catch (error) {
-      console.error(error)
-      alert(error.response?.data?.message || "Error")
-    }
-  }
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 
   useEffect(() => {
     const obtenerAlumno = async () => {
       try {
-<<<<<<< HEAD
         const res = await axios.get("http://localhost:3000/alumno/1");
         const data = res.data;
-=======
-        const res = await axios.get("http://localhost:3000/alumno/1")
-        const data = res.data
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 
         //setNombre(`${data.nombre} ${data.apellido}`)
 
@@ -117,7 +68,6 @@ export default function MiPerfil() {
           direccion: data.direccion || "",
           estadoCivil: "",
           correo: data.correo || "",
-<<<<<<< HEAD
           telefono: data.telefono || "",
         });
       } catch (error) {
@@ -218,120 +168,12 @@ export default function MiPerfil() {
 
   return (
     <div className="bg-gray-100 min-h-screen">
-=======
-          telefono: data.telefono || ""
-        })
-
-      } catch (error) {
-        console.error(error)
-      } finally {
-        setCargando(false)
-      }
-    }
-
-    obtenerAlumno()
-  }, [])
-
-  const handleChange = async (e) => {
-  const file = e.target.files[0];
-
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('usuario_id', usuario.id);
-
-  await fetch('http://localhost:3000/multimedia/upload', {
-    method: 'POST',
-    body: formData,
-  });
-};
-
-
- const cambiarFoto = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setFoto(reader.result)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const toggleEditar = () => {
-  if (editando) {
-    setEditando(false)
-
-    if (!nombreBloqueado) {
-      setNombreBloqueado(true)
-    }
-
-    alert("Datos guardados correctamente")
-  } else {
-    setEditando(true)
-  }
-}
-
-const toggleEditarGuardar = async () => {
-
-  // Si está cargando, no hacer nada
-  if (cargando) return
-
-  // Si NO está editando → activar edición
-  if (!editando) {
-    setEditando(true)
-    return
-  }
-
-  // Validación básica
-  if (!datos.correo || !datos.telefono) {
-    alert("Completa los campos obligatorios")
-    return
-  }
-
-  try {
-    setGuardando(true)
-
-    await axios.put("http://localhost:3000/alumno/1", {
-      nombre: datos.nombre,
-      apellido: datos.apellido,
-      telefono: datos.telefono,
-      direccion: datos.direccion,
-      correo: datos.correo
-    })
-
-    setEditando(false)
-
-    alert("Actualizado correctamente")
-
-  } catch (error) {
-    console.error(error)
-    alert("Error al actualizar")
-  } finally {
-    setGuardando(false)
-  }
-}
-
-if (cargando) {
-  return (
-    <div className="flex justify-center items-center h-screen">
-      <div className="animate-pulse text-xl text-gray-500">
-        Cargando perfil...
-      </div>
-    </div>
-  )
-}
-
-  return (
-    <div className="bg-gray-100 min-h-screen">
-
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
       {/* HEADER ROJO */}
       <div className="bg-blue-600 text-white px-6 py-3 font-semibold">
         Mis Datos
       </div>
 
       {/* BANNER */}
-<<<<<<< HEAD
       <div
         className="relative h-64 bg-cover bg-center"
         style={{
@@ -339,14 +181,6 @@ if (cargando) {
             "url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRL19UTn2zu4iNZDVr7Azm15Xkr1oKGRoV72A&s')",
         }}
       >
-=======
-      <div className="relative h-64 bg-cover bg-center"
-        style={{
-          backgroundImage: "url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRL19UTn2zu4iNZDVr7Azm15Xkr1oKGRoV72A&s')"
-        }}
-      >
-
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
         <div className="absolute inset-0 bg-black/40"></div>
 
         {/* FOTO */}
@@ -373,10 +207,6 @@ if (cargando) {
 
         {/* NOMBRE */}
         <div className="absolute bottom-6 w-full flex justify-center items-center text-white text-lg font-semibold tracking-wide">
-<<<<<<< HEAD
-=======
-
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
           {editando && !nombreBloqueado ? (
             <>
               <input
@@ -387,13 +217,9 @@ if (cargando) {
 
               <input
                 value={datos.apellido}
-<<<<<<< HEAD
                 onChange={(e) =>
                   setDatos({ ...datos, apellido: e.target.value })
                 }
-=======
-                onChange={(e) => setDatos({ ...datos, apellido: e.target.value })}
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
                 className="text-center bg-white text-black px-2 py-1 rounded"
               />
             </>
@@ -409,35 +235,18 @@ if (cargando) {
               El nombre solo puede modificarse una vez
             </p>
           )}
-<<<<<<< HEAD
         </div>
-=======
-
-        </div>
-
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
       </div>
 
       {/* CONTENIDO */}
       <div className="max-w-6xl mx-auto mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 px-4 md:px-6">
-<<<<<<< HEAD
         {/* DATOS PERSONALES */}
         <div className="md:col-span-2 bg-white rounded shadow">
-=======
-
-        {/* DATOS PERSONALES */}
-        <div className="md:col-span-2 bg-white rounded shadow">
-
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
           <div className="bg-blue-600 text-white px-4 py-2 rounded-t">
             Datos Personales
           </div>
 
           <div className="p-6 space-y-4 text-sm">
-<<<<<<< HEAD
-=======
-
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
             <div className="grid grid-cols-2 gap-4">
               <Input
                 label="Lugar Residencia"
@@ -449,61 +258,41 @@ if (cargando) {
                 label="Departamento"
                 value={datos.departamento}
                 editando={editando}
-<<<<<<< HEAD
                 onChange={(e) =>
                   setDatos({ ...datos, departamento: e.target.value })
                 }
-=======
-                onChange={(e) => setDatos({ ...datos, departamento: e.target.value })}
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
               />
               <Input
                 label="Provincia"
                 value={datos.provincia}
                 editando={editando}
-<<<<<<< HEAD
                 onChange={(e) =>
                   setDatos({ ...datos, provincia: e.target.value })
                 }
-=======
-                onChange={(e) => setDatos({ ...datos, provincia: e.target.value })}
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
               />
               <Input
                 label="Distrito"
                 value={datos.distrito}
                 editando={editando}
-<<<<<<< HEAD
                 onChange={(e) =>
                   setDatos({ ...datos, distrito: e.target.value })
                 }
-=======
-                onChange={(e) => setDatos({ ...datos, distrito: e.target.value })}
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
               />
               <Input
                 label="Dirección"
                 value={datos.direccion}
                 editando={editando}
-<<<<<<< HEAD
                 onChange={(e) =>
                   setDatos({ ...datos, direccion: e.target.value })
                 }
-=======
-                onChange={(e) => setDatos({ ...datos, direccion: e.target.value })}
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
               />
               <Input
                 label="Estado Civil"
                 value={datos.estadoCivil}
                 editando={editando}
-<<<<<<< HEAD
                 onChange={(e) =>
                   setDatos({ ...datos, estadoCivil: e.target.value })
                 }
-=======
-                onChange={(e) => setDatos({ ...datos, estadoCivil: e.target.value })}
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
               />
               <Input
                 label="Correo"
@@ -515,18 +304,11 @@ if (cargando) {
                 label="Teléfono"
                 value={datos.telefono}
                 editando={editando}
-<<<<<<< HEAD
                 onChange={(e) =>
                   setDatos({ ...datos, telefono: e.target.value })
                 }
               />
             </div>
-=======
-                onChange={(e) => setDatos({ ...datos, telefono: e.target.value })}
-              />
-            </div>
-
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
           </div>
           <button
             onClick={toggleEditarGuardar}
@@ -535,37 +317,22 @@ if (cargando) {
               cargando || guardando
                 ? "bg-gray-400 cursor-not-allowed"
                 : editando
-<<<<<<< HEAD
                   ? "bg-green-600 hover:bg-green-700"
                   : "bg-blue-600 hover:bg-blue-700"
-=======
-                ? "bg-green-600 hover:bg-green-700"
-                : "bg-blue-600 hover:bg-blue-700"
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
             }`}
           >
             {cargando
               ? "Cargando..."
               : guardando
-<<<<<<< HEAD
                 ? "Guardando..."
                 : editando
                   ? "Guardar"
                   : "Editar"}
           </button>
-=======
-              ? "Guardando..."
-              : editando
-              ? "Guardar"
-              : "Editar"}
-          </button>
-
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
         </div>
 
         {/* SIDEBAR */}
         <div className="space-y-6">
-<<<<<<< HEAD
           {/* PROGRESO */}
           <div className="bg-white rounded shadow p-6 text-center">
             <p className="text-sm text-gray-500 mb-4">TU PERFIL ESTÁ AL:</p>
@@ -584,43 +351,11 @@ if (cargando) {
           {/* INFO ADICIONAL */}
           <div className="bg-white rounded shadow p-6 text-sm space-y-3">
             <p className="font-semibold text-gray-600">INF. ALUMNO</p>
-=======
-
-          {/* PROGRESO */}
-            <div className="bg-white rounded shadow p-6 text-center">
-
-                <p className="text-sm text-gray-500 mb-4">
-                    TU PERFIL ESTÁ AL:
-                </p>
-
-                <div className="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
-
-                    <div className="w-full h-full rounded-full border-8 border-blue-600 flex items-center justify-center text-xl md:text-2xl font-bold text-red-600">
-                    90%
-                    </div>
-
-                </div>
-
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm transition">
-                    Actualizar Perfil
-                </button>
-
-            </div>
-
-
-          {/* INFO ADICIONAL */}
-          <div className="bg-white rounded shadow p-6 text-sm space-y-3">
-
-            <p className="font-semibold text-gray-600">
-              INF. ALUMNO
-            </p>
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 
             <Info label="Doc. Identidad" value="73986719" />
             <Info label="Fecha Nac" value="11/04/1997" />
             <Info label="Sexo" value="Femenino" />
             <Info label="Nacionalidad" value="Perú" />
-<<<<<<< HEAD
           </div>
         </div>
       </div>
@@ -644,37 +379,6 @@ function Input({ label, value, editando, onChange }) {
     </div>
   );
 }
-=======
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-  )
- 
-  
-}
-
-  function Input({ label, value, editando, onChange }) {
-    return (
-      <div>
-        <label className="block text-gray-500 mb-1">{label}</label>
-        <input
-          type="text"
-          value={value}
-          disabled={!editando}
-          onChange={onChange}
-          className={`w-full border rounded px-3 py-2 ${
-            editando ? "border-blue-400" : "border-gray-200 bg-gray-100"
-          }`}
-        />
-      </div>
-    )
-  }
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 
 function Info({ label, value }) {
   return (
@@ -682,11 +386,5 @@ function Info({ label, value }) {
       <span className="text-gray-500">{label}</span>
       <span className="font-medium">{value}</span>
     </div>
-<<<<<<< HEAD
   );
 }
-=======
-  )
-}
-
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5

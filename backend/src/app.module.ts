@@ -3,7 +3,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsuarioModule } from './usuario/usuario.module';
 import { AuthModule } from './auth/auth.module';
-<<<<<<< HEAD
 import { MailerModule } from '@nestjs-modules/mailer';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -14,20 +13,14 @@ import { TemarioModule } from './temario/temario.module';
 import { UnidadModule } from './unidad/unidad.module';
 import { SesionModule } from './sesion/sesion.module';
 import { GrupoModule } from './grupo/grupo.module';
-=======
-import { DocenteModule } from './docente/docente.module';
-import { AlumnoModule } from './alumno/alumno.module';
-import { MailerModule } from '@nestjs-modules/mailer';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
-
+import { MatriculaModule } from './matricula/matricula.module';
+import { PagoModule } from './pago/pago.module';
 import { join } from 'path';
 
 @Module({
   imports: [
+    PagoModule, 
     ConfigModule.forRoot({
-<<<<<<< HEAD
       isGlobal: true,
       envFilePath: join(__dirname, '..', '.env'),
     }),
@@ -36,7 +29,7 @@ import { join } from 'path';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
-        url: 'postgresql://postgres:jcmkd2118110497@db.bwnuvmawjpettbqogmgk.supabase.co:5432/postgres',
+        url: config.get<string>('DATABASE_URL'),
         ssl: {
           rejectUnauthorized: false, // Esto funcionará perfecto con Supabase
         },
@@ -44,24 +37,7 @@ import { join } from 'path';
         synchronize: false,
       }),
     }),
-=======
-  isGlobal: true,
-  envFilePath: join(__dirname, '..', '.env'),
-}),
-
-    TypeOrmModule.forRootAsync({
-  inject: [ConfigService],
-  useFactory: (config: ConfigService) => ({
-    type: 'postgres',
-    url: config.get<string>('DATABASE_URL'),
-    ssl: {
-      rejectUnauthorized: false,
-    },
-    autoLoadEntities: true,
-    synchronize: false,
-  }),
-}),
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
+    
     MailerModule.forRoot({
       transport: {
         host: 'smtp.ethereal.email',
@@ -80,20 +56,14 @@ import { join } from 'path';
     AuthModule,
     DocenteModule,
     AlumnoModule,
-<<<<<<< HEAD
     CursoModule,
     TemarioModule,
     UnidadModule,
     SesionModule,
     GrupoModule,
-=======
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
+    MatriculaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-<<<<<<< HEAD
 export class AppModule {}
-=======
-export class AppModule {}
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5

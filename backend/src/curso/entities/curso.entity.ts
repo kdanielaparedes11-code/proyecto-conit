@@ -1,14 +1,8 @@
-<<<<<<< HEAD
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Grupo } from '../../grupo/entities/grupo.entity';
 import { Temario } from '../../temario/entities/temario.entity';
 
 @Entity({ name: 'curso' })
-=======
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
-
-@Entity({ name: 'Curso' })
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 export class Curso {
 
   @PrimaryGeneratedColumn()
@@ -18,7 +12,6 @@ export class Curso {
   descripcion: string;
 
   @Column({ type: 'text', nullable: true })
-<<<<<<< HEAD
   contenidomultimedia: string;
 
   @Column({ type: 'varchar', nullable: true })
@@ -26,15 +19,6 @@ export class Curso {
 
   @Column({ type: 'varchar', nullable: true })
   publicoobjetivo: string;
-=======
-  contenidoMultimedia: string;
-
-  @Column({ type: 'varchar', nullable: true })
-  nombreCurso: string;
-
-  @Column({ type: 'varchar', nullable: true })
-  publicoObjetivo: string;
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
 
   @Column({ type: 'int', nullable: true })
   duracion: number;
@@ -49,7 +33,6 @@ export class Curso {
   estado: boolean;
 
   @Column({ type: 'int', nullable: true })
-<<<<<<< HEAD
   idrequisito: number;
 
   @ManyToOne(() => Temario, { nullable: true })
@@ -67,16 +50,7 @@ export class Curso {
       (grupo) => grupo.curso
     )
     grupos: Grupo[];
-=======
-  idRequisito: number;
 
-  @Column({ type: 'int', nullable: true })
-  idTemario: number;
-
-  @Column({ type: 'int', nullable: true })
-  idCategorizacion: number;
-
-  @Column({ type: 'varchar', nullable: true })
-  tiempoSemanal: string;
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
+    @Column("float")
+    precio: number;
 }

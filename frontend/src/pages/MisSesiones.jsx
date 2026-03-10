@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react"
 import { ArrowUpDown } from "lucide-react"
 
-<<<<<<< HEAD
 const sesiones = [
   { fecha: "2030-05-07", hora: "07:00", usuario: "Eduardo" },
   { fecha: "2030-05-07", hora: "13:00", usuario: "Paula" },
@@ -14,20 +13,6 @@ const sesiones = [
 
 export default function MisSesiones() {
 
-=======
-export default function MisSesiones() {
-
-  const sesiones = [
-    { fecha: "2030-05-07", hora: "07:00", usuario: "Eduardo" },
-    { fecha: "2030-05-07", hora: "13:00", usuario: "Paula" },
-    { fecha: "2030-05-14", hora: "09:30", usuario: "Carlos" },
-    { fecha: "2030-05-14", hora: "15:00", usuario: "Lucía" },
-    { fecha: "2030-05-21", hora: "10:00", usuario: "María" },
-    { fecha: "2030-05-22", hora: "11:00", usuario: "José" },
-    { fecha: "2030-05-23", hora: "08:00", usuario: "Ana" },
-  ]
-
->>>>>>> 05542c37d34b8b0e415c3ea79bf733b199403bb5
   const [desde, setDesde] = useState("")
   const [hasta, setHasta] = useState("")
   const [ordenAsc, setOrdenAsc] = useState(true)

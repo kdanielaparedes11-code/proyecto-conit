@@ -8,6 +8,8 @@ export default function CursoDetalle() {
   const [curso, setCurso] = useState(null);
   const navigate = useNavigate();
   const [unidadActiva, setUnidadActiva] = useState(null);
+  const [archivo, setArchivo] = useState(null);
+const [dragActivo, setDragActivo] = useState(false);
 
   useEffect(() => {
     axios.get(`http://localhost:3000/curso/${id}`)
@@ -94,7 +96,109 @@ export default function CursoDetalle() {
               </h3>
               <ul style={{ lineHeight: "1.8" }}>
                 {unidadActiva.sesion && (
-                  <li>{unidadActiva.sesion.nombresesion}</li>
+                 <div style={{
+                    background: "#f9f9f9",
+                    padding: "15px",
+                    borderRadius: "8px",
+                    marginTop: "10px"
+                  }}>
+                    <h4>{unidadActiva.sesion.nombresesion}</h4>
+
+                    {/*Video*/}
+                    <div style={{ marginTop: "15px", display: "flex", justifyContent: "center" }}>
+                      <video
+                        controls
+                        style={{
+                          width: "100%",
+                          maxWidth: "500px",
+                          borderRadius: "8px",
+                          boxShadow: "0 3px 8px rgba(0,0,0,0.15)"
+                        }}
+                      >
+                        <source src="/videos/demo.mp4" type="video/mp4" />
+                        Tu navegador no soporta video.
+                      </video>
+                    </div>
+
+                    {/*Entrega del alumno*/}
+                    <div
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDragActivo(true);
+                      }}
+                      onDragLeave={() => setDragActivo(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setDragActivo(false);
+                        const file = e.dataTransfer.files[0];
+                        setArchivo(file);
+                      }}
+                      style={{
+                        marginTop: "20px",
+                        border: dragActivo ? "2px dashed #e10600" : "2px dashed #ccc",
+                        padding: "25px",
+                        borderRadius: "10px",
+                        textAlign: "center",
+                        background: dragActivo ? "#fff5f5" : "#fafafa",
+                        cursor: "pointer",
+                        transition: "0.2s"
+                      }}
+                    >
+                      <p style={{ fontSize: "16px", fontWeight: "500" }}>
+                        📎 Arrastra tu archivo aquí
+                      </p>
+
+                      <p style={{ fontSize: "14px", color: "#777" }}>
+                        o haz clic para subir
+                      </p>
+
+                      <input
+                        type="file"
+                        onChange={(e) => setArchivo(e.target.files[0])}
+                        style={{ display: "none" }}
+                        id="fileUpload"
+                      />
+
+                      <label
+                        htmlFor="fileUpload"
+                        style={{
+                          display: "inline-block",
+                          marginTop: "10px",
+                          background: "#e10600",
+                          color: "white",
+                          padding: "8px 16px",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          fontSize: "14px"
+                        }}
+                      >
+                        Seleccionar archivo
+                      </label>
+
+                      {archivo && (
+                        <p style={{ marginTop: "10px", color: "#333" }}>
+                          Archivo seleccionado: <strong>{archivo.name}</strong>
+                        </p>
+                      )}
+
+                      {archivo && (
+                        <button
+                          style={{
+                            marginTop: "15px",
+                            background: "#1e73be",
+                            color: "white",
+                            border: "none",
+                            padding: "10px 20px",
+                            borderRadius: "6px",
+                            cursor: "pointer"
+                          }}
+                          onClick={() => console.log("Enviar archivo", archivo)}
+                        >
+                          Enviar entrega
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 )}
               </ul>
             </>
