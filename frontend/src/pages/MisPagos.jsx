@@ -26,11 +26,6 @@ export default function MisPagos() {
     }
   ]);
 
-<<<<<<< HEAD
-  const confirmarPago = () => {
-    const fechaActual = new Date().toLocaleDateString();
-    const codigoBoleta = generarCodigoBoleta();
-=======
   useEffect(() => {
   const cargarPagos = async () => {
     try {
@@ -66,7 +61,6 @@ export default function MisPagos() {
   };
 
   const confirmarPago = async () => {
->>>>>>> c0fa001c855a26e4874a87dcfb1053b49cef9b56
 
     if (!selectedPago) return;
 

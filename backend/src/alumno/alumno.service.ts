@@ -1,9 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Alumno } from './entities/alumno.entity';
 import { Usuario } from 'src/usuario/entities/usuario.entity';
-import { DataSource } from 'typeorm/browser';
 import { th } from 'zod/v4/locales';
 
 @Injectable()

@@ -26,15 +26,6 @@ import Pagos from "./admin/Pagos";
 
 import Matricula from "./pages/Matricula";
 
-<<<<<<< HEAD
-// import DocenteLayout from "./docente/DocenteLayout"
-// import PerfilDocente from "./docente/PerfilDocente"
-// import MisCursosDocente from "./docente/MisCursos"
-// import HorarioDocente from "./docente/HorarioDocente"
-// import CursoDetalleDocente from "./docente/CursoDetalleDocente"
-// import RegistroNotas from "./docente/RegistroNotas"
-// import ListaAprobados from "./docente/ListaAprobados"
-=======
 import DocenteLayout from "./docente/DocenteLayout"
 import PerfilDocente from "./docente/PerfilDocente"
 import MisCursosDocente from "./docente/MisCursos"
@@ -42,7 +33,6 @@ import HorarioDocente from "./docente/HorarioDocente"
 import CursoDetalleDocente from "./docente/CursoDetalleDocente"
 import RegistroNotas from "./docente/RegistroNotas"
 import ListaAprobados from "./docente/ListaAprobados"
->>>>>>> c0fa001c855a26e4874a87dcfb1053b49cef9b56
 
 export default function App() {
   return (
@@ -80,24 +70,15 @@ export default function App() {
             <Route path="pagos" element={<Pagos />} />
           </Route>
 
-<<<<<<< HEAD
-          {/* DOCENTE (DESACTIVADO POR AHORA) */}
-          {/* <Route path="/docente" element={<DocenteLayout />}>
-=======
           {/* DOCENTE */}
           <Route path="/docente" element={<DocenteLayout />}>
->>>>>>> c0fa001c855a26e4874a87dcfb1053b49cef9b56
             <Route path="perfil" element={<PerfilDocente />} />
             <Route path="cursos" element={<MisCursosDocente />} />
             <Route path="cursos/:id" element={<CursoDetalleDocente />} />
             <Route path="notas" element={<RegistroNotas />} />
             <Route path="aprobados" element={<ListaAprobados />} />
             <Route path="horario" element={<HorarioDocente />} />
-<<<<<<< HEAD
-          </Route> */}
-=======
           </Route>
->>>>>>> c0fa001c855a26e4874a87dcfb1053b49cef9b56
         </Route>
         {/*Ruta Comodín*/}
         <Route path="*" element={<Navigate to="/login" replace />} />

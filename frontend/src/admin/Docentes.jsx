@@ -25,31 +25,8 @@ export default function Docentes() {
   const [docenteInhabilitar, setDocenteInhabilitar] = useState(null); //Para inhabilitar un docente
   const [docenteHabilitar, setDocenteHabilitar] = useState(null); //Para habilitar un docente
 
-<<<<<<< HEAD
   //Usamos nuestra funcion segura que incluye el Token en el header
   const cargarDocentes = async () => {
-=======
-  const [nuevoDocente, setNuevoDocente] = useState({
-    nombre: "",
-    correo: "",
-    especialidad: "",
-  });
-
-  // 1. Declaramos la función primero
-  const obtenerDocentes = () => {
-    axios
-      .get("http://localhost:3000/docentes")
-      .then((res) => setDocentes(res.data))
-      .catch((err) => console.error(err));
-  };
-
-  // 2. La llamamos en el useEffect después
-  useEffect(() => {
-    obtenerDocentes();
-  }, []);
-
-  const crearDocente = async () => {
->>>>>>> c0fa001c855a26e4874a87dcfb1053b49cef9b56
     try {
       setIsLoading(true);
       const data = await obtenerDocentes();
@@ -62,7 +39,6 @@ export default function Docentes() {
     }
   };
 
-<<<<<<< HEAD
   //Cargamos los docentes al montar el componente
   useEffect(() => {
     cargarDocentes();
@@ -110,11 +86,6 @@ export default function Docentes() {
       `${docente.nombre || ""} ${docente.apellido || ""}`.toLowerCase();
     return nombreCompleto.includes(termino);
   });
-=======
-  const docentesFiltrados = docentes.filter((doc) =>
-    doc.nombre?.toLowerCase().includes(busqueda.toLowerCase()),
-  );
->>>>>>> c0fa001c855a26e4874a87dcfb1053b49cef9b56
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
@@ -138,18 +109,11 @@ export default function Docentes() {
         </div>
 
         <button
-<<<<<<< HEAD
           onClick={handleNuevo}
           className="bg-[#5573b3] hover:bg-[#344c92] text-white px-5 py-2 rounded-lg font-medium transition-colors shrink-0 flex items-center gap-2"
         >
           <Plus size={20} />
           Nuevo Docente
-=======
-          onClick={() => setMostrarModal(true)}
-          className="bg-blue-600 text-white px-5 py-2 rounded-lg"
-        >
-          + Nuevo Docente
->>>>>>> c0fa001c855a26e4874a87dcfb1053b49cef9b56
         </button>
       </div>
 
