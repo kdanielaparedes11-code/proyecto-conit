@@ -1,3 +1,4 @@
+import { Module } from '@nestjs/common';
 import { PagoModule } from './pago/pago.module';
 
 @Module({
