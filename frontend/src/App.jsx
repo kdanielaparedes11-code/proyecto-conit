@@ -10,12 +10,12 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import LayoutEstudiante from "./layouts/LayoutEstudiante";
 import HomePage from "./pages/HomePage";
 import MisCursos from "./pages/MisCursos";
+import CursoDetalle from "./pages/CursoDetalle";
 import MisSesiones from "./pages/MisSesiones";
 import MisCertificados from "./pages/MisCertificados";
 import Biblioteca from "./pages/Biblioteca";
 import MiPerfil from "./pages/MiPerfil";
 import MisPagos from "./pages/MisPagos";
-
 import AdminLayout from "./admin/AdminLayout";
 import Dashboard from "./admin/Dashboard";
 import Docentes from "./admin/Docentes";
@@ -26,6 +26,7 @@ import Pagos from "./admin/Pagos";
 
 import Matricula from "./pages/Matricula";
 
+<<<<<<< HEAD
 // import DocenteLayout from "./docente/DocenteLayout"
 // import PerfilDocente from "./docente/PerfilDocente"
 // import MisCursosDocente from "./docente/MisCursos"
@@ -33,6 +34,15 @@ import Matricula from "./pages/Matricula";
 // import CursoDetalleDocente from "./docente/CursoDetalleDocente"
 // import RegistroNotas from "./docente/RegistroNotas"
 // import ListaAprobados from "./docente/ListaAprobados"
+=======
+import DocenteLayout from "./docente/DocenteLayout"
+import PerfilDocente from "./docente/PerfilDocente"
+import MisCursosDocente from "./docente/MisCursos"
+import HorarioDocente from "./docente/HorarioDocente"
+import CursoDetalleDocente from "./docente/CursoDetalleDocente"
+import RegistroNotas from "./docente/RegistroNotas"
+import ListaAprobados from "./docente/ListaAprobados"
+>>>>>>> c0fa001c855a26e4874a87dcfb1053b49cef9b56
 
 export default function App() {
   return (
@@ -51,12 +61,13 @@ export default function App() {
           <Route path="/" element={<LayoutEstudiante />}>
             <Route index element={<HomePage />} />
             <Route path="mis-cursos" element={<MisCursos />} />
+            <Route path="/curso/:id" element={<CursoDetalle />} />
             <Route path="mis-sesiones" element={<MisSesiones />} />
             <Route path="mis-certificados" element={<MisCertificados />} />
-            <Route path="biblioteca" element={<Biblioteca />} />
             <Route path="mi-perfil" element={<MiPerfil />} />
             <Route path="mis-pagos" element={<MisPagos />} />
             <Route path="matricula" element={<Matricula />} />
+            <Route path="/recursos" element={<Biblioteca />} />
           </Route>
 
           {/* ADMIN */}
@@ -69,15 +80,24 @@ export default function App() {
             <Route path="pagos" element={<Pagos />} />
           </Route>
 
+<<<<<<< HEAD
           {/* DOCENTE (DESACTIVADO POR AHORA) */}
           {/* <Route path="/docente" element={<DocenteLayout />}>
+=======
+          {/* DOCENTE */}
+          <Route path="/docente" element={<DocenteLayout />}>
+>>>>>>> c0fa001c855a26e4874a87dcfb1053b49cef9b56
             <Route path="perfil" element={<PerfilDocente />} />
             <Route path="cursos" element={<MisCursosDocente />} />
             <Route path="cursos/:id" element={<CursoDetalleDocente />} />
             <Route path="notas" element={<RegistroNotas />} />
             <Route path="aprobados" element={<ListaAprobados />} />
             <Route path="horario" element={<HorarioDocente />} />
+<<<<<<< HEAD
           </Route> */}
+=======
+          </Route>
+>>>>>>> c0fa001c855a26e4874a87dcfb1053b49cef9b56
         </Route>
         {/*Ruta Comodín*/}
         <Route path="*" element={<Navigate to="/login" replace />} />

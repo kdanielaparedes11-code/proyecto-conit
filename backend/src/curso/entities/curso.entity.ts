@@ -1,6 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Grupo } from '../../grupo/entities/grupo.entity';
+import { Temario } from '../../temario/entities/temario.entity';
 
-@Entity({ name: 'Curso' })
+@Entity({ name: 'curso' })
 export class Curso {
 
   @PrimaryGeneratedColumn()
@@ -10,13 +12,13 @@ export class Curso {
   descripcion: string;
 
   @Column({ type: 'text', nullable: true })
-  contenidoMultimedia: string;
+  contenidomultimedia: string;
 
   @Column({ type: 'varchar', nullable: true })
-  nombreCurso: string;
+  nombrecurso: string;
 
   @Column({ type: 'varchar', nullable: true })
-  publicoObjetivo: string;
+  publicoobjetivo: string;
 
   @Column({ type: 'int', nullable: true })
   duracion: number;
@@ -34,14 +36,24 @@ export class Curso {
   precio: number;
 
   @Column({ type: 'int', nullable: true })
-  idRequisito: number;
+  idrequisito: number;
+
+  @ManyToOne(() => Temario, { nullable: true })
+      @JoinColumn({ name: 'idtemario' })
+      temario?: Temario;
 
   @Column({ type: 'int', nullable: true })
-  idTemario: number;
-
-  @Column({ type: 'int', nullable: true })
-  idCategorizacion: number;
+  idcategorizacion: number;
 
   @Column({ type: 'varchar', nullable: true })
-  tiempoSemanal: string;
+  tiemposemana: string;
+
+  @OneToMany(
+      () => Grupo,
+      (grupo) => grupo.curso
+    )
+    grupos: Grupo[];
+
+    @Column("float")
+    precio: number;
 }
