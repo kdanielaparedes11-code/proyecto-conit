@@ -29,7 +29,7 @@ import MisPagos from "./pages/MisPagos";
 // ADMIN
 import AdminLayout from "./admin/AdminLayout";
 import Dashboard from "./admin/Dashboard";
-import Docentes from "./admin/docentes";
+import Docentes from "./admin/Docentes";
 import Cursos from "./admin/Cursos";
 import Alumnos from "./admin/alumnos";
 import Usuarios from "./admin/Usuarios";
@@ -115,12 +115,13 @@ export default function App() {
           <Route path="/" element={<LayoutEstudiante />}>
             <Route index element={<HomePage />} />
             <Route path="mis-cursos" element={<MisCursos />} />
+            <Route path="/curso/:id" element={<CursoDetalleDocente />} />
             <Route path="mis-sesiones" element={<MisSesiones />} />
             <Route path="mis-certificados" element={<MisCertificados />} />
-            <Route path="biblioteca" element={<Biblioteca />} />
             <Route path="mi-perfil" element={<MiPerfil />} />
             <Route path="mis-pagos" element={<MisPagos />} />
             <Route path="matricula" element={<Matricula />} />
+            <Route path="/recursos" element={<Biblioteca />} />
           </Route>
 
           {/* ADMIN */}

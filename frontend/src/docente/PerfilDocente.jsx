@@ -89,9 +89,8 @@ function PerfilDocente() {
   const [tiempoEstudiosFin, setTiempoEstudiosFin] = useState("");
   const [institucionEgreso, setInstitucionEgreso] = useState("");
   const [contactoEmergenciaNombre, setContactoEmergenciaNombre] = useState("");
-  const [contactoEmergenciaTelefono, setContactoEmergenciaTelefono] = useState(
-    ""
-  );
+  const [contactoEmergenciaTelefono, setContactoEmergenciaTelefono] =
+    useState("");
   const [perfilProfesional, setPerfilProfesional] = useState("");
 
   // ===== Password UI =====
@@ -101,6 +100,7 @@ function PerfilDocente() {
 
   // ===== Nombre solo 1 vez =====
   const NAME_LOCK_KEY = "docente_nombre_completo_locked_v1";
+
   const [nombreBloqueado, setNombreBloqueado] = useState(() => {
     return localStorage.getItem(NAME_LOCK_KEY) === "true";
   });
@@ -348,38 +348,38 @@ function PerfilDocente() {
   };
 
   const agregarCursoExtraLocal = async () => {
-  try {
-    if (!nuevoCursoNombre.trim()) {
-      return alert("Ingresa el nombre del curso o capacitación.");
+    try {
+      if (!nuevoCursoNombre.trim()) {
+        return alert("Ingresa el nombre del curso o capacitación.");
+      }
+
+      setGuardandoCursoExtra(true);
+
+      const nuevoCurso = await createCursoAdicionalDocente({
+        nombre: nuevoCursoNombre.trim(),
+        institucion: nuevoCursoInstitucion.trim(),
+        fecha_inicio: nuevoCursoFechaInicio || null,
+        fecha_fin: nuevoCursoFechaFin || null,
+        archivo: nuevoCursoArchivo || null,
+      });
+
+      setCursosExtra((prev) => [nuevoCurso, ...prev]);
+
+      setNuevoCursoNombre("");
+      setNuevoCursoInstitucion("");
+      setNuevoCursoFechaInicio("");
+      setNuevoCursoFechaFin("");
+      setNuevoCursoArchivo(null);
+      setMostrarFormCursoExtra(false);
+
+      alert("Curso guardado en Supabase ✅");
+    } catch (e) {
+      console.error(e);
+      alert(e?.message || "No se pudo guardar el curso");
+    } finally {
+      setGuardandoCursoExtra(false);
     }
-
-    setGuardandoCursoExtra(true);
-
-    const nuevoCurso = await createCursoAdicionalDocente({
-      nombre: nuevoCursoNombre.trim(),
-      institucion: nuevoCursoInstitucion.trim(),
-      fecha_inicio: nuevoCursoFechaInicio || null,
-      fecha_fin: nuevoCursoFechaFin || null,
-      archivo: nuevoCursoArchivo || null,
-    });
-
-    setCursosExtra((prev) => [nuevoCurso, ...prev]);
-
-    setNuevoCursoNombre("");
-    setNuevoCursoInstitucion("");
-    setNuevoCursoFechaInicio("");
-    setNuevoCursoFechaFin("");
-    setNuevoCursoArchivo(null);
-    setMostrarFormCursoExtra(false);
-
-    alert("Curso guardado en Supabase ✅");
-  } catch (e) {
-    console.error(e);
-    alert(e?.message || "No se pudo guardar el curso");
-  } finally {
-    setGuardandoCursoExtra(false);
-  }
-};
+  };
 
   const eliminarCursoLocal = (id) => {
     setCursosExtra((prev) => prev.filter((c) => c.id !== id));
@@ -411,7 +411,9 @@ function PerfilDocente() {
           </div>
 
           <div className="text-right">
-            <span className={`inline-block text-sm px-3 py-1 rounded ${badgeClass}`}>
+            <span
+              className={`inline-block text-sm px-3 py-1 rounded ${badgeClass}`}
+            >
               {estado}
             </span>
 
@@ -458,7 +460,9 @@ function PerfilDocente() {
               >
                 Cambiar foto
               </button>
-              <p className="text-xs text-gray-500 mt-1">JPG o PNG recomendado</p>
+              <p className="text-xs text-gray-500 mt-1">
+                JPG o PNG recomendado
+              </p>
 
               <input
                 ref={inputFotoRef}
@@ -495,7 +499,9 @@ function PerfilDocente() {
                 </div>
                 <div className="text-sm">
                   Modalidad:{" "}
-                  <span className="font-semibold">{proximaClase.modalidad}</span>
+                  <span className="font-semibold">
+                    {proximaClase.modalidad}
+                  </span>
                 </div>
               </div>
             ) : (
@@ -503,7 +509,6 @@ function PerfilDocente() {
             )}
           </div>
 
-          
           {/* Documentos PDF */}
           <div className="border-t pt-4">
             <h3 className="font-semibold text-sm text-gray-500 mb-3">
@@ -521,7 +526,9 @@ function PerfilDocente() {
                   archivo_url: c.archivo_url,
                 })),
             ].length === 0 ? (
-              <p className="text-sm text-gray-500">No hay documentos registrados.</p>
+              <p className="text-sm text-gray-500">
+                No hay documentos registrados.
+              </p>
             ) : (
               <div className="space-y-2">
                 {[
@@ -579,7 +586,9 @@ function PerfilDocente() {
             </h3>
 
             {historial.length === 0 ? (
-              <p className="text-sm text-gray-500">No hay historial registrado.</p>
+              <p className="text-sm text-gray-500">
+                No hay historial registrado.
+              </p>
             ) : (
               <div className="space-y-3">
                 {historial.map((h) => (
@@ -605,7 +614,9 @@ function PerfilDocente() {
                     )}
 
                     {h.detalle && (
-                      <div className="text-sm text-gray-600 mt-2">{h.detalle}</div>
+                      <div className="text-sm text-gray-600 mt-2">
+                        {h.detalle}
+                      </div>
                     )}
                   </div>
                 ))}
@@ -660,7 +671,9 @@ function PerfilDocente() {
               </div>
 
               <div>
-                <label className="block font-semibold mb-2">Fecha de nacimiento</label>
+                <label className="block font-semibold mb-2">
+                  Fecha de nacimiento
+                </label>
                 <input
                   type="date"
                   value={fechaNacimiento}
@@ -790,7 +803,9 @@ function PerfilDocente() {
               </div>
 
               <div>
-                <label className="block font-semibold mb-2">Fin de estudios</label>
+                <label className="block font-semibold mb-2">
+                  Fin de estudios
+                </label>
                 <input
                   type="date"
                   value={tiempoEstudiosFin}
@@ -801,7 +816,9 @@ function PerfilDocente() {
             </div>
 
             <div className="mt-4">
-              <label className="block font-semibold mb-2">Institución de egreso</label>
+              <label className="block font-semibold mb-2">
+                Institución de egreso
+              </label>
               <input
                 value={institucionEgreso}
                 onChange={(e) => setInstitucionEgreso(e.target.value)}
@@ -810,7 +827,9 @@ function PerfilDocente() {
             </div>
 
             <div className="mt-4">
-              <label className="block font-semibold mb-2">Experiencia resumida</label>
+              <label className="block font-semibold mb-2">
+                Experiencia resumida
+              </label>
               <input
                 value={experiencia}
                 onChange={(e) => setExperiencia(e.target.value)}
@@ -819,7 +838,9 @@ function PerfilDocente() {
             </div>
 
             <div className="mt-4">
-              <label className="block font-semibold mb-2">Perfil profesional</label>
+              <label className="block font-semibold mb-2">
+                Perfil profesional
+              </label>
               <textarea
                 value={perfilProfesional}
                 onChange={(e) => setPerfilProfesional(e.target.value)}
@@ -874,7 +895,9 @@ function PerfilDocente() {
                   </div>
 
                   <div>
-                    <label className="block font-semibold mb-2">Institución</label>
+                    <label className="block font-semibold mb-2">
+                      Institución
+                    </label>
                     <input
                       value={nuevoCursoInstitucion}
                       onChange={(e) => setNuevoCursoInstitucion(e.target.value)}
@@ -884,7 +907,9 @@ function PerfilDocente() {
                   </div>
 
                   <div>
-                    <label className="block font-semibold mb-2">Fecha inicio</label>
+                    <label className="block font-semibold mb-2">
+                      Fecha inicio
+                    </label>
                     <input
                       type="date"
                       value={nuevoCursoFechaInicio}
@@ -1034,7 +1059,9 @@ function PerfilDocente() {
 function StatCard({ label, value }) {
   return (
     <div className="bg-white px-4 py-3 rounded shadow-sm border">
-      <div className="text-xs text-gray-500 uppercase tracking-wide">{label}</div>
+      <div className="text-xs text-gray-500 uppercase tracking-wide">
+        {label}
+      </div>
       <div className="text-xl font-bold mt-1">{value}</div>
     </div>
   );
