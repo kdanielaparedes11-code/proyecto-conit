@@ -81,7 +81,7 @@ export default function Cursos() {
 
   const cursosFiltrados = cursos.filter((curso) => {
     const temario = busqueda.toLowerCase();
-    const nombre = (curso.nombreCurso || "").toLowerCase();
+    const nombre = (curso.nombrecurso || "").toLowerCase();
     return nombre.includes(temario);
   });
 
@@ -149,8 +149,6 @@ export default function Cursos() {
                 </tr>
               ) : (
                 cursosFiltrados.map((curso) => {
-                  //LÓGICA DE ESTADO BOOLEANO
-                  //Si es false, está inactivo. Si es true o null, es activo.
                   const esInactivo = curso.estado === false;
                   const textoEstado = esInactivo ? "INACTIVO" : "ACTIVO";
 
@@ -167,7 +165,7 @@ export default function Cursos() {
                         </div>
                         <div>
                           <div className="font-bold text-gray-800">
-                            {curso.nombreCurso}
+                            {curso.nombrecurso}
                           </div>
                           <div className="text-xs text-gray-500 font-normal truncate max-w-[200px]">
                             {curso.descripcion || "Sin descripción"}
@@ -191,7 +189,6 @@ export default function Cursos() {
                         {curso.duracion} hrs / {curso.creditos} crs
                       </td>
 
-                      {/* Etiqueta de Estado */}
                       <td className="px-6 py-4 text-center">
                         <span
                           className={`px-3 py-1 text-xs font-semibold rounded-full ${
@@ -214,7 +211,6 @@ export default function Cursos() {
                             <Edit2 size={18} />
                           </button>
 
-                          {/* Mostrar Basurero o Check según el estado */}
                           {esInactivo ? (
                             <button
                               onClick={() => solicitarHabilitacion(curso)}
@@ -243,7 +239,6 @@ export default function Cursos() {
         </div>
       </div>
 
-      {/* Renderiza el modal de formulario */}
       {mostrarModal && (
         <CursoModal
           cursoEditar={cursoEditar}
@@ -252,7 +247,7 @@ export default function Cursos() {
         />
       )}
 
-      {/* Modal para inhabilitar */}
+      {/* MODAL INHABILITAR */}
       {cursoInhabilitar && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 animate-fadeIn p-4">
           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-zoomIn">
@@ -264,11 +259,11 @@ export default function Cursos() {
                 ¿Inhabilitar Curso?
               </h3>
               <p className="text-gray-600">
-                Estás a punto de inhabilitar el curso{" "}
+                Estás a punto de inhabilitar{" "}
                 <span className="font-bold text-gray-800">
-                  {cursoInhabilitar.nombreCurso}
+                  {cursoInhabilitar.nombrecurso}
                 </span>
-                . Dejará de estar disponible para nuevas asignaciones.
+                .
               </p>
             </div>
             <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
@@ -280,7 +275,7 @@ export default function Cursos() {
               </button>
               <button
                 onClick={confirmarInhabilitacion}
-                className="px-4 py-2 bg-red-600 text-white font-medium hover:bg-red-700 rounded-lg transition-colors shadow-sm"
+                className="px-4 py-2 bg-red-600 text-white font-medium hover:bg-red-700 rounded-lg transition-colors"
               >
                 Sí, inhabilitar
               </button>
@@ -289,7 +284,7 @@ export default function Cursos() {
         </div>
       )}
 
-      {/* Modal para habilitar */}
+      {/* MODAL HABILITAR */}
       {cursoHabilitar && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 animate-fadeIn p-4">
           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-zoomIn">
@@ -301,11 +296,11 @@ export default function Cursos() {
                 ¿Habilitar Curso?
               </h3>
               <p className="text-gray-600">
-                Estás a punto de re-habilitar el curso{" "}
+                Estás a punto de re-habilitar{" "}
                 <span className="font-bold text-gray-800">
-                  {cursoHabilitar.nombreCurso}
+                  {cursoHabilitar.nombrecurso}
                 </span>
-                . Volverá a estar visible y disponible.
+                .
               </p>
             </div>
             <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
@@ -317,7 +312,7 @@ export default function Cursos() {
               </button>
               <button
                 onClick={confirmarHabilitacion}
-                className="px-4 py-2 bg-green-600 text-white font-medium hover:bg-green-700 rounded-lg transition-colors shadow-sm"
+                className="px-4 py-2 bg-green-600 text-white font-medium hover:bg-green-700 rounded-lg transition-colors"
               >
                 Sí, habilitar
               </button>
