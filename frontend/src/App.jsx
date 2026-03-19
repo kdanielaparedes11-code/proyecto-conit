@@ -34,7 +34,7 @@ import AdminLayout from "./admin/AdminLayout";
 import Dashboard from "./admin/Dashboard";
 import Docentes from "./admin/Docentes";
 import Cursos from "./admin/Cursos";
-import Alumnos from "./admin/alumnos";
+import Alumnos from "./admin/Alumnos";
 import Usuarios from "./admin/Usuarios";
 import Pagos from "./admin/Pagos";
 

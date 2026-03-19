@@ -349,110 +349,95 @@ export const getCursosDocente = async () => {
 // ALUMNOS POR CURSO
 // ======================================================
 
-export const getAlumnosByCurso = async (cursoId) => {
-  // 1. Traer grupos del curso del docente actual
-  const docente = await getDocenteActual();
+export const getAlumnosByCurso = async (idgrupo) => {
+  try {
+    const grupoId = Number(idgrupo);
 
-  const { data: grupos, error: errGrupos } = await supabase
-    .from("grupo")
-    .select("id")
-    .eq("idcurso", Number(cursoId))
-    .eq("iddocente", docente.id);
+    const { data: matriculas, error: errMat } = await supabase
+      .from("matricula")
+      .select("id, idalumno, idgrupo")
+      .eq("idgrupo", grupoId);
 
-  if (errGrupos) throw new Error(errGrupos.message);
+    if (errMat) throw new Error(errMat.message);
+    if (!matriculas || matriculas.length === 0) return [];
 
-  const grupoIds = (grupos || []).map((g) => g.id);
-  if (grupoIds.length === 0) return [];
+    const matriculasUnicas = Array.from(
+      new Map(
+        matriculas
+          .filter((m) => m.idalumno)
+          .map((m) => [m.idalumno, m])
+      ).values()
+    );
 
-  // 2. Traer matrículas de esos grupos
-  const { data: matriculas, error: errMat } = await supabase
-    .from("matricula")
-    .select("id, idalumno, idgrupo")
-    .in("idgrupo", grupoIds);
+    if (matriculasUnicas.length === 0) return [];
 
-    
+    const matriculaIds = matriculasUnicas.map((m) => m.id);
+    const alumnoIds = matriculasUnicas.map((m) => m.idalumno);
 
-  if (errMat) throw new Error(errMat.message);
-  if (!matriculas || matriculas.length === 0) return [];
-
-  // 3. Dejar solo una matrícula por alumno
-  const matriculasUnicas = Array.from(
-    new Map(
-      matriculas
-        .filter((m) => m.idalumno)
-        .map((m) => [m.idalumno, m])
-    ).values()
-  );
-
-  const alumnoIds = matriculasUnicas.map((m) => m.idalumno);
-  if (alumnoIds.length === 0) return [];
-
-  // 4. Traer alumnos
-  const alumnosChunks = chunkArray(alumnoIds, 100);
-  let alumnos = [];
-
-  for (const chunk of alumnosChunks) {
-    const { data, error } = await supabase
+    const { data: alumnos, error: errAlumnos } = await supabase
       .from("alumno")
       .select("*")
-      .in("id", chunk);
+      .in("id", alumnoIds);
 
-    if (error) throw new Error(error.message);
-    alumnos = alumnos.concat(data || []);
+    if (errAlumnos) throw new Error(errAlumnos.message);
+
+    const alumnosMap = new Map((alumnos || []).map((a) => [a.id, a]));
+
+    const { data: notas, error: errNotas } = await supabase
+      .from("nota")
+      .select("idmatricula, evaluacion, nota")
+      .in("idmatricula", matriculaIds);
+
+    if (errNotas) throw new Error(errNotas.message);
+
+    const notasMap = new Map();
+
+    (notas || []).forEach((n) => {
+      if (!notasMap.has(n.idmatricula)) {
+        notasMap.set(n.idmatricula, {
+          nota1: null,
+          nota2: null,
+          nota3: null,
+        });
+      }
+
+      const fila = notasMap.get(n.idmatricula);
+
+      if (Number(n.evaluacion) === 21 || Number(n.evaluacion) === 1) fila.nota1 = Number(n.nota);
+      if (Number(n.evaluacion) === 22 || Number(n.evaluacion) === 2) fila.nota2 = Number(n.nota);
+      if (Number(n.evaluacion) === 23 || Number(n.evaluacion) === 3) fila.nota3 = Number(n.nota);
+    });
+
+    return matriculasUnicas
+      .map((m) => {
+        const alumno = alumnosMap.get(m.idalumno);
+        if (!alumno) return null;
+
+        const nota = notasMap.get(m.id) || {};
+
+        const n1 = nota.nota1;
+        const n2 = nota.nota2;
+        const n3 = nota.nota3;
+
+        return {
+          idalumno: alumno.id,
+          idmatricula: m.id,
+          nombre: alumno.nombre || "",
+          apellido: alumno.apellido || "",
+          correo: alumno.correo || "",
+          numdocumento: alumno.numdocumento || "",
+          foto_url: alumno.foto_url || "",
+          nota1: n1,
+          nota2: n2,
+          nota3: n3,
+        };
+      })
+      .filter(Boolean);
+  } catch (error) {
+    console.error("Error obteniendo alumnos:", error);
+    return [];
   }
-
-  const alumnosMap = new Map((alumnos || []).map((a) => [a.id, a]));
-
-  // 5. Traer notas solo de las matrículas únicas
-const matriculaIds = matriculasUnicas.map((m) => m.id);
-
-const { data: notas, error: errNotas } = await supabase
-  .from("nota")
-  .select("idmatricula, evaluacion, nota")
-  .in("idmatricula", matriculaIds);
-
-if (errNotas) throw new Error(errNotas.message);
-
-// Agrupar notas por matrícula
-const notasMap = new Map();
-
-(notas || []).forEach((n) => {
-  const key = n.idmatricula;
-
-  if (!notasMap.has(key)) {
-    notasMap.set(key, {});
-  }
-
-  const fila = notasMap.get(key);
-
-  if (Number(n.evaluacion) === 1) fila.nota1 = n.nota;
-  if (Number(n.evaluacion) === 2) fila.nota2 = n.nota;
-  if (Number(n.evaluacion) === 3) fila.nota3 = n.nota;
-});
-
-// 6. Armar resultado final
-return matriculasUnicas
-  .map((m) => {
-    const alumno = alumnosMap.get(m.idalumno);
-    if (!alumno) return null;
-
-    const nota = notasMap.get(m.id) || {};
-
-    return {
-      idalumno: alumno.id,
-      idmatricula: m.id,
-      nombre: alumno.nombre || "",
-      apellido: alumno.apellido || "",
-      correo: alumno.correo || "",
-      numdocumento: alumno.numdocumento || "",
-      foto_url: alumno.foto_url || "",
-      nota1: nota.nota1 ?? "",
-      nota2: nota.nota2 ?? "",
-      nota3: nota.nota3 ?? "",
-    };
-  })
-  .filter(Boolean);
-};
+};  
 // ======================================================
 // GUARDAR NOTAS
 // ======================================================
@@ -460,19 +445,42 @@ return matriculasUnicas
 export const guardarNotas = async (idmatricula, notas) => {
   const idMat = Number(idmatricula);
 
-  const registros = [
-    { idmatricula: idMat, evaluacion: 1, nota: Number(notas[1] ?? notas.nota1) },
-    { idmatricula: idMat, evaluacion: 2, nota: Number(notas[2] ?? notas.nota2) },
-    { idmatricula: idMat, evaluacion: 3, nota: Number(notas[3] ?? notas.nota3) },
-  ];
+  const paraGuardar = [];
+  const paraEliminar = [];
 
-  const { error } = await supabase
-    .from("nota")
-    .upsert(registros, {
-      onConflict: "idmatricula,evaluacion",
-    });
+  Object.entries(notas).forEach(([evaluacionId, valor]) => {
+    const evalId = Number(evaluacionId);
 
-  if (error) throw new Error(error.message);
+    if (valor === "" || valor === null || valor === undefined) {
+      paraEliminar.push(evalId);
+    } else {
+      paraGuardar.push({
+        idmatricula: idMat,
+        evaluacion: evalId,
+        nota: Number(valor),
+      });
+    }
+  });
+
+  if (paraGuardar.length > 0) {
+    const { error: errorUpsert } = await supabase
+      .from("nota")
+      .upsert(paraGuardar, {
+        onConflict: "idmatricula,evaluacion",
+      });
+
+    if (errorUpsert) throw new Error(errorUpsert.message);
+  }
+
+  if (paraEliminar.length > 0) {
+    const { error: errorDelete } = await supabase
+      .from("nota")
+      .delete()
+      .eq("idmatricula", idMat)
+      .in("evaluacion", paraEliminar);
+
+    if (errorDelete) throw new Error(errorDelete.message);
+  }
 
   return true;
 };
@@ -1091,4 +1099,620 @@ export const createCursoAdicionalDocente = async ({
   return data;
 };
 
+export const getTareasByCurso = async (cursoId) => {
+  const { data, error } = await supabase
+    .from("tarea")
+    .select("*")
+    .eq("idcurso", Number(cursoId))
+    .order("fecha_limite", { ascending: true });
 
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const marcarTareaRevisada = async (tareaId, revisada) => {
+  const { data, error } = await supabase
+    .from("tarea")
+    .update({ revisada })
+    .eq("id", Number(tareaId))
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const deleteTarea = async (tareaId) => {
+  const { error } = await supabase
+    .from("tarea")
+    .delete()
+    .eq("id", Number(tareaId));
+
+  if (error) throw new Error(error.message);
+  return true;
+};
+
+
+// ======================================================
+// MÓDULOS / LECCIONES / MATERIALES DE LECCIÓN
+// ======================================================
+
+const LIMITE_ARCHIVO_LECCION = 20 * 1024 * 1024; // 20 MB
+
+// ------------------------------
+// MÓDULOS
+// ------------------------------
+export const getModulosByCurso = async (cursoId) => {
+  const { data, error } = await supabase
+    .from("curso_modulo")
+    .select("*")
+    .eq("idcurso", Number(cursoId))
+    .order("orden", { ascending: true })
+    .order("id", { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const crearModulo = async ({ cursoId, titulo, descripcion }) => {
+  if (!titulo?.trim()) {
+    throw new Error("El título del módulo es obligatorio.");
+  }
+
+  const { data: ultimo, error: errorUltimo } = await supabase
+    .from("curso_modulo")
+    .select("orden")
+    .eq("idcurso", Number(cursoId))
+    .order("orden", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (errorUltimo) throw new Error(errorUltimo.message);
+
+  const nuevoOrden = (ultimo?.orden || 0) + 1;
+
+  const { data, error } = await supabase
+    .from("curso_modulo")
+    .insert({
+      idcurso: Number(cursoId),
+      titulo: titulo.trim(),
+      descripcion: descripcion?.trim() || null,
+      orden: nuevoOrden,
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const actualizarModulo = async (moduloId, payload) => {
+  const body = {};
+
+  if (payload.titulo !== undefined) body.titulo = payload.titulo?.trim() || "";
+  if (payload.descripcion !== undefined) {
+    body.descripcion = payload.descripcion?.trim() || null;
+  }
+
+  const { data, error } = await supabase
+    .from("curso_modulo")
+    .update(body)
+    .eq("id", Number(moduloId))
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const deleteModulo = async (moduloId) => {
+  const { error } = await supabase
+    .from("curso_modulo")
+    .delete()
+    .eq("id", Number(moduloId));
+
+  if (error) throw new Error(error.message);
+  return true;
+};
+
+export const moverModulo = async (moduloId, direccion) => {
+  const { data: actual, error: errorActual } = await supabase
+    .from("curso_modulo")
+    .select("*")
+    .eq("id", Number(moduloId))
+    .maybeSingle();
+
+  if (errorActual) throw new Error(errorActual.message);
+  if (!actual) throw new Error("No se encontró el módulo.");
+
+  let query = supabase
+    .from("curso_modulo")
+    .select("*")
+    .eq("idcurso", actual.idcurso);
+
+  if (direccion === "arriba") {
+    query = query.lt("orden", actual.orden).order("orden", { ascending: false });
+  } else {
+    query = query.gt("orden", actual.orden).order("orden", { ascending: true });
+  }
+
+  const { data: vecino, error: errorVecino } = await query.limit(1).maybeSingle();
+
+  if (errorVecino) throw new Error(errorVecino.message);
+  if (!vecino) return actual;
+
+  const { error: errorSwap1 } = await supabase
+    .from("curso_modulo")
+    .update({ orden: vecino.orden })
+    .eq("id", actual.id);
+
+  if (errorSwap1) throw new Error(errorSwap1.message);
+
+  const { error: errorSwap2 } = await supabase
+    .from("curso_modulo")
+    .update({ orden: actual.orden })
+    .eq("id", vecino.id);
+
+  if (errorSwap2) throw new Error(errorSwap2.message);
+
+  return true;
+};
+
+// ------------------------------
+// LECCIONES
+// ------------------------------
+export const getLeccionesByModulo = async (moduloId) => {
+  const { data, error } = await supabase
+    .from("curso_leccion")
+    .select("*")
+    .eq("idmodulo", Number(moduloId))
+    .order("orden", { ascending: true })
+    .order("id", { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const crearLeccion = async ({ moduloId, titulo, descripcion }) => {
+  if (!titulo?.trim()) {
+    throw new Error("El título de la lección es obligatorio.");
+  }
+
+  const { data: ultima, error: errorUltima } = await supabase
+    .from("curso_leccion")
+    .select("orden")
+    .eq("idmodulo", Number(moduloId))
+    .order("orden", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (errorUltima) throw new Error(errorUltima.message);
+
+  const nuevoOrden = (ultima?.orden || 0) + 1;
+
+  const { data, error } = await supabase
+    .from("curso_leccion")
+    .insert({
+      idmodulo: Number(moduloId),
+      titulo: titulo.trim(),
+      descripcion: descripcion?.trim() || null,
+      orden: nuevoOrden,
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const actualizarLeccion = async (leccionId, payload) => {
+  const body = {};
+
+  if (payload.titulo !== undefined) body.titulo = payload.titulo?.trim() || "";
+  if (payload.descripcion !== undefined) {
+    body.descripcion = payload.descripcion?.trim() || null;
+  }
+
+  const { data, error } = await supabase
+    .from("curso_leccion")
+    .update(body)
+    .eq("id", Number(leccionId))
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const deleteLeccion = async (leccionId) => {
+  const { error } = await supabase
+    .from("curso_leccion")
+    .delete()
+    .eq("id", Number(leccionId));
+
+  if (error) throw new Error(error.message);
+  return true;
+};
+
+export const moverLeccion = async (leccionId, direccion) => {
+  const { data: actual, error: errorActual } = await supabase
+    .from("curso_leccion")
+    .select("*")
+    .eq("id", Number(leccionId))
+    .maybeSingle();
+
+  if (errorActual) throw new Error(errorActual.message);
+  if (!actual) throw new Error("No se encontró la lección.");
+
+  let query = supabase
+    .from("curso_leccion")
+    .select("*")
+    .eq("idmodulo", actual.idmodulo);
+
+  if (direccion === "arriba") {
+    query = query.lt("orden", actual.orden).order("orden", { ascending: false });
+  } else {
+    query = query.gt("orden", actual.orden).order("orden", { ascending: true });
+  }
+
+  const { data: vecino, error: errorVecino } = await query.limit(1).maybeSingle();
+
+  if (errorVecino) throw new Error(errorVecino.message);
+  if (!vecino) return actual;
+
+  const { error: errorSwap1 } = await supabase
+    .from("curso_leccion")
+    .update({ orden: vecino.orden })
+    .eq("id", actual.id);
+
+  if (errorSwap1) throw new Error(errorSwap1.message);
+
+  const { error: errorSwap2 } = await supabase
+    .from("curso_leccion")
+    .update({ orden: actual.orden })
+    .eq("id", vecino.id);
+
+  if (errorSwap2) throw new Error(errorSwap2.message);
+
+  return true;
+};
+
+// ------------------------------
+// MATERIALES DE LECCIÓN
+// ------------------------------
+export const getMaterialesByLeccion = async (leccionId) => {
+  const { data, error } = await supabase
+    .from("leccion_material")
+    .select("*")
+    .eq("idleccion", Number(leccionId))
+    .order("orden", { ascending: true })
+    .order("id", { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const addMaterialLeccion = async (leccionId, payload) => {
+  if (!payload.titulo?.trim()) {
+    throw new Error("El título del material es obligatorio.");
+  }
+
+  if (!payload.tipo) {
+    throw new Error("El tipo de material es obligatorio.");
+  }
+
+  let archivoUrl = null;
+  let videoUrl = payload.video_url || null;
+  let nombreArchivo = null;
+  let tamanoBytes = null;
+  let mimeType = null;
+  let contenidoTexto = payload.contenido_texto || null;
+  let enlaceUrl = payload.enlace_url || null;
+
+  if (payload.file) {
+    const file = payload.file;
+
+    if (file.size > LIMITE_ARCHIVO_LECCION) {
+      throw new Error("El archivo supera el límite permitido de 20 MB.");
+    }
+
+    const extension = file.name.split(".").pop();
+    const safeName = file.name.replace(/\s+/g, "_");
+    const fileName = `leccion-${leccionId}-${Date.now()}-${safeName}`;
+    const filePath = `cursos/lecciones/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("documentos")
+      .upload(filePath, file, {
+        upsert: true,
+      });
+
+    if (uploadError) throw new Error(uploadError.message);
+
+    const { data: publicData } = supabase.storage
+      .from("documentos")
+      .getPublicUrl(filePath);
+
+    archivoUrl = publicData?.publicUrl || null;
+    nombreArchivo = file.name;
+    tamanoBytes = file.size || null;
+    mimeType = file.type || null;
+  }
+
+  const { data: ultimo, error: errorUltimo } = await supabase
+    .from("leccion_material")
+    .select("orden")
+    .eq("idleccion", Number(leccionId))
+    .order("orden", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (errorUltimo) throw new Error(errorUltimo.message);
+
+  const nuevoOrden = (ultimo?.orden || 0) + 1;
+
+  const body = {
+    idleccion: Number(leccionId),
+    titulo: payload.titulo.trim(),
+    tipo: payload.tipo,
+    contenido_texto: contenidoTexto,
+    archivo_url: archivoUrl,
+    video_url: videoUrl,
+    enlace_url: enlaceUrl,
+    nombre_archivo: nombreArchivo,
+    tamano_bytes: tamanoBytes,
+    mime_type: mimeType,
+    orden: nuevoOrden,
+  };
+
+  const { data, error } = await supabase
+    .from("leccion_material")
+    .insert(body)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const actualizarMaterialLeccion = async (materialId, payload) => {
+  const body = {};
+
+  if (payload.titulo !== undefined) body.titulo = payload.titulo?.trim() || "";
+  if (payload.contenido_texto !== undefined) {
+    body.contenido_texto = payload.contenido_texto || null;
+  }
+  if (payload.video_url !== undefined) body.video_url = payload.video_url || null;
+  if (payload.enlace_url !== undefined) body.enlace_url = payload.enlace_url || null;
+  if (payload.tipo !== undefined) body.tipo = payload.tipo;
+
+  const { data, error } = await supabase
+    .from("leccion_material")
+    .update(body)
+    .eq("id", Number(materialId))
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const deleteMaterialLeccion = async (materialId) => {
+  const { error } = await supabase
+    .from("leccion_material")
+    .delete()
+    .eq("id", Number(materialId));
+
+  if (error) throw new Error(error.message);
+  return true;
+};
+
+export const moverMaterialLeccion = async (materialId, direccion) => {
+  const { data: actual, error: errorActual } = await supabase
+    .from("leccion_material")
+    .select("*")
+    .eq("id", Number(materialId))
+    .maybeSingle();
+
+  if (errorActual) throw new Error(errorActual.message);
+  if (!actual) throw new Error("No se encontró el material.");
+
+  let query = supabase
+    .from("leccion_material")
+    .select("*")
+    .eq("idleccion", actual.idleccion);
+
+  if (direccion === "arriba") {
+    query = query.lt("orden", actual.orden).order("orden", { ascending: false });
+  } else {
+    query = query.gt("orden", actual.orden).order("orden", { ascending: true });
+  }
+
+  const { data: vecino, error: errorVecino } = await query.limit(1).maybeSingle();
+
+  if (errorVecino) throw new Error(errorVecino.message);
+  if (!vecino) return actual;
+
+  const { error: errorSwap1 } = await supabase
+    .from("leccion_material")
+    .update({ orden: vecino.orden })
+    .eq("id", actual.id);
+
+  if (errorSwap1) throw new Error(errorSwap1.message);
+
+  const { error: errorSwap2 } = await supabase
+    .from("leccion_material")
+    .update({ orden: actual.orden })
+    .eq("id", vecino.id);
+
+  if (errorSwap2) throw new Error(errorSwap2.message);
+
+  return true;
+};
+
+//===================================
+// Registro de notas
+//===================================
+
+export const getRegistroNotasByGrupo = async (grupoId) => {
+  try {
+    const idGrupo = Number(grupoId);
+
+    // 1. Matrículas del grupo
+    const { data: matriculas, error: errMat } = await supabase
+      .from("matricula")
+      .select("id, idalumno, idgrupo")
+      .eq("idgrupo", idGrupo);
+
+    if (errMat) throw errMat;
+    if (!matriculas || matriculas.length === 0) {
+      return { evaluaciones: [], alumnos: [] };
+    }
+
+    // 2. Evaluaciones configuradas
+    const { data: evaluaciones, error: errEval } = await supabase
+      .from("evaluacion_config")
+      .select("*")
+      .eq("idgrupo", idGrupo)
+      .eq("activa", true)
+      .order("orden", { ascending: true });
+
+    if (errEval) throw errEval;
+
+    // 3. Alumnos
+    const alumnoIds = [...new Set(matriculas.map((m) => m.idalumno).filter(Boolean))];
+
+    const { data: alumnosDB, error: errAlumnos } = await supabase
+      .from("alumno")
+      .select("id, nombre, apellido, numdocumento, foto_url")
+      .in("id", alumnoIds.length ? alumnoIds : [-1]);
+
+    if (errAlumnos) throw errAlumnos;
+
+    // 4. Notas
+    const matriculaIds = matriculas.map((m) => m.id);
+
+    const { data: notas, error: errNotas } = await supabase
+      .from("nota")
+      .select("idmatricula, evaluacion, nota")
+      .in("idmatricula", matriculaIds.length ? matriculaIds : [-1]);
+
+    if (errNotas) throw errNotas;
+
+    const alumnosMap = new Map((alumnosDB || []).map((a) => [Number(a.id), a]));
+    const notasPorMatricula = new Map();
+
+    (notas || []).forEach((n) => {
+      const key = Number(n.idmatricula);
+      if (!notasPorMatricula.has(key)) {
+        notasPorMatricula.set(key, {});
+      }
+      notasPorMatricula.get(key)[Number(n.evaluacion)] = Number(n.nota);
+    });
+
+    const matriculasUnicas = Array.from(
+      new Map(
+        matriculas.map((m) => [`${m.idgrupo}-${m.idalumno}`, m])
+      ).values()
+    );
+
+    const alumnos = matriculasUnicas.map((m) => {
+      const alumno = alumnosMap.get(Number(m.idalumno));
+      const notasAlumno = notasPorMatricula.get(Number(m.id)) || {};
+
+      let sumaPonderada = 0;
+      let faltantes = 0;
+
+      (evaluaciones || []).forEach((ev) => {
+        const valor = notasAlumno[Number(ev.id)];
+
+        if (valor === undefined || valor === null || Number.isNaN(valor)) {
+          faltantes++;
+        } else {
+          sumaPonderada += valor * (Number(ev.porcentaje || 0) / 100);
+        }
+      });
+
+      return {
+        idmatricula: Number(m.id),
+        idgrupo: Number(m.idgrupo),
+        nombre: alumno?.nombre || "",
+        apellido: alumno?.apellido || "",
+        numdocumento: alumno?.numdocumento || "",
+        foto_url: alumno?.foto_url || "",
+        notas: notasAlumno,
+        promedio: (evaluaciones || []).length ? Number(sumaPonderada.toFixed(2)) : null,
+        faltantes,
+      };
+    });
+
+    return {
+      evaluaciones: evaluaciones || [],
+      alumnos,
+    };
+  } catch (error) {
+    console.error("Error obteniendo registro de notas:", error);
+    return { evaluaciones: [], alumnos: [] };
+  }
+};
+
+
+//===================================
+// Actualizar evaluaciones
+//===================================
+export const actualizarEvaluacionesGrupo = async (evaluaciones) => {
+  if (!evaluaciones || evaluaciones.length === 0) return true;
+
+  const payload = evaluaciones.map((ev, index) => ({
+    id: Number(ev.id),
+    idgrupo: Number(ev.idgrupo), // ✅ IMPORTANTE
+    nombre: String(ev.nombre || "").trim(),
+    porcentaje: Number(ev.porcentaje || 0),
+    orden: Number(ev.orden ?? index + 1),
+    tipo: ev.tipo || "manual",
+    activa: ev.activa ?? true,
+  }));
+
+  const { error } = await supabase
+    .from("evaluacion_config")
+    .upsert(payload, { onConflict: "id" });
+
+  if (error) throw new Error(error.message);
+  return true;
+};
+
+export const crearEvaluacionGrupo = async ({
+  idgrupo,
+  nombre,
+  porcentaje,
+  tipo = "manual",
+  orden = 1,
+}) => {
+  const { data, error } = await supabase
+    .from("evaluacion_config")
+    .insert([
+      {
+        idgrupo: Number(idgrupo),
+        nombre: String(nombre || "").trim(),
+        porcentaje: Number(porcentaje || 0),
+        tipo,
+        orden: Number(orden),
+        activa: true,
+      },
+    ])
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const eliminarEvaluacionGrupo = async (evaluacionId) => {
+  const { error } = await supabase
+    .from("evaluacion_config")
+    .delete()
+    .eq("id", Number(evaluacionId));
+
+  if (error) throw new Error(error.message);
+  return true;
+};
