@@ -7,11 +7,14 @@ import {
   Patch,
   Post,
   Body,
+  UseGuards
 } from '@nestjs/common';
 import { CursoService } from './curso.service';
 import { Curso } from './entities/curso.entity';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.auth.guard';
 
 @Controller('curso')
+@UseGuards(JwtAuthGuard)
 export class CursoController {
   constructor(private readonly cursoService: CursoService) {}
 

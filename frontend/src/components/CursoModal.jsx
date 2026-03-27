@@ -35,7 +35,7 @@ export default function CursoModal({ onClose, onSuccess, cursoEditar }) {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isValid },
+    formState: { errors },
   } = useForm({
     resolver: zodResolver(cursoSchema),
     mode: "onChange",
@@ -239,12 +239,8 @@ export default function CursoModal({ onClose, onSuccess, cursoEditar }) {
             <button
               type="submit"
               //Bloqueamos visualmente el botón si el formulario no es válido
-              disabled={isLoading || !isValid}
-              className={`px-6 py-2 rounded-lg text-white transition shadow-md min-w-[160px] ${
-                isValid && !isLoading
-                  ? "bg-[#5573b3] hover:bg-[#344c92]"
-                  : "bg-gray-400 cursor-not-allowed"
-              }`}
+              disabled={isLoading}
+              className="px-6 py-2.5 rounded-lg text-white font-medium transition shadow-sm bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center min-w-[160px]"
             >
               {isLoading
                 ? "Procesando..."

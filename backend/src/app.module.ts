@@ -20,6 +20,7 @@ import { RecursoModule } from './recurso/recurso.module';
 import { join } from 'path';
 import { TareaModule } from './tarea/tarea.module';
 import { SesionVivoModule } from './sesion-vivo/sesion-vivo.module';
+import { HistorialLoginModule } from './historial-login/historial-login.module';
 
 @Module({
   imports: [
@@ -31,7 +32,7 @@ import { SesionVivoModule } from './sesion-vivo/sesion-vivo.module';
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        type: 'postgres',
+        type: 'postgres' as 'postgres',
         url: config.get<string>('DATABASE_URL'),
         ssl: {
           rejectUnauthorized: false,
@@ -70,6 +71,7 @@ import { SesionVivoModule } from './sesion-vivo/sesion-vivo.module';
     RecursoModule,
     TareaModule,
     SesionVivoModule,
+    HistorialLoginModule,
   ],
   controllers: [AppController],
   providers: [AppService],

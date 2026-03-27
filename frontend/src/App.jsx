@@ -17,7 +17,6 @@ import ContactoWeb from "./pages/ContactoWeb";
 import CarritoWeb from "./pages/CarritoWeb";
 
 // ESTUDIANTE
-
 import LayoutEstudiante from "./layouts/LayoutEstudiante";
 import HomePage from "./pages/HomePage";
 import MisCursos from "./pages/MisCursos";
@@ -37,6 +36,7 @@ import Cursos from "./admin/Cursos";
 import Alumnos from "./admin/alumnos";
 import Usuarios from "./admin/Usuarios";
 import Pagos from "./admin/Pagos";
+import ControlSesiones from "./admin/ControlSesiones";
 
 // DOCENTE
 import DocenteLayout from "./docente/DocenteLayout";
@@ -134,6 +134,7 @@ export default function App() {
             <Route path="alumnos" element={<Alumnos />} />
             <Route path="usuarios" element={<Usuarios />} />
             <Route path="pagos" element={<Pagos />} />
+            <Route path="sesiones" element={<ControlSesiones />} />
           </Route>
 
           {/* DOCENTE */}

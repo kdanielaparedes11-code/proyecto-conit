@@ -10,6 +10,7 @@ import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import * as bcrypt from 'bcrypt';
+import { HistorialLoginService } from '../historial-login/historial-login.service';
 
 @Injectable()
 export class AuthService {
@@ -17,9 +18,10 @@ export class AuthService {
     private usuarioService: UsuarioService,
     private jwtService: JwtService,
     private mailerService: MailerService,
+    private historialLoginService: HistorialLoginService,
   ) {}
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto, ip: string, dispositivo: string) {
     //Validacion del token de reCaptcha
     if (!loginDto.recaptchaToken) {
       throw new UnauthorizedException('Falta el token de reCaptcha');
@@ -59,6 +61,13 @@ export class AuthService {
       correo: usuario.correo,
       rol: usuario.rol,
     };
+
+    try {
+      await this.historialLoginService.registrarIngreso(usuario.id, ip || 'IP desconocida', dispositivo || "Navegador desconocido");
+    } catch (error) {
+      console.error('Error al registrar el inicio de sesión:', error);
+    }
+
     return {
       access_token: this.jwtService.sign(payload),
       usuario: {
