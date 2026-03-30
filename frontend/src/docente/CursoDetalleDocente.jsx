@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Settings } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import jsPDF from "jspdf";
+import XLSX from "xlsx-js-style";
 import autoTable from "jspdf-autotable";
 import {
   getCursoById,
@@ -464,6 +465,178 @@ function CursoDetalleDocente() {
 
     doc.save(`asistencia_${curso?.nombre || "curso"}_${fechaAsistencia}.pdf`);
   };
+
+  //==============================
+    //Exportar Excel
+    //==============================
+    const exportarExcel = () => {
+      const totalAlumnos = alumnosFiltradosAsistencia.length;
+      const totalPresentes = alumnosFiltradosAsistencia.filter((a) => {
+        const key = a.idalumno || a.id;
+        return asistenciaMap[key]?.estado === "presente";
+      }).length;
+
+      const totalTardanzas = alumnosFiltradosAsistencia.filter((a) => {
+        const key = a.idalumno || a.id;
+        return asistenciaMap[key]?.estado === "tardanza";
+      }).length;
+
+      const totalFaltas = alumnosFiltradosAsistencia.filter((a) => {
+        const key = a.idalumno || a.id;
+        return asistenciaMap[key]?.estado === "falta";
+      }).length;
+
+      const totalSinRegistro = alumnosFiltradosAsistencia.filter((a) => {
+        const key = a.idalumno || a.id;
+        return !asistenciaMap[key]?.estado;
+      }).length;
+
+      const wsData = [
+        ["REPORTE DE ASISTENCIA"],
+        [""],
+        ["DATOS DEL CURSO"],
+        ["Curso", curso?.nombre || ""],
+        ["Grupo", curso?.grupo || "Sin grupo"],
+        ["Horario", curso?.horario || "Sin horario"],
+        ["Fecha consultada", fechaAsistencia],
+        [""],
+        ["RESUMEN"],
+        ["Total alumnos", totalAlumnos],
+        ["Presentes", totalPresentes],
+        ["Tardanzas", totalTardanzas],
+        ["Faltas", totalFaltas],
+        ["Sin registro", totalSinRegistro],
+        [""],
+        ["DETALLE DE ASISTENCIA"],
+        ["N°", "Alumno", "DNI", "Estado", "Justificación", "Observación"],
+        ...alumnosFiltradosAsistencia.map((a, index) => {
+          const key = a.idalumno || a.id;
+          const asistencia = asistenciaMap[key] || {};
+
+          return [
+            index + 1,
+            `${a.nombre || ""} ${a.apellido || ""}`.trim(),
+            a.numdocumento || "-",
+            asistencia.estado || "Sin registro",
+            asistencia.tipo_justificacion || "-",
+            asistencia.observacion || "-",
+          ];
+        }),
+      ];
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      ws["!merges"] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },
+        { s: { r: 2, c: 0 }, e: { r: 2, c: 5 } },
+        { s: { r: 8, c: 0 }, e: { r: 8, c: 5 } },
+        { s: { r: 15, c: 0 }, e: { r: 15, c: 5 } },
+      ];
+
+      ws["!cols"] = [
+        { wch: 8 },
+        { wch: 30 },
+        { wch: 16 },
+        { wch: 16 },
+        { wch: 18 },
+        { wch: 35 },
+      ];
+
+      const borderAll = {
+        top: { style: "thin", color: { rgb: "D1D5DB" } },
+        bottom: { style: "thin", color: { rgb: "D1D5DB" } },
+        left: { style: "thin", color: { rgb: "D1D5DB" } },
+        right: { style: "thin", color: { rgb: "D1D5DB" } },
+      };
+
+      const styleTitle = {
+        font: { bold: true, sz: 16, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "1E3A8A" } },
+        alignment: { horizontal: "center", vertical: "center" },
+      };
+
+      const styleSection = {
+        font: { bold: true, sz: 12, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "2563EB" } },
+        alignment: { horizontal: "left", vertical: "center" },
+        border: borderAll,
+      };
+
+      const styleLabel = {
+        font: { bold: true, color: { rgb: "111827" } },
+        fill: { fgColor: { rgb: "E5E7EB" } },
+        border: borderAll,
+      };
+
+      const styleValue = {
+        border: borderAll,
+        alignment: { vertical: "center" },
+      };
+
+      const styleHeader = {
+        font: { bold: true, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "0F766E" } },
+        alignment: { horizontal: "center", vertical: "center" },
+        border: borderAll,
+      };
+
+      const styleCell = {
+        border: borderAll,
+        alignment: { vertical: "center", wrapText: true },
+      };
+
+      const styleCentered = {
+        border: borderAll,
+        alignment: { horizontal: "center", vertical: "center" },
+      };
+
+      // Título
+      ws["A1"].s = styleTitle;
+
+      // Secciones
+      ws["A3"].s = styleSection;
+      ws["A9"].s = styleSection;
+      ws["A16"].s = styleSection;
+
+      // Datos del curso
+      ["A4", "A5", "A6", "A7"].forEach((cell) => {
+        if (ws[cell]) ws[cell].s = styleLabel;
+      });
+      ["B4", "B5", "B6", "B7"].forEach((cell) => {
+        if (ws[cell]) ws[cell].s = styleValue;
+      });
+
+      // Resumen
+      ["A10", "A11", "A12", "A13", "A14"].forEach((cell) => {
+        if (ws[cell]) ws[cell].s = styleLabel;
+      });
+      ["B10", "B11", "B12", "B13", "B14"].forEach((cell) => {
+        if (ws[cell]) ws[cell].s = styleCentered;
+      });
+
+      // Encabezado tabla
+      ["A17", "B17", "C17", "D17", "E17", "F17"].forEach((cell) => {
+        if (ws[cell]) ws[cell].s = styleHeader;
+      });
+
+      // Filas de detalle
+      for (let row = 18; row < 18 + alumnosFiltradosAsistencia.length; row++) {
+        if (ws[`A${row}`]) ws[`A${row}`].s = styleCentered;
+        if (ws[`B${row}`]) ws[`B${row}`].s = styleCell;
+        if (ws[`C${row}`]) ws[`C${row}`].s = styleCentered;
+        if (ws[`D${row}`]) ws[`D${row}`].s = styleCentered;
+        if (ws[`E${row}`]) ws[`E${row}`].s = styleCentered;
+        if (ws[`F${row}`]) ws[`F${row}`].s = styleCell;
+      }
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Asistencia");
+
+      XLSX.writeFile(
+        wb,
+        `asistencia_${curso?.nombre || "curso"}_${fechaAsistencia}.xlsx`
+      );
+    };
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -2171,7 +2344,7 @@ const guardarConfiguracionTarea = async () => {
                 onClick={irAHoy}
                 className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700"
               >
-                Hoy
+                Hoy 
               </button>
 
               <button
@@ -2180,6 +2353,14 @@ const guardarConfiguracionTarea = async () => {
                 className="bg-red-600 text-white px-4 py-2 rounded-xl hover:bg-red-700"
               >
                 Exportar PDF
+              </button>
+              
+              <button
+                type="button"
+                onClick={exportarExcel}
+                className="bg-emerald-600 text-white px-4 py-2 rounded-xl hover:bg-emerald-700"
+              >
+                Exportar Excel
               </button>
             </div>
           </div>

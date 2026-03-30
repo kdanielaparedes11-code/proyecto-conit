@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import {
   BookOpen,
   Users,
@@ -7,29 +6,20 @@ import {
   Clock3,
   CalendarDays,
   AlertTriangle,
-  GraduationCap,
   BarChart3,
-  ChevronRight,
 } from "lucide-react";
 import {
   ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
   PieChart,
   Pie,
   Cell,
+  Tooltip,
 } from "recharts";
 import {
   getCursosDocente,
   getHorarioDocente,
-  getAlumnosByCurso,
-  getTareasByCurso,
-  getEntregasByTarea,
   getRegistroNotasByGrupo,
+  getPendientesRevisionByGrupo,
 } from "../services/docenteService";
 
 function SkeletonCard() {
@@ -66,8 +56,8 @@ function StatCard({ title, value, subtitle, icon: Icon, tone = "blue" }) {
 
 function SectionCard({ title, subtitle, icon: Icon, right, children, className = "" }) {
   return (
-    <section className={`rounded-3xl border border-slate-200 bg-white shadow-sm ${className}`}>
-      <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
+    <section className={`h-full w-full rounded-3xl border border-slate-200 bg-white shadow-sm ${className}`}>
+      <div className="flex flex-col gap-4 border-b border-slate-100 px-6 py-5 md:flex-row md:items-start md:justify-between">
         <div className="flex items-start gap-3">
           {Icon ? (
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
@@ -80,7 +70,7 @@ function SectionCard({ title, subtitle, icon: Icon, right, children, className =
           </div>
         </div>
 
-        {right ? <div>{right}</div> : null}
+        {right ? <div className="w-full md:w-auto">{right}</div> : null}
       </div>
 
       <div className="p-6">{children}</div>
@@ -119,8 +109,10 @@ export default function DashboardDocente() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [cursos, setCursos] = useState([]);
   const [horario, setHorario] = useState([]);
+  const [alertas, setAlertas] = useState([]);
+  const [detalleCursos, setDetalleCursos] = useState([]);
+  const [cursoSeleccionado, setCursoSeleccionado] = useState("");
 
   const [stats, setStats] = useState({
     totalCursos: 0,
@@ -128,11 +120,6 @@ export default function DashboardDocente() {
     totalAprobados: 0,
     pendientesRevision: 0,
   });
-
-  const [chartCursos, setChartCursos] = useState([]);
-  const [chartEstados, setChartEstados] = useState([]);
-  const [alertas, setAlertas] = useState([]);
-  const [resumenCursos, setResumenCursos] = useState([]);
 
   useEffect(() => {
     let activo = true;
@@ -149,69 +136,67 @@ export default function DashboardDocente() {
 
         if (!activo) return;
 
-        setCursos(cursosData || []);
         setHorario(horarioData || []);
 
         const cursosConGrupo = (cursosData || []).filter((c) => c.idgrupo);
 
-        const detalleCursos = await Promise.all(
+        const detalleCursosCalculado = await Promise.all(
           cursosConGrupo.map(async (curso) => {
-            const [alumnos, registro, tareas] = await Promise.all([
-                getAlumnosByCurso(curso.idgrupo).catch(() => []),
-                getRegistroNotasByGrupo(curso.idgrupo).catch(() => ({ evaluaciones: [], alumnos: [] })),
-                getTareasByCurso(curso.idcurso).catch(() => []),
-                ]);
-
-            let pendientes = 0;
-
-            for (const tarea of tareas || []) {
-              const entregas = await getEntregasByTarea(tarea.id).catch(() => ({ entregas: [] }));
-              pendientes += (entregas?.entregas || []).filter((e) => e.entrego && !e.revisado).length;
-            }
+            const [registro, pendientes] = await Promise.all([
+              getRegistroNotasByGrupo(curso.idgrupo).catch(() => ({
+                evaluaciones: [],
+                alumnos: [],
+              })),
+              getPendientesRevisionByGrupo(curso.idgrupo).catch(() => 0),
+            ]);
 
             const alumnosRegistro = registro?.alumnos || [];
+            const totalAlumnos = alumnosRegistro.length;
 
             const aprobadosCount = alumnosRegistro.filter(
-            (a) => Number(a.faltantes || 0) === 0 && Number(a.promedio || 0) >= 12
+              (a) => Number(a.faltantes || 0) === 0 && Number(a.promedio || 0) >= 12
             ).length;
 
             const recuperacionCount = alumnosRegistro.filter(
-            (a) => Number(a.faltantes || 0) === 0 &&
-                    Number(a.promedio || 0) >= 9 &&
-                    Number(a.promedio || 0) < 12
+              (a) =>
+                Number(a.faltantes || 0) === 0 &&
+                Number(a.promedio || 0) >= 9 &&
+                Number(a.promedio || 0) < 12
             ).length;
 
             const desaprobadosCount = alumnosRegistro.filter(
-            (a) => Number(a.faltantes || 0) === 0 && Number(a.promedio || 0) < 9
+              (a) => Number(a.faltantes || 0) === 0 && Number(a.promedio || 0) < 9
             ).length;
 
             const sinNotasCount = alumnosRegistro.filter(
-            (a) => Number(a.faltantes || 0) > 0
+              (a) => Number(a.faltantes || 0) > 0
             ).length;
 
-            const promedioCurso =
-                alumnosRegistro.length > 0
-                    ? (
-                        alumnosRegistro
-                        .filter((a) => Number(a.faltantes || 0) === 0 && a.promedio !== null && a.promedio !== undefined)
-                        .reduce((acc, a) => acc + Number(a.promedio || 0), 0) /
-                        Math.max(
-                        alumnosRegistro.filter(
-                            (a) => Number(a.faltantes || 0) === 0 && a.promedio !== null && a.promedio !== undefined
-                        ).length,
-                        1
-                        )
-                    ).toFixed(1)
-                    : null;
+            const alumnosConPromedio = alumnosRegistro.filter(
+              (a) =>
+                Number(a.faltantes || 0) === 0 &&
+                a.promedio !== null &&
+                a.promedio !== undefined
+            );
 
-                const faltantes = alumnosRegistro.reduce(
-                (acc, alumno) => acc + Number(alumno.faltantes || 0),
-                0
-                );
+            const promedioCurso =
+              alumnosConPromedio.length > 0
+                ? (
+                    alumnosConPromedio.reduce(
+                      (acc, a) => acc + Number(a.promedio || 0),
+                      0
+                    ) / alumnosConPromedio.length
+                  ).toFixed(1)
+                : null;
+
+            const faltantes = alumnosRegistro.reduce(
+              (acc, alumno) => acc + Number(alumno.faltantes || 0),
+              0
+            );
 
             return {
               ...curso,
-              totalAlumnos: alumnos.length,
+              totalAlumnos,
               aprobadosCount,
               recuperacionCount,
               desaprobadosCount,
@@ -225,39 +210,31 @@ export default function DashboardDocente() {
 
         if (!activo) return;
 
-        const totalAlumnos = detalleCursos.reduce((acc, c) => acc + c.totalAlumnos, 0);
-        const totalAprobados = detalleCursos.reduce((acc, c) => acc + c.aprobadosCount, 0);
-        const pendientesRevision = detalleCursos.reduce((acc, c) => acc + c.pendientes, 0);
+        const totalAlumnos = detalleCursosCalculado.reduce(
+          (acc, c) => acc + c.totalAlumnos,
+          0
+        );
+
+        const totalAprobados = detalleCursosCalculado.reduce(
+          (acc, c) => acc + c.aprobadosCount,
+          0
+        );
+
+        const pendientesRevision = detalleCursosCalculado.reduce(
+          (acc, c) => acc + c.pendientes,
+          0
+        );
 
         setStats({
-          totalCursos: detalleCursos.length,
+          totalCursos: detalleCursosCalculado.length,
           totalAlumnos,
           totalAprobados,
           pendientesRevision,
         });
 
-        setChartCursos(
-          detalleCursos.map((c) => ({
-            nombre: c.nombre?.length > 16 ? `${c.nombre.slice(0, 16)}…` : c.nombre,
-            alumnos: c.totalAlumnos,
-            aprobados: c.aprobadosCount,
-          }))
-        );
-
-        const totalRecuperacion = detalleCursos.reduce((acc, c) => acc + c.recuperacionCount, 0);
-        const totalDesaprobados = detalleCursos.reduce((acc, c) => acc + c.desaprobadosCount, 0);
-        const totalSinNotas = detalleCursos.reduce((acc, c) => acc + c.sinNotasCount, 0);
-
-        setChartEstados([
-          { name: "Aprobados", value: totalAprobados },
-          { name: "Recuperación", value: totalRecuperacion },
-          { name: "Desaprobados", value: totalDesaprobados },
-          { name: "Sin notas", value: totalSinNotas },
-        ]);
-
         const nuevasAlertas = [];
 
-        detalleCursos.forEach((c) => {
+        detalleCursosCalculado.forEach((c) => {
           if (c.pendientes > 0) {
             nuevasAlertas.push({
               tipo: "pendientes",
@@ -283,25 +260,27 @@ export default function DashboardDocente() {
           }
         });
 
-        setAlertas(nuevasAlertas.slice(0, 8));
+        setDetalleCursos(detalleCursosCalculado);
 
-        setResumenCursos(
-          detalleCursos
-            .sort((a, b) => b.totalAlumnos - a.totalAlumnos)
-            .map((c) => ({
-              idgrupo: c.idgrupo,
-              nombre: c.nombre,
-              grupo: c.grupo,
-              modalidad: c.modalidad,
-              horario: c.horario,
-              totalAlumnos: c.totalAlumnos,
-              promedioCurso: c.promedioCurso,
-              pendientes: c.pendientes,
-            }))
-        );
+        setCursoSeleccionado((prev) => {
+          if (
+            prev &&
+            detalleCursosCalculado.some((c) => String(c.idgrupo) === String(prev))
+          ) {
+            return prev;
+          }
+
+          return detalleCursosCalculado.length > 0
+            ? String(detalleCursosCalculado[0].idgrupo)
+            : "";
+        });
+
+        setAlertas(nuevasAlertas.slice(0, 8));
       } catch (err) {
         console.error(err);
-        if (activo) setError(err?.message || "No se pudo cargar el dashboard.");
+        if (activo) {
+          setError(err?.message || "No se pudo cargar el dashboard.");
+        }
       } finally {
         if (activo) setLoading(false);
       }
@@ -330,6 +309,48 @@ export default function DashboardDocente() {
     });
   }, [horario]);
 
+  const cursoActivo = useMemo(() => {
+    if (!detalleCursos.length) return null;
+    return (
+      detalleCursos.find((c) => String(c.idgrupo) === String(cursoSeleccionado)) ||
+      detalleCursos[0]
+    );
+  }, [detalleCursos, cursoSeleccionado]);
+
+  const estadosCursoActivo = useMemo(() => {
+    if (!cursoActivo) return [];
+
+    const total =
+      Number(cursoActivo.aprobadosCount || 0) +
+      Number(cursoActivo.recuperacionCount || 0) +
+      Number(cursoActivo.desaprobadosCount || 0) +
+      Number(cursoActivo.sinNotasCount || 0);
+
+    const data = [
+      {
+        name: "Aprobados",
+        value: Number(cursoActivo.aprobadosCount || 0),
+      },
+      {
+        name: "Recuperación",
+        value: Number(cursoActivo.recuperacionCount || 0),
+      },
+      {
+        name: "Desaprobados",
+        value: Number(cursoActivo.desaprobadosCount || 0),
+      },
+      {
+        name: "Sin notas",
+        value: Number(cursoActivo.sinNotasCount || 0),
+      },
+    ];
+
+    return data.map((item) => ({
+      ...item,
+      porcentaje: total > 0 ? ((item.value / total) * 100).toFixed(1) : "0.0",
+    }));
+  }, [cursoActivo]);
+
   if (loading) {
     return (
       <div className="min-h-full bg-slate-50 px-6 py-6">
@@ -340,14 +361,15 @@ export default function DashboardDocente() {
             <SkeletonCard />
             <SkeletonCard />
           </div>
-          <div className="grid gap-6 xl:grid-cols-3">
-            <div className="xl:col-span-2 h-[380px] animate-pulse rounded-3xl bg-slate-200" />
-            <div className="h-[380px] animate-pulse rounded-3xl bg-slate-200" />
-          </div>
+
+          <div className="h-[420px] animate-pulse rounded-3xl bg-slate-200" />
+
           <div className="grid gap-6 xl:grid-cols-2">
             <div className="h-[360px] animate-pulse rounded-3xl bg-slate-200" />
             <div className="h-[360px] animate-pulse rounded-3xl bg-slate-200" />
           </div>
+
+          <div className="h-[320px] animate-pulse rounded-3xl bg-slate-200" />
         </div>
       </div>
     );
@@ -424,77 +446,148 @@ export default function DashboardDocente() {
           />
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-3">
+        <div className="grid gap-6 grid-cols-1">
           <SectionCard
-            title="Rendimiento general"
-            subtitle="Vista comparativa por curso"
+            title="Estado académico por curso"
+            subtitle="Selecciona un curso para ver el resumen de alumnos"
             icon={BarChart3}
-            className="xl:col-span-2"
+            right={
+              <select
+                value={cursoSeleccionado}
+                onChange={(e) => setCursoSeleccionado(e.target.value)}
+                className="w-full min-w-0 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 outline-none transition focus:border-slate-400 md:min-w-[320px]"
+              >
+                {detalleCursos.map((curso) => (
+                  <option key={curso.idgrupo} value={curso.idgrupo}>
+                    {curso.nombre} - {curso.grupo || "Sin grupo"}
+                  </option>
+                ))}
+              </select>
+            }
           >
-            {chartCursos.length === 0 ? (
-              <EmptyState text="Aún no hay datos suficientes para mostrar el gráfico." />
+            {!cursoActivo ? (
+              <EmptyState text="No hay cursos disponibles para mostrar el estado académico." />
             ) : (
-              <div className="h-[320px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartCursos}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="nombre" tick={{ fontSize: 12 }} />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Bar dataKey="alumnos" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </SectionCard>
+              <div className="space-y-6">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900">{cursoActivo.nombre}</h3>
+                      <p className="mt-1 text-sm text-slate-500">
+                        Grupo: {cursoActivo.grupo || "-"} · Modalidad: {cursoActivo.modalidad || "-"}
+                      </p>
+                    </div>
 
-          <SectionCard
-            title="Estado académico"
-            subtitle="Distribución general"
-            icon={GraduationCap}
-          >
-            {chartEstados.every((item) => !item.value) ? (
-              <EmptyState text="Aún no hay estados académicos para mostrar." />
-            ) : (
-              <div className="h-[320px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={chartEstados}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={65}
-                      outerRadius={100}
-                      paddingAngle={3}
-                    >
-                      <Cell fill="#22c55e" />
-                      <Cell fill="#f59e0b" />
-                      <Cell fill="#ef4444" />
-                      <Cell fill="#94a3b8" />
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              {chartEstados.map((item) => (
-                <div key={item.name} className="rounded-2xl bg-slate-50 px-4 py-3">
-                  <p className="text-xs font-medium text-slate-500">{item.name}</p>
-                  <p className="mt-1 text-xl font-bold text-slate-900">{item.value}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
+                        Total alumnos: {cursoActivo.totalAlumnos || 0}
+                      </span>
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
+                        Promedio: {cursoActivo.promedioCurso ?? "-"}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
+
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-4">
+                    <p className="text-sm font-medium text-emerald-700">Aprobados</p>
+                    <p className="mt-2 text-3xl font-bold text-emerald-900">
+                      {cursoActivo.aprobadosCount || 0}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-4">
+                    <p className="text-sm font-medium text-amber-700">Recuperación</p>
+                    <p className="mt-2 text-3xl font-bold text-amber-900">
+                      {cursoActivo.recuperacionCount || 0}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-4">
+                    <p className="text-sm font-medium text-rose-700">Desaprobados</p>
+                    <p className="mt-2 text-3xl font-bold text-rose-900">
+                      {cursoActivo.desaprobadosCount || 0}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-slate-100 px-4 py-4">
+                    <p className="text-sm font-medium text-slate-700">Sin notas</p>
+                    <p className="mt-2 text-3xl font-bold text-slate-900">
+                      {cursoActivo.sinNotasCount || 0}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid gap-6 xl:grid-cols-12 xl:items-center">
+                  <div className="xl:col-span-9 overflow-x-auto">
+                    <table className="min-w-full border-separate border-spacing-y-2">
+                      <thead>
+                        <tr className="text-left text-sm text-slate-500">
+                          <th className="px-3 py-2 font-medium">Estado</th>
+                          <th className="px-3 py-2 font-medium">Total</th>
+                          <th className="px-3 py-2 font-medium">Porcentaje</th>
+                          <th className="px-3 py-2 font-medium">Observación</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {estadosCursoActivo.map((item) => (
+                          <tr key={item.name} className="rounded-2xl bg-slate-50">
+                            <td className="px-3 py-3 font-semibold text-slate-800">{item.name}</td>
+                            <td className="px-3 py-3 text-slate-700">{item.value}</td>
+                            <td className="px-3 py-3 text-slate-700">{item.porcentaje}%</td>
+                            <td className="px-3 py-3 text-slate-500">
+                              {item.name === "Aprobados" && "Alumnos con promedio aprobatorio."}
+                              {item.name === "Recuperación" && "Alumnos que requieren recuperación."}
+                              {item.name === "Desaprobados" && "Alumnos con promedio desaprobatorio."}
+                              {item.name === "Sin notas" && "Alumnos con evaluaciones pendientes."}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="xl:col-span-3">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                      {estadosCursoActivo.every((item) => !item.value) ? (
+                        <EmptyState text="Sin datos" />
+                      ) : (
+                        <div className="h-[240px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={estadosCursoActivo}
+                                dataKey="value"
+                                nameKey="name"
+                                innerRadius={55}
+                                outerRadius={85}
+                                paddingAngle={3}
+                              >
+                                <Cell fill="#22c55e" />
+                                <Cell fill="#f59e0b" />
+                                <Cell fill="#ef4444" />
+                                <Cell fill="#94a3b8" />
+                              </Pie>
+                              <Tooltip />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </SectionCard>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-3">
+        <div className="grid gap-6 xl:grid-cols-2">
           <SectionCard
             title="Clases de hoy"
             subtitle="Agenda rápida del día actual"
             icon={CalendarDays}
-            className="xl:col-span-1"
+            className="h-full"
           >
             {clasesHoy.length === 0 ? (
               <EmptyState text="No tienes clases programadas para hoy." />
@@ -533,67 +626,10 @@ export default function DashboardDocente() {
           </SectionCard>
 
           <SectionCard
-            title="Cursos y grupos"
-            subtitle="Resumen rápido de tus cursos"
-            icon={BookOpen}
-            className="xl:col-span-1"
-          >
-            {resumenCursos.length === 0 ? (
-              <EmptyState text="No tienes cursos asignados por el momento." />
-            ) : (
-              <div className="space-y-3">
-                {resumenCursos.slice(0, 6).map((curso) => (
-                  <div
-                    key={curso.idgrupo}
-                    className="rounded-2xl border border-slate-200 p-4 transition hover:border-slate-300 hover:shadow-sm"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="font-semibold text-slate-900">{curso.nombre}</h3>
-                        <p className="mt-1 text-sm text-slate-500">Grupo: {curso.grupo || "-"}</p>
-                      </div>
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                        {curso.modalidad || "Curso"}
-                      </span>
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                      <div className="rounded-xl bg-slate-50 px-2 py-3">
-                        <p className="text-xs text-slate-500">Alumnos</p>
-                        <p className="mt-1 text-lg font-bold text-slate-900">{curso.totalAlumnos}</p>
-                      </div>
-                      <div className="rounded-xl bg-slate-50 px-2 py-3">
-                        <p className="text-xs text-slate-500">Promedio</p>
-                        <p className="mt-1 text-lg font-bold text-slate-900">
-                          {curso.promedioCurso ?? "-"}
-                        </p>
-                      </div>
-                      <div className="rounded-xl bg-slate-50 px-2 py-3">
-                        <p className="text-xs text-slate-500">Pendientes</p>
-                        <p className="mt-1 text-lg font-bold text-slate-900">{curso.pendientes}</p>
-                      </div>
-                    </div>
-
-                    <div className="mt-4">
-                      <Link
-                        to={`/docente/cursos/${curso.idgrupo}`}
-                        className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 transition hover:text-slate-900"
-                      >
-                        Ir al curso
-                        <ChevronRight size={16} />
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </SectionCard>
-
-          <SectionCard
             title="Alertas y seguimiento"
             subtitle="Aspectos que requieren atención"
             icon={AlertTriangle}
-            className="xl:col-span-1"
+            className="h-full"
           >
             {alertas.length === 0 ? (
               <EmptyState text="Todo en orden. No hay alertas importantes por ahora." />
@@ -661,4 +697,4 @@ export default function DashboardDocente() {
       </div>
     </div>
   );
-}   
+}

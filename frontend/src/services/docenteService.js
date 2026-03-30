@@ -2288,3 +2288,39 @@ export const updatePasswordDocente = async (newPassword) => {
   if (error) throw new Error(error.message || "No se pudo actualizar la contraseña");
   return data;
 };
+
+
+export const getPendientesRevisionByGrupo = async (grupoId) => {
+  const idGrupo = Number(grupoId);
+
+  const { data: tareas, error: errTareas } = await supabase
+    .from("tarea")
+    .select("id")
+    .eq("idgrupo", idGrupo);
+
+  if (errTareas) throw new Error(errTareas.message);
+
+  const tareaIds = (tareas || []).map((t) => Number(t.id));
+  if (tareaIds.length === 0) return 0;
+
+  const { data: matriculas, error: errMat } = await supabase
+    .from("matricula")
+    .select("id")
+    .eq("idgrupo", idGrupo);
+
+  if (errMat) throw new Error(errMat.message);
+
+  const matriculaIds = (matriculas || []).map((m) => Number(m.id));
+  if (matriculaIds.length === 0) return 0;
+
+  const { data: entregas, error: errEntregas } = await supabase
+    .from("tarea_entrega")
+    .select("id")
+    .in("idtarea", tareaIds)
+    .in("idmatricula", matriculaIds)
+    .eq("revisado", false);
+
+  if (errEntregas) throw new Error(errEntregas.message);
+
+  return (entregas || []).length;
+};
