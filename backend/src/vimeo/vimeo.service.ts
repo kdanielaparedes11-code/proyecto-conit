@@ -20,6 +20,40 @@ export class VimeoService {
 
   } 
 
+  /* 🔥 CREAR UPLOAD TUS */
+  crearVideo(size: number) {
+
+    return new Promise((resolve, reject) => {
+
+      this.vimeo.request(
+        {
+          method: "POST",
+          path: "/me/videos",
+          query: {
+            upload: {
+              approach: "tus",
+              size: size
+            }
+          }
+        },
+        (error, body) => {
+
+          if (error) return reject(error)
+
+          resolve({
+            uploadLink: body.upload.upload_link,
+            videoId: body.uri.replace("/videos/", "")
+          })
+
+        }
+      )
+
+    })
+
+  }
+
+
+
   /* SUBIR VIDEO */
 
   async subirVideo(filePath: string): Promise<any> {
@@ -148,6 +182,8 @@ export class VimeoService {
 
   }
 
+  /*
+
   async verificarEstado(videoId: string): Promise<any> {
 
   return new Promise((resolve, reject) => {
@@ -167,6 +203,30 @@ export class VimeoService {
 
   })
 
-}
+}*/
+
+
+/* 🔍 VERIFICAR ESTADO */
+  verificarEstado(videoId: string) {
+
+    return new Promise((resolve, reject) => {
+
+      this.vimeo.request(
+        {
+          method: "GET",
+          path: `/videos/${videoId}`
+        },
+        (error, body) => {
+
+          if(error) reject(error)
+          else resolve(body)
+
+        }
+      )
+
+    })
+
+  }
+
 
 }
