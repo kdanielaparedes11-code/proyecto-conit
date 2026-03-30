@@ -9,7 +9,7 @@ export interface LoginCredentials {
 
 //Definimos que nos responde el backend al hacer login, que es un token de acceso y la información del usuario.
 export interface LoginResponse {
-  accessToken: string;
+  access_token: string;
   usuario: {
     correo: string;
     nombre: string;
@@ -37,11 +37,11 @@ export const login = async (
     const errorData = await response.json().catch(() => null);
     throw new Error(errorData?.message || "Correo o contraseña incorrectos");
   }
-
+  
   const data: LoginResponse = await response.json();
 
   // Guardar token y usuario en el almacenamiento del navegador
-  localStorage.setItem("token", data.accessToken);
+  localStorage.setItem("token", data.access_token);
   localStorage.setItem("usuario", JSON.stringify(data.usuario));
 
   return data;

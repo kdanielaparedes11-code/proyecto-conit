@@ -10,6 +10,7 @@ import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import * as bcrypt from 'bcrypt';
+import { HistorialLoginService } from '../historial-login/historial-login.service';
 
 @Injectable()
 export class AuthService {
@@ -17,9 +18,10 @@ export class AuthService {
     private usuarioService: UsuarioService,
     private jwtService: JwtService,
     private mailerService: MailerService,
+    private historialLoginService: HistorialLoginService,
   ) {}
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto, ip: string, dispositivo: string) {
     //Validacion del token de reCaptcha
     if (!loginDto.recaptchaToken) {
       throw new UnauthorizedException('Falta el token de reCaptcha');
@@ -59,6 +61,13 @@ export class AuthService {
       correo: usuario.correo,
       rol: usuario.rol,
     };
+
+    try {
+      await this.historialLoginService.registrarIngreso(usuario.id, ip || 'IP desconocida', dispositivo || "Navegador desconocido");
+    } catch (error) {
+      console.error('Error al registrar el inicio de sesión:', error);
+    }
+
     return {
       access_token: this.jwtService.sign(payload),
       usuario: {
@@ -129,44 +138,45 @@ export class AuthService {
   }
 
   //Función para restablecer la contraseña usando el token enviado por correo
-  async resetPassword(resetPasswordDto: ResetPasswordDto) {
-    try {
-      //Verificamos el token. Si expiró o es inválido, lanzamos un error
-      const payload = this.jwtService.verify<{ correo: string; code: string }>(
-        resetPasswordDto.token,
-      );
+ async resetPassword(resetPasswordDto: ResetPasswordDto) {
+      try {
+        //Verificamos el token. Si expiró o es inválido, lanzamos un error
+        const payload = this.jwtService.verify<{ correo: string; code: string }>(
+          resetPasswordDto.token,
+        );
 
-      const isCodeValid = await bcrypt.compare(
-        resetPasswordDto.codigoSeguridad,
-        payload.code,
-      );
-      if (!isCodeValid) {
-        throw new BadRequestException('Código de seguridad inválido');
+        const isCodeValid = await bcrypt.compare(
+          resetPasswordDto.codigoSeguridad,
+          payload.code,
+        );
+        if (!isCodeValid) {
+          throw new BadRequestException('Código de seguridad inválido');
+        }
+
+        //Buscamos al usuario en la base de datos
+        const usuario = await this.usuarioService.findOneByCorreo(payload.correo);
+        if (!usuario) {
+          throw new UnauthorizedException('Usuario no encontrado');
+        }
+
+        //Actualizamos la contraseña del usuario
+        await this.usuarioService.actualizarContrasenia(
+          usuario.id,
+          resetPasswordDto.contrasenia,
+        );
+
+        return { message: 'Contraseña restablecida exitosamente' };
+      } catch (error) {
+        console.error('Error al restablecer contraseña:', error);
+        //Si el error es nuestro BadRequestException (contraseña repetida), lo lanzamos tal cual para que el cliente lo maneje
+        if (error instanceof BadRequestException) {
+          throw error;
+        }
+        //Si el token es inválido o expiró, respondemos con un mensaje genérico para no revelar detalles
+        throw new UnauthorizedException(
+          'El enlace de restablecimiento no es válido o ha expirado',
+        );
       }
-
-      //Buscamos al usuario en la base de datos
-      const usuario = await this.usuarioService.findOneByCorreo(payload.correo);
-      if (!usuario) {
-        throw new UnauthorizedException('Usuario no encontrado');
-      }
-
-      //Actualizamos la contraseña del usuario
-      await this.usuarioService.actualizarContrasenia(
-        usuario.id,
-        resetPasswordDto.contrasenia,
-      );
-
-      return { message: 'Contraseña restablecida exitosamente' };
-    } catch (error) {
-      console.error('Error al restablecer contraseña:', error);
-      //Si el error es nuestro BadRequestException (contraseña repetida), lo lanzamos tal cual para que el cliente lo maneje
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-      //Si el token es inválido o expiró, respondemos con un mensaje genérico para no revelar detalles
-      throw new UnauthorizedException(
-        'El enlace de restablecimiento no es válido o ha expirado',
-      );
     }
-  }
 }
+  

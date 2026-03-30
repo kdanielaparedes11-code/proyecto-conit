@@ -3,13 +3,31 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsuarioModule } from './usuario/usuario.module';
 import { AuthModule } from './auth/auth.module';
-import { DocenteModule } from './docente/docente.module';
-import { AlumnoModule } from './alumno/alumno.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-
+import { AdministradorModule } from './administrador/administrador.module';
+import { DocenteModule } from './docente/docente.module';
+import { AlumnoModule } from './alumno/alumno.module';
+import { CursoModule } from './curso/curso.module';
+import { TemarioModule } from './temario/temario.module';
+import { UnidadModule } from './unidad/unidad.module';
+import { SesionModule } from './sesion/sesion.module';
+import { GrupoModule } from './grupo/grupo.module';
+import { MatriculaModule } from './matricula/matricula.module';
+import { PagoModule } from './pago/pago.module';
+import { RecursoModule } from './recurso/recurso.module';
 import { join } from 'path';
+import { TareaModule } from './tarea/tarea.module';
+import { SesionVivoModule } from './sesion-vivo/sesion-vivo.module';
+import { HistorialLoginModule } from './historial-login/historial-login.module';
+import { CursoModuloModule } from './curso_modulo/curso_modulo.module';
+import { CursoLeccionModule } from './curso_leccion/curso_leccion.module';
+import { LeccionMaterialModule } from './leccion-material/leccion-material.module';
+import { VimeoService } from './vimeo/vimeo.service';
+import { VimeoController } from './vimeo/vimeo.controller';
+import { VimeoModule } from './vimeo/vimeo.module';
+import { EntregasVideoModule } from './entregas-video/entregas-video.module';
 
 @Module({
   imports: [
@@ -21,15 +39,16 @@ import { join } from 'path';
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        url: 'postgresql://postgres:jcmkd2118110497@db.bwnuvmawjpettbqogmgk.supabase.co:5432/postgres',
+        type: 'postgres' as 'postgres',
+        url: config.get<string>('DATABASE_URL'),
         ssl: {
-          rejectUnauthorized: false, // Esto funcionará perfecto con Supabase
+          rejectUnauthorized: false,
         },
         autoLoadEntities: true,
         synchronize: false,
       }),
     }),
+
     MailerModule.forRoot({
       transport: {
         host: 'smtp.ethereal.email',
@@ -46,8 +65,26 @@ import { join } from 'path';
 
     UsuarioModule,
     AuthModule,
+    AdministradorModule,
     DocenteModule,
     AlumnoModule,
+    CursoModule,
+    TemarioModule,
+    UnidadModule,
+    SesionModule,
+    GrupoModule,
+    MatriculaModule,
+    PagoModule,
+    RecursoModule,
+    TareaModule,
+    SesionVivoModule,
+    HistorialLoginModule,
+    CursoModuloModule,
+    CursoLeccionModule,
+    LeccionMaterialModule,
+    VimeoModule,
+    EntregasVideoModule,
+    
   ],
   controllers: [AppController],
   providers: [AppService],
