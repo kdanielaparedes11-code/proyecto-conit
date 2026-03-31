@@ -10,4 +10,3 @@ import { MatriculaController } from './matricula.controller';
   providers: [MatriculaService],
 })
 export class MatriculaModule {}
-
