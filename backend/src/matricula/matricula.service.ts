@@ -33,7 +33,7 @@ export class MatriculaService {
     const serieGenerada = prefijo + correlativo;
 
     const matricula = await this.matriculaRepo.save({
-      alumno:{ id: 1 },
+      alumno:{ id: alumnoId },
       grupo:{ id: grupoId },
 
       estado:"pendiente",
@@ -47,8 +47,22 @@ export class MatriculaService {
       idcertificado:1,
       idcontrolacademico:1
     });
+    
 
     return matricula;
   }
 
+  async findByAlumno(idalumno: number) {
+  return await this.matriculaRepo.find({
+    where: {
+      alumno: { id: idalumno }
+    },
+    relations: ['grupo'],
+    order: {
+      created_at: 'DESC'
+    }
+  });
 }
+
+}
+

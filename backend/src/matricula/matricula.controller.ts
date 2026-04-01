@@ -1,5 +1,6 @@
 import { Controller, Post, Body, BadRequestException } from '@nestjs/common';
 import { MatriculaService } from './matricula.service';
+import { Get, Param, ParseIntPipe } from '@nestjs/common';
 
 @Controller('matricula')
 export class MatriculaController {
@@ -16,5 +17,10 @@ crear(@Body() body){
   );
 
 }
+
+@Get('alumno/:idalumno')
+  findByAlumno(@Param('idalumno', ParseIntPipe) idalumno: number) {
+    return this.matriculaService.findByAlumno(idalumno);
+  }
 
 }
