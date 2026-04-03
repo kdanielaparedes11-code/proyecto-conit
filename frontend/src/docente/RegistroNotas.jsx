@@ -162,9 +162,15 @@ export default function RegistroNotas() {
       } else if (filtroEstado === "pendientes") {
         coincideEstado = a.faltantes > 0;
       } else if (filtroEstado === "aprobados") {
-        coincideEstado = a.faltantes === 0 && Number(a.promedio) >= 11;
+        coincideEstado = a.faltantes === 0 && Number(a.promedio) >= 12;
+      } else if (filtroEstado === "recuperacion") {
+        coincideEstado =
+          a.faltantes === 0 &&
+          Number(a.promedio) >= 9 &&
+          Number(a.promedio) < 12;
       } else if (filtroEstado === "desaprobados") {
-        coincideEstado = a.faltantes === 0 && Number(a.promedio) < 11;
+        coincideEstado = a.faltantes === 0 && Number(a.promedio) < 9;
+
       }
 
       return coincideBusqueda && coincideEstado;
@@ -272,6 +278,7 @@ export default function RegistroNotas() {
       porcentaje: String(ev.porcentaje ?? 0),
       tipo: ev.tipo || "manual",
       idtarea: ev.idtarea ?? null,
+      idexamen: ev.idexamen ?? null,
       orden: ev.orden ?? index + 1,
       activa: ev.activa ?? true,
       isNew: false,
@@ -295,6 +302,7 @@ const cambiarEvaluacionDraft = (index, field, value) => {
 
       if (field === "tipo") {
         next.idtarea = null;
+        next.idexamen = null;
       }
 
       return next;
@@ -308,10 +316,12 @@ const agregarEvaluacionDraft = () => {
     ...prev,
     {
       id: `new-${Date.now()}`,
-      idgrupo: grupoId, // 
+      idgrupo: grupoId,
       nombre: "",
       porcentaje: "",
       tipo: "manual",
+      idtarea: null,
+      idexamen: null,
       orden: prev.length + 1,
       activa: true,
       isNew: true,
@@ -386,12 +396,13 @@ const guardarConfigEvaluaciones = async () => {
       await actualizarEvaluacionesGrupo(
         existentes.map((ev, index) => ({
           id: ev.id,
-          idgrupo: ev.idgrupo || grupoId, //
+          idgrupo: ev.idgrupo || grupoId,
           nombre: ev.nombre,
           porcentaje: ev.porcentaje,
           orden: index + 1,
           tipo: ev.tipo,
-          idtarea: null,
+          idtarea: ev.idtarea ?? null,
+          idexamen: ev.idexamen ?? null,
           activa: true,
         }))
       );
@@ -404,7 +415,8 @@ const guardarConfigEvaluaciones = async () => {
         nombre: ev.nombre,
         porcentaje: ev.porcentaje,
         tipo: ev.tipo,
-        idtarea: null,
+        idtarea: ev.idtarea ?? null,
+        idexamen: ev.idexamen ?? null,
         orden: existentes.length + i + 1,
       });
     }
@@ -601,7 +613,13 @@ const guardarConfigEvaluaciones = async () => {
                     {ev.nombre}
                   </div>
                   <div className="mt-1 text-xs text-slate-500">
-                    {ev.porcentaje}% · {ev.tipo === "tarea" ? "Tarea" : "Manual"}
+                    {ev.porcentaje}% · {
+                      ev.tipo === "tarea"
+                        ? "Tarea"
+                        : ev.tipo === "examen"
+                        ? "Examen"
+                        : "Manual"
+                    }
                   </div>
                 </div>
               ))
@@ -658,6 +676,7 @@ const guardarConfigEvaluaciones = async () => {
                     <option value="completos">Con notas completas</option>
                     <option value="pendientes">Con notas pendientes</option>
                     <option value="aprobados">Aprobados</option>
+                    <option value="recuperacion">Recuperación</option>
                     <option value="desaprobados">Desaprobados</option>
                   </select>
                 </div>
@@ -763,8 +782,10 @@ const guardarConfigEvaluaciones = async () => {
                       ) : (
                         <span
                           className={`font-bold ${
-                            Number(a.promedio) >= 11
+                            Number(a.promedio) >= 12
                               ? "text-emerald-600"
+                              : Number(a.promedio) >= 9
+                              ? "text-yellow-600"
                               : "text-rose-600"
                           }`}
                         >
@@ -778,9 +799,13 @@ const guardarConfigEvaluaciones = async () => {
                         <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
                           Incompleto ({a.faltantes})
                         </span>
-                      ) : Number(a.promedio) >= 11 ? (
+                      ) : Number(a.promedio) >= 12 ? (
                         <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                           Aprobado
+                        </span>
+                      ) : Number(a.promedio) >= 9 ? (
+                        <span className="inline-flex items-center rounded-full border border-yellow-200 bg-yellow-50 px-3 py-1 text-xs font-semibold text-yellow-700">
+                          Recuperación
                         </span>
                       ) : (
                         <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">
@@ -962,7 +987,7 @@ const guardarConfigEvaluaciones = async () => {
           <div>
             <h3 className="text-xl font-bold">Configurar evaluaciones</h3>
             <p className="text-sm text-slate-200 mt-1">
-              Agrega, edita o elimina evaluaciones del grupo seleccionado. Las evaluaciones de tipo tarea se vinculan después desde la sección de tareas del curso.
+              Agrega, edita o elimina evaluaciones del grupo seleccionado. Las evaluaciones de tipo tarea y examen se vinculan después desde la gestión del curso.
             </p>
           </div>
 
@@ -1036,13 +1061,10 @@ const guardarConfigEvaluaciones = async () => {
                       onChange={(e) =>
                         cambiarEvaluacionDraft(index, "nombre", e.target.value)
                       }
-                      placeholder="Ej. Parcial, Proyecto"
-                      disabled={ev.tipo === "tarea"}
-                      className={`w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 ${
-                        ev.tipo === "tarea" ? "bg-slate-100 text-slate-500" : ""
-                      }`}
+                      placeholder="Ej. Parcial, Proyecto, Examen Final"
+                      className="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
                     />
-                  </td>
+                  </td> 
 
                   {/* PORCENTAJE */}
                   <td className="px-4 py-3">
@@ -1071,6 +1093,7 @@ const guardarConfigEvaluaciones = async () => {
                     >
                       <option value="manual">Manual</option>
                       <option value="tarea">Tarea</option>
+                      <option value="examen">Examen</option>
                     </select>
                   </td>
 
