@@ -10,10 +10,16 @@ import {
   AlertCircle,
   CheckCircle,
   CreditCard,
+  RotateCcw,
 } from "lucide-react";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx-js-style";
+
+const formatearNombreAlumno = (alumno) => {
+  if (!alumno) return "Alumno Desconocido";
+  return `${alumno.nombre || alumno.apellido || ""}`.trim();
+};
 
 export default function Pagos() {
   const [activeTab, setActiveTab] = useState("pagos");
@@ -23,6 +29,12 @@ export default function Pagos() {
   const [historialPagos, setHistorialPagos] = useState([]);
   const [alumnosDeuda, setAlumnosDeuda] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [modalExportacion, setModalExportacion] = useState({
+    abierto: false,
+    tipo: null,
+    nombreArchivo: "reporte_pagos",
+  });
 
   const cargarDatosFinancieros = async () => {
     try {
@@ -36,12 +48,9 @@ export default function Pagos() {
       const pagosFormateados = dataPagos.map((p) => ({
         id: p.id,
         fecha: p.fechapago?.split("T")[0] || "Sin fecha",
-        alumno:
-          p.matricula?.alumno?.nombre ||
-          p.matricula?.usuario?.nombre ||
-          "Alumno Desconocido",
-        curso: p.matricula?.curso?.nombrecurso || "Curso Desconocido",
-        comprobante: p.tipopago || "N/A",
+        alumno: formatearNombreAlumno(p.matricula?.alumno),
+        curso: p.matricula?.grupo?.curso?.nombrecurso || "Curso Desconocido",
+        tipopago: p.tipopago || "N/A",
         total: parseFloat(p.preciofinal) || 0,
         estado: p.estado || "Pagado",
       }));
@@ -59,10 +68,7 @@ export default function Pagos() {
 
           return {
             id: d.id,
-            alumno:
-              d.matricula?.alumno?.nombre ||
-              d.matricula?.usuario?.nombre ||
-              "Alumno Desconocido",
+            alumno: formatearNombreAlumno(d.matricula?.alumno),
             curso: d.matricula?.curso?.nombrecurso || "Curso Desconocido",
             cuota: d.numero_cuota,
             vencimiento: d.fecha_vencimiento?.split("T")[0] || "Sin fecha",
@@ -94,48 +100,79 @@ export default function Pagos() {
         pago.curso.toLowerCase().includes(termino);
 
       const coincideInicio = dateRange.start
-        ? new Date(pago.fecha) >= new Date(dateRange.start)
+        ? pago.fecha >= dateRange.start
         : true;
-      const coincideFin = dateRange.end
-        ? new Date(pago.fecha) <= new Date(dateRange.end)
-        : true;
+      const coincideFin = dateRange.end ? pago.fecha <= dateRange.end : true;
 
       return coincideBusqueda && coincideInicio && coincideFin;
     });
   }, [historialPagos, busqueda, dateRange]);
 
-  // Funciones de Exportación
-  const exportarPDF = () => {
-    const doc = new jsPDF();
-    doc.text("Reporte de Ingresos", 14, 20);
-    const columnas = ["ID", "Fecha", "Alumno", "Curso", "Tipo", "Total (S/)"];
-    const filas = pagosFiltrados.map((p) => [
-      p.id,
-      p.fecha,
-      p.alumno,
-      p.curso,
-      p.comprobante,
-      p.total.toFixed(2),
-    ]);
-    doc.autoTable({
-      startY: 30,
-      head: [columnas],
-      body: filas,
-      headStyles: { fillColor: [52, 76, 146] },
+  const abrirModalExportacion = (tipo) => {
+    setModalExportacion({
+      abierto: true,
+      tipo: tipo,
+      nombreArchivo: "reporte_pagos",
     });
-    doc.save("reporte_pagos.pdf");
-    toast.success("PDF generado exitosamente");
   };
 
-  const exportarExcel = () => {
+  const confirmarExportacion = () => {
+    const { tipo, nombreArchivo } = modalExportacion;
+
+    if (!nombreArchivo.trim) {
+      toast.error("El nombre del archivo no puede estar vacío");
+      return;
+    }
+
+    if (tipo === "pdf") {
+      exportarPDF(nombreArchivo);
+    } else if (tipo === "excel") {
+      exportarExcel(nombreArchivo);
+    } else if (tipo === "csv") {
+      exportarCSV(nombreArchivo);
+    }
+
+    setModalExportacion({ ...modalExportacion, abierto: false });
+  };
+
+  // Funciones de Exportación
+  const exportarPDF = (nombreArchivo) => {
+    try {
+      const doc = new jsPDF();
+      doc.text("Reporte de Ingresos", 14, 20);
+      const columnas = ["ID", "Fecha", "Alumno", "Curso", "Tipo", "Total (S/)"];
+      const filas = pagosFiltrados.map((p) => [
+        p.id,
+        p.fecha,
+        p.alumno,
+        p.curso,
+        p.tipopago,
+        p.total.toFixed(2),
+      ]);
+
+      autoTable(doc, {
+        startY: 30,
+        head: [columnas],
+        body: filas,
+        headStyles: { fillColor: [52, 76, 146] },
+      });
+      doc.save(`${nombreArchivo}.pdf`);
+      toast.success("PDF generado exitosamente");
+    } catch (error) {
+      toast.error("Error al generar PDF:", error);
+      console.error("Error al generar PDF", error);
+    }
+  };
+
+  const exportarExcel = (nombreArchivo) => {
     const datos = [
-      ["ID", "FECHA", "ALUMNO", "CURSO", "COMPROBANTE", "TOTAL"],
+      ["ID", "FECHA", "ALUMNO", "CURSO", "TIPO DE PAGO", "TOTAL"],
       ...pagosFiltrados.map((p) => [
         p.id,
         p.fecha,
         p.alumno,
         p.curso,
-        p.comprobante,
+        p.tipopago,
         p.total,
       ]),
     ];
@@ -152,23 +189,29 @@ export default function Pagos() {
     }
     const libro = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(libro, hoja, "Pagos");
-    XLSX.writeFile(libro, "reporte_pagos.xlsx");
+    XLSX.writeFile(libro, `${nombreArchivo}.xlsx`);
     toast.success("Excel generado exitosamente");
   };
 
-  const exportarCSV = () => {
-    const cabeceras = "ID,Fecha,Alumno,Curso,Comprobante,Total\n";
+  const exportarCSV = (nombreArchivo) => {
+    const cabeceras = "ID,Fecha,Alumno,Curso,Tipo de Pago,Total\n";
     const filas = pagosFiltrados
       .map(
         (p) =>
-          `${p.id},${p.fecha},"${p.alumno}","${p.curso}",${p.comprobante},${p.total}`,
+          `${p.id},${p.fecha},"${p.alumno}","${p.curso}",${p.tipopago},${p.total}`,
       )
       .join("\n");
     const enlace = document.createElement("a");
     enlace.href = "data:text/csv;charset=utf-8," + encodeURI(cabeceras + filas);
-    enlace.download = "reporte_pagos.csv";
+    enlace.download = `${nombreArchivo}.csv`;
     enlace.click();
     toast.success("CSV descargado exitosamente");
+  };
+
+  const limpiarFiltros = () => {
+    setBusqueda("");
+    setDateRange({ start: "", end: "" });
+    toast.success("Filtros restablecidos");
   };
 
   return (
@@ -189,26 +232,41 @@ export default function Pagos() {
         {activeTab === "pagos" && (
           <div className="flex items-center gap-3 shrink-0">
             <span className="text-sm font-medium opacity-90">Exportar:</span>
+
+            {/* Botón CSV */}
             <button
-              onClick={exportarCSV}
-              className="bg-white text-gray-700 hover:bg-gray-100 p-2.5 rounded-lg transition-colors shadow-sm tooltip"
+              onClick={() => abrirModalExportacion("csv")}
+              className="bg-white text-gray-700 hover:bg-gray-100 p-2 flex flex-col items-center justify-center rounded-lg shadow-sm tooltip w-16 cursor-pointer hover:scale-105 active:scale-95 transition-all duration-200"
               title="Exportar CSV"
             >
               <FileDown size={20} />
+              <span className="text-[11px] font-bold mt-1 tracking-wide">
+                CSV
+              </span>
             </button>
+
+            {/* Botón Excel */}
             <button
-              onClick={exportarExcel}
-              className="bg-white text-green-600 hover:bg-gray-100 p-2.5 rounded-lg transition-colors shadow-sm tooltip"
+              onClick={() => abrirModalExportacion("excel")}
+              className="bg-white text-green-600 hover:bg-gray-100 p-2 flex flex-col items-center justify-center rounded-lg shadow-sm tooltip w-16 cursor-pointer hover:scale-105 active:scale-95 transition-all duration-200"
               title="Exportar Excel"
             >
               <FileSpreadsheet size={20} />
+              <span className="text-[11px] font-bold mt-1 tracking-wide">
+                EXCEL
+              </span>
             </button>
+
+            {/* Botón PDF */}
             <button
-              onClick={exportarPDF}
-              className="bg-white text-red-600 hover:bg-gray-100 p-2.5 rounded-lg transition-colors shadow-sm tooltip"
+              onClick={() => abrirModalExportacion("pdf")}
+              className="bg-white text-red-600 hover:bg-gray-100 p-2 flex flex-col items-center justify-center rounded-lg shadow-sm tooltip w-16 cursor-pointer hover:scale-105 active:scale-95 transition-all duration-200"
               title="Exportar PDF"
             >
               <FileText size={20} />
+              <span className="text-[11px] font-bold mt-1 tracking-wide">
+                PDF
+              </span>
             </button>
           </div>
         )}
@@ -259,25 +317,44 @@ export default function Pagos() {
                   onChange={(e) => setBusqueda(e.target.value)}
                 />
               </div>
+
               <div className="flex items-center gap-3 w-full md:w-auto">
-                <Calendar className="text-gray-400" size={20} />
-                <input
-                  type="date"
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                  value={dateRange.start}
-                  onChange={(e) =>
-                    setDateRange({ ...dateRange, start: e.target.value })
-                  }
-                />
-                <span className="text-gray-500 font-medium">-</span>
-                <input
-                  type="date"
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                  value={dateRange.end}
-                  onChange={(e) =>
-                    setDateRange({ ...dateRange, end: e.target.value })
-                  }
-                />
+                <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg border border-gray-200">
+                  <Calendar className="text-gray-500 ml-2" size={18} />
+                  <input
+                    type="date"
+                    className="bg-transparent border-none text-sm focus:outline-none focus:ring-0 p-1"
+                    value={dateRange.start}
+                    onChange={(e) =>
+                      setDateRange({ ...dateRange, start: e.target.value })
+                    }
+                  />
+                  <span className="text-gray-400 font-bold">-</span>
+                  <input
+                    type="date"
+                    className="bg-transparent border-none text-sm focus:outline-none focus:ring-0 p-1"
+                    value={dateRange.end}
+                    onChange={(e) =>
+                      setDateRange({ ...dateRange, end: e.target.value })
+                    }
+                  />
+                </div>
+
+                {/* Botón Restaurar */}
+                <button
+                  onClick={limpiarFiltros}
+                  disabled={!busqueda && !dateRange.start && !dateRange.end}
+                  className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-indigo-600 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
+                  title="Limpiar todos los filtros"
+                >
+                  <RotateCcw
+                    size={18}
+                    className="group-hover:rotate-[-45deg] transition-transform"
+                  />
+                  <span className="text-sm font-medium hidden sm:inline">
+                    Limpiar
+                  </span>
+                </button>
               </div>
             </div>
           )}
@@ -291,7 +368,7 @@ export default function Pagos() {
                     <th className="px-6 py-4">Fecha</th>
                     <th className="px-6 py-4">Alumno</th>
                     <th className="px-6 py-4">Curso</th>
-                    <th className="px-6 py-4 text-center">Comprobante</th>
+                    <th className="px-6 py-4 text-center">Tipo de Pago</th>
                     <th className="px-6 py-4 text-right">Monto</th>
                     <th className="px-6 py-4 text-center">Estado</th>
                   </tr>
@@ -342,7 +419,7 @@ export default function Pagos() {
                           {pago.curso}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600 text-center">
-                          {pago.comprobante}
+                          {pago.tipopago}
                         </td>
                         <td className="px-6 py-4 font-bold text-indigo-600 text-right">
                           S/ {pago.total.toFixed(2)}
@@ -398,6 +475,67 @@ export default function Pagos() {
           </div>
         </div>
       </div>
+      {/* MODAL DE EXPORTACIÓN  */}
+      {modalExportacion.abierto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+            {/* Cabecera del Modal */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-4 text-white">
+              <h3 className="text-lg font-bold flex items-center gap-2">
+                <FileText size={20} />
+                Guardar archivo como...
+              </h3>
+            </div>
+
+            {/* Cuerpo del Modal */}
+            <div className="p-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nombre del archivo:
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  autoFocus
+                  className="w-full border border-gray-300 rounded-lg pl-4 pr-16 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition-shadow"
+                  value={modalExportacion.nombreArchivo}
+                  onChange={(e) =>
+                    setModalExportacion({
+                      ...modalExportacion,
+                      nombreArchivo: e.target.value,
+                    })
+                  }
+                  onKeyDown={(e) => e.key === "Enter" && confirmarExportacion()}
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-400 font-medium">
+                  .{modalExportacion.tipo}
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                El archivo se guardará en tu carpeta de Descargas
+                predeterminada.
+              </p>
+            </div>
+
+            {/* Botones del Modal */}
+            <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
+              <button
+                onClick={() =>
+                  setModalExportacion({ ...modalExportacion, abierto: false })
+                }
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarExportacion}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm transition-colors"
+              >
+                Exportar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

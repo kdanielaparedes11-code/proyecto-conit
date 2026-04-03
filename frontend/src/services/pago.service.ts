@@ -1,7 +1,7 @@
 import api from "../api";
 
 export const obtenerPagos = async () => {
-  const response = await api.get("/pago");
+  const response = await api.get("/pago/realizados");
   return response.data;
 };
 

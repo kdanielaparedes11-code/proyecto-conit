@@ -30,6 +30,7 @@ import { VimeoModule } from './vimeo/vimeo.module';
 import { EntregasVideoModule } from './entregas-video/entregas-video.module';
 import { MultimediaModule } from './multimedia/multimedia.module';
 import { SoporteModule } from './soporte/soporte.module';
+import { PensionModule } from './pension/pension.module';
 
 @Module({
   imports: [
@@ -88,6 +89,7 @@ import { SoporteModule } from './soporte/soporte.module';
     EntregasVideoModule,
     MultimediaModule,
     SoporteModule,
+    PensionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

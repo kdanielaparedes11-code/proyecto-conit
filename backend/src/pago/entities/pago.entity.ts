@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from "typeorm"
 import { Matricula } from '../../matricula/entities/matricula.entity';
 
-@Entity({ name: 'pago' }) // Respeta el nombre exacto en BD
+@Entity({ name: 'pago' }) //Respeta el nombre exacto en BD
 export class Pago {
 
   @PrimaryGeneratedColumn()
