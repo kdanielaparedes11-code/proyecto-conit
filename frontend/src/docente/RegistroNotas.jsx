@@ -278,6 +278,7 @@ export default function RegistroNotas() {
       porcentaje: String(ev.porcentaje ?? 0),
       tipo: ev.tipo || "manual",
       idtarea: ev.idtarea ?? null,
+      idexamen: ev.idexamen ?? null,
       orden: ev.orden ?? index + 1,
       activa: ev.activa ?? true,
       isNew: false,
@@ -301,6 +302,7 @@ const cambiarEvaluacionDraft = (index, field, value) => {
 
       if (field === "tipo") {
         next.idtarea = null;
+        next.idexamen = null;
       }
 
       return next;
@@ -314,10 +316,12 @@ const agregarEvaluacionDraft = () => {
     ...prev,
     {
       id: `new-${Date.now()}`,
-      idgrupo: grupoId, // 
+      idgrupo: grupoId,
       nombre: "",
       porcentaje: "",
       tipo: "manual",
+      idtarea: null,
+      idexamen: null,
       orden: prev.length + 1,
       activa: true,
       isNew: true,
@@ -392,12 +396,13 @@ const guardarConfigEvaluaciones = async () => {
       await actualizarEvaluacionesGrupo(
         existentes.map((ev, index) => ({
           id: ev.id,
-          idgrupo: ev.idgrupo || grupoId, //
+          idgrupo: ev.idgrupo || grupoId,
           nombre: ev.nombre,
           porcentaje: ev.porcentaje,
           orden: index + 1,
           tipo: ev.tipo,
-          idtarea: null,
+          idtarea: ev.idtarea ?? null,
+          idexamen: ev.idexamen ?? null,
           activa: true,
         }))
       );
@@ -410,7 +415,8 @@ const guardarConfigEvaluaciones = async () => {
         nombre: ev.nombre,
         porcentaje: ev.porcentaje,
         tipo: ev.tipo,
-        idtarea: null,
+        idtarea: ev.idtarea ?? null,
+        idexamen: ev.idexamen ?? null,
         orden: existentes.length + i + 1,
       });
     }
@@ -607,7 +613,13 @@ const guardarConfigEvaluaciones = async () => {
                     {ev.nombre}
                   </div>
                   <div className="mt-1 text-xs text-slate-500">
-                    {ev.porcentaje}% · {ev.tipo === "tarea" ? "Tarea" : "Manual"}
+                    {ev.porcentaje}% · {
+                      ev.tipo === "tarea"
+                        ? "Tarea"
+                        : ev.tipo === "examen"
+                        ? "Examen"
+                        : "Manual"
+                    }
                   </div>
                 </div>
               ))
@@ -975,7 +987,7 @@ const guardarConfigEvaluaciones = async () => {
           <div>
             <h3 className="text-xl font-bold">Configurar evaluaciones</h3>
             <p className="text-sm text-slate-200 mt-1">
-              Agrega, edita o elimina evaluaciones del grupo seleccionado. Las evaluaciones de tipo tarea se vinculan después desde la sección de tareas del curso.
+              Agrega, edita o elimina evaluaciones del grupo seleccionado. Las evaluaciones de tipo tarea y examen se vinculan después desde la gestión del curso.
             </p>
           </div>
 
@@ -1049,13 +1061,10 @@ const guardarConfigEvaluaciones = async () => {
                       onChange={(e) =>
                         cambiarEvaluacionDraft(index, "nombre", e.target.value)
                       }
-                      placeholder="Ej. Parcial, Proyecto"
-                      disabled={ev.tipo === "tarea"}
-                      className={`w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 ${
-                        ev.tipo === "tarea" ? "bg-slate-100 text-slate-500" : ""
-                      }`}
+                      placeholder="Ej. Parcial, Proyecto, Examen Final"
+                      className="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
                     />
-                  </td>
+                  </td> 
 
                   {/* PORCENTAJE */}
                   <td className="px-4 py-3">
@@ -1084,6 +1093,7 @@ const guardarConfigEvaluaciones = async () => {
                     >
                       <option value="manual">Manual</option>
                       <option value="tarea">Tarea</option>
+                      <option value="examen">Examen</option>
                     </select>
                   </td>
 
