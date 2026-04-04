@@ -31,6 +31,7 @@ import { EntregasVideoModule } from './entregas-video/entregas-video.module';
 import { MultimediaModule } from './multimedia/multimedia.module';
 import { SoporteModule } from './soporte/soporte.module';
 import { ExamenModule } from './examen/examen.module';
+import { PensionModule } from './pension/pension.module';
 
 @Module({
   imports: [
@@ -90,6 +91,7 @@ import { ExamenModule } from './examen/examen.module';
     MultimediaModule,
     SoporteModule,
     ExamenModule,
+    PensionModule,
   ],
 
   controllers: [AppController],

@@ -1,9 +1,16 @@
-import { Controller, Get, Patch, Param, Post, Body, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Param,
+  Post,
+  Body,
+  Query,
+} from '@nestjs/common';
 import { PagoService } from './pago.service';
 
 @Controller('pago')
 export class PagoController {
-
   constructor(private readonly pagoService: PagoService) {}
 
   // PAGOS PENDIENTES
@@ -41,41 +48,36 @@ export class PagoController {
     return this.pagoService.pagarConPaypal(body);
   }
 
-@Post('izipay')
-pagarIzipay(@Body() body: any) {
-  return this.pagoService.pagarConIzipay(body);
-}
-
-@Post('estado')
-async estado(@Body() body: any) {
-
-  const pago = await this.pagoService.buscarPorMatricula(body.matricula_id);
-
-  return {
-    status: pago?.estado || "pendiente"
-  };
-}
-
-@Post('izipay/confirmar')
-confirmarIzipay(@Body() body: any) {
-  return this.pagoService.confirmarPagoIzipay(body.formToken, body);
-}
-
-@Post('izipay/webhook')
-async webhookIzipay(@Body() body: any) {
-
-  console.log("🔥 WEBHOOK IZIPAY:", body);
-
-  // 👇 esto depende de lo que te envía izipay
-  if (body.orderStatus === "PAID") {
-
-    const matricula_id = body.orderId; // 👈 AJUSTAR
-
-    await this.pagoService.marcarPagado(matricula_id, body);
-
+  @Post('izipay')
+  pagarIzipay(@Body() body: any) {
+    return this.pagoService.pagarConIzipay(body);
   }
 
-  return { ok: true };
-}
+  @Post('estado')
+  async estado(@Body() body: any) {
+    const pago = await this.pagoService.buscarPorMatricula(body.matricula_id);
 
+    return {
+      status: pago?.estado || 'pendiente',
+    };
+  }
+
+  @Post('izipay/confirmar')
+  confirmarIzipay(@Body() body: any) {
+    return this.pagoService.confirmarPagoIzipay(body.formToken, body);
+  }
+
+  @Post('izipay/webhook')
+  async webhookIzipay(@Body() body: any) {
+    console.log('🔥 WEBHOOK IZIPAY:', body);
+
+    // 👇 esto depende de lo que te envía izipay
+    if (body.orderStatus === 'PAID') {
+      const matricula_id = body.orderId;
+
+      await this.pagoService.marcarPagado(matricula_id, body);
+    }
+
+    return { ok: true };
+  }
 }
