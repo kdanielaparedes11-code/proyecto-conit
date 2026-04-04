@@ -73,7 +73,7 @@ export class PagoController {
 
     // 👇 esto depende de lo que te envía izipay
     if (body.orderStatus === 'PAID') {
-      const matricula_id = body.orderId; //👈 AJUSTAR
+      const matricula_id = body.orderId;
 
       await this.pagoService.marcarPagado(matricula_id, body);
     }
