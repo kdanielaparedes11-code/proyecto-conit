@@ -11,13 +11,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Pago } from './entities/pago.entity';
 
-
 @Injectable()
 export class PagoService {
-
   constructor(
     private matriculaService: MatriculaService,
-      @InjectRepository(Pago)
+    @InjectRepository(Pago)
     private pagoRepository: Repository<Pago>,
   ) {}
 
@@ -27,41 +25,51 @@ export class PagoService {
   async getPagosPendientes() {
     const { data, error } = await supabase
       .from('matricula')
-      .select(`
+      .select(
+        `
         id,
         observacion,
         estado,
-        idalumno,
+        alumno (
+          nombre,
+          apellido
+        ),
         grupo (
-          idcurso,
           curso (
             precio,
             nombrecurso
           )
         )
-      `)
-      .eq('estado', 'pendiente')
-      .eq('idalumno', 1);
+      `,
+      )
+      .eq('estado', 'pendiente');
 
     if (error) throw new Error(error.message);
 
-    return (data || []).map((m: any) => ({
-      id: m.id,
-      descripcion: m.observacion || 'Matrícula pendiente',
-      curso: m.grupo?.curso?.nombrecurso || 'Curso',
-      monto: m.grupo?.curso?.precio || 0,
-      estado: m.estado,
-      idalumno: m.idalumno,
-    }));
+    return (data || []).map((m: any) => {
+      const nombreAlumno = m.alumno.nombre
+        ? `${m.alumno.nombres} ${m.alumno.apellidos} || ''}`
+        : m.alumno?.nombres || 'Alumno Desconocido';
+
+      return {
+        id: m.id,
+        descripcion: m.observacion || 'Matrícula pendiente',
+        alumno: nombreAlumno,
+        curso: m.grupo?.curso?.nombrecurso || 'Curso Desconocido',
+        monto: m.grupo?.curso?.precio || 0,
+        estado: m.estado,
+      };
+    });
   }
 
   // ==============================
   // PAGOS REALIZADOS
   // ==============================
-async getPagosRealizados() {
-  const { data, error } = await supabase
-    .from('pago')
-    .select(`
+  async getPagosRealizados() {
+    const { data, error } = await supabase
+      .from('pago')
+      .select(
+        `
       id,
       fechapago,
       igv,
@@ -74,25 +82,25 @@ async getPagosRealizados() {
         id,
         observacion,
         estado,
-        idalumno,
+        alumno (
+          nombre,
+          apellido
+        ),
         grupo (
-          idcurso,
           curso (
             precio,
             nombrecurso
           )
         )
       )
-    `)
-    .eq('estado', 'pagado')        // Filtra por estado del pago
-    .eq('matricula.idalumno', 1);  // Filtra por id del alumno dentro de la relación
+    `,
+      )
+      .eq('estado', 'pagado'); // Filtra por estado del pago
 
-  if (error) throw new Error(error.message);
+    if (error) throw new Error(error.message);
 
-  return data;
-}
-
-
+    return data;
+  }
 
   // ==============================
   // PAGO CON MERCADOPAGO
@@ -107,7 +115,10 @@ async getPagosRealizados() {
       installments: Number(data.installments),
       payment_method_id: data.payment_method_id,
       issuer_id: data.issuer_id,
-      payer: { email: data.email, identification: { type: 'DNI', number: data.dni } },
+      payer: {
+        email: data.email,
+        identification: { type: 'DNI', number: data.dni },
+      },
     });
 
     return this.procesarPagoBackend(data, payment.body, 'mercadopago');
@@ -118,35 +129,49 @@ async getPagosRealizados() {
   // ==============================
   async pagarConPaypal(data: any) {
     // 🌐 Aquí usarías la API de PayPal REST v2
-    const res = await axios.post('https://api-m.sandbox.paypal.com/v2/checkout/orders', {
-      intent: 'CAPTURE',
-      purchase_units: [{ amount: { currency_code: 'PEN', value: String(data.preciofinal) } }],
-      payer: { email_address: data.email },
-    }, {
-      headers: { Authorization: `Bearer ${process.env.PAYPAL_ACCESS_TOKEN}` }
-    });
+    const res = await axios.post(
+      'https://api-m.sandbox.paypal.com/v2/checkout/orders',
+      {
+        intent: 'CAPTURE',
+        purchase_units: [
+          { amount: { currency_code: 'PEN', value: String(data.preciofinal) } },
+        ],
+        payer: { email_address: data.email },
+      },
+      {
+        headers: { Authorization: `Bearer ${process.env.PAYPAL_ACCESS_TOKEN}` },
+      },
+    );
 
     // Capturar pago inmediatamente (sandbox)
     const orderId = res.data.id;
-    const capture = await axios.post(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`, {}, {
-      headers: { Authorization: `Bearer ${process.env.PAYPAL_ACCESS_TOKEN}` }
-    });
+    const capture = await axios.post(
+      `https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`,
+      {},
+      {
+        headers: { Authorization: `Bearer ${process.env.PAYPAL_ACCESS_TOKEN}` },
+      },
+    );
 
     const pago = {
       id: capture.data.id,
       status: capture.data.status.toLowerCase(), // APPROVED -> approved
-      status_detail: null
+      status_detail: null,
     };
 
     return this.procesarPagoBackend(data, pago, 'paypal');
   }
 
- 
-    // ==============================
+  // ==============================
   // PROCESAR PAGO Y GUARDAR EN SUPABASE
   // ==============================
   private async procesarPagoBackend(data: any, pago: any, metodo: string) {
-    const estado = pago.status === 'approved' ? 'pagado' : (pago.status === 'rejected' ? 'rechazado' : 'pendiente');
+    const estado =
+      pago.status === 'approved'
+        ? 'pagado'
+        : pago.status === 'rejected'
+          ? 'rechazado'
+          : 'pendiente';
 
     const { data: existe } = await supabase
       .from('pago')
@@ -155,30 +180,34 @@ async getPagosRealizados() {
       .maybeSingle();
 
     if (!existe) {
-      await supabase.from('pago').insert([{
-        fechapago: new Date(),
-        precioinicial: data.precioinicial,
-        preciodescuento: data.preciodescuento,
-        preciofinal: data.preciofinal,
-        igv: data.igv,
-        tipopago: metodo,
-        estado,
-        matricula_id: data.matricula_id,
-        idpagodoc: pago.id,
-        idtipocomprobante: 1,
-        status_detail: pago.status_detail
-      }]);
+      await supabase.from('pago').insert([
+        {
+          fechapago: new Date(),
+          precioinicial: data.precioinicial,
+          preciodescuento: data.preciodescuento,
+          preciofinal: data.preciofinal,
+          igv: data.igv,
+          tipopago: metodo,
+          estado,
+          matricula_id: data.matricula_id,
+          idpagodoc: pago.id,
+          idtipocomprobante: 1,
+          status_detail: pago.status_detail,
+        },
+      ]);
     }
 
     if (estado === 'pagado') {
-      await supabase.from('matricula').update({ estado: 'pagado' }).eq('id', data.matricula_id);
+      await supabase
+        .from('matricula')
+        .update({ estado: 'pagado' })
+        .eq('id', data.matricula_id);
       const pdfPath = await this.generarPDF(data, pago);
       await this.enviarCorreo(data.email, data, pdfPath);
     }
 
     return { id: pago.id, status: estado, status_detail: pago.status_detail };
   }
-
 
   // ==============================
   // PAGO MANUAL
@@ -199,17 +228,24 @@ async getPagosRealizados() {
   // PAGO CON TARJETA
   // ==============================
   async pagarConTarjeta(data: any) {
-
     mercadopago.configure({ access_token: process.env.MP_ACCESS_TOKEN });
-    console.log("📦 DATA BACKEND:", data);
+    console.log('📦 DATA BACKEND:', data);
 
     // 🔹 Sandbox: simulamos pago aprobado
     if (data.sandbox) {
       const fakePayment = {
-        body: { id: Math.floor(Math.random() * 10000000), status: "approved", status_detail: "accredited" }
+        body: {
+          id: Math.floor(Math.random() * 10000000),
+          status: 'approved',
+          status_detail: 'accredited',
+        },
       };
       await this._guardarPago(data, fakePayment);
-      return { id: fakePayment.body.id, status: fakePayment.body.status, status_detail: fakePayment.body.status_detail };
+      return {
+        id: fakePayment.body.id,
+        status: fakePayment.body.status,
+        status_detail: fakePayment.body.status_detail,
+      };
     }
 
     try {
@@ -220,31 +256,32 @@ async getPagosRealizados() {
         installments: Number(data.installments),
         payment_method_id: data.payment_method_id,
         issuer_id: data.issuer_id,
-        payer: { email: data.email, identification: { type: "DNI", number: data.dni } }
+        payer: {
+          email: data.email,
+          identification: { type: 'DNI', number: data.dni },
+        },
       });
 
-      console.log("✅ RESPUESTA MP:", payment.body);
+      console.log('✅ RESPUESTA MP:', payment.body);
       await this._guardarPago(data, payment);
 
       return {
         id: payment.body.id,
         status: payment.body.status,
-        status_detail: payment.body.status_detail
+        status_detail: payment.body.status_detail,
       };
-
     } catch (error) {
-      console.error("💥 ERROR GENERAL:", error);
+      console.error('💥 ERROR GENERAL:', error);
       throw error;
     }
   }
 
   // 🔹 Método privado para guardar pago + PDF + correo
   private async _guardarPago(data: any, payment: any) {
-    let estado = payment.body.status === "approved" ? "pagado" : "rechazado";
+    let estado = payment.body.status === 'approved' ? 'pagado' : 'rechazado';
 
-    const { error: errorPago } = await supabase
-      .from('pago')
-      .insert([{
+    const { error: errorPago } = await supabase.from('pago').insert([
+      {
         fechapago: new Date(),
         precioinicial: data.precioinicial,
         preciodescuento: data.preciodescuento,
@@ -255,13 +292,15 @@ async getPagosRealizados() {
         matricula_id: data.matricula_id,
         idpagodoc: payment.body.id,
         idtipocomprobante: 1,
-        status_detail: payment.body.status_detail || null
-      }]);
+        status_detail: payment.body.status_detail || null,
+      },
+    ]);
 
     if (errorPago) throw new Error(errorPago.message);
 
-    if (estado === "pagado") {
-      await supabase.from('matricula')
+    if (estado === 'pagado') {
+      await supabase
+        .from('matricula')
         .update({ estado: 'pagado' })
         .eq('id', data.matricula_id);
 
@@ -274,28 +313,28 @@ async getPagosRealizados() {
   // WEBHOOK
   // ==============================
   async procesarWebhook(body: any) {
-    console.log("📩 WEBHOOK:", body);
+    console.log('📩 WEBHOOK:', body);
 
-    if (body.type === "payment") {
+    if (body.type === 'payment') {
       const paymentId = body.data.id;
       const payment = await mercadopago.payment.findById(paymentId);
       const estadoMP = payment.body.status;
-      let estado = "pendiente";
-      if (estadoMP === "approved") estado = "pagado";
-      if (estadoMP === "rejected") estado = "rechazado";
+      let estado = 'pendiente';
+      if (estadoMP === 'approved') estado = 'pagado';
+      if (estadoMP === 'rejected') estado = 'rechazado';
 
       await supabase
         .from('pago')
         .update({ estado, status_detail: payment.body.status_detail })
         .eq('idpagodoc', paymentId);
 
-      console.log("✅ WEBHOOK actualizado:", estado);
+      console.log('✅ WEBHOOK actualizado:', estado);
     }
 
     return { received: true };
   }
 
-    // ==============================
+  // ==============================
   // PDF Y CORREO
   // ==============================
   async generarPDF(data: any, payment: any) {
@@ -318,7 +357,7 @@ async getPagosRealizados() {
   async enviarCorreo(email: string, detalle: any, pdfPath: string) {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
     });
 
     await transporter.sendMail({
@@ -326,90 +365,90 @@ async getPagosRealizados() {
       to: email,
       subject: '✅ Pago confirmado',
       html: `<h2>Pago exitoso</h2><p>Monto: S/ ${detalle.preciofinal}</p>`,
-      attachments: [{ filename: 'boleta.pdf', path: pdfPath }]
+      attachments: [{ filename: 'boleta.pdf', path: pdfPath }],
     });
   }
 
-   // ==============================
+  // ==============================
   // PAGO CON IZIPAY
   // ==============================
   async pagarConIzipay(data: any) {
-
-  if (!process.env.IZIPAY_USER || !process.env.IZIPAY_PASSWORD) {
-    throw new Error("❌ Credenciales Izipay no configuradas");
-  }
-
-  const res = await axios.post(
-    "https://api.micuentaweb.pe/api-payment/V4/Charge/CreatePayment",
-    {
-      amount: data.preciofinal * 100,
-      currency: "PEN",
-      orderId: data.matricula_id.toString(), // 🔥 IMPORTANTE
-      customer: {
-        email: data.email
-      }
-    },
-    {
-      headers: {
-        Authorization: "Basic " + Buffer.from(
-          `${process.env.IZIPAY_USER}:${process.env.IZIPAY_PASSWORD}`
-        ).toString("base64"),
-        "Content-Type": "application/json"
-      }
+    if (!process.env.IZIPAY_USER || !process.env.IZIPAY_PASSWORD) {
+      throw new Error('❌ Credenciales Izipay no configuradas');
     }
-  );
 
-  return {
-    status: "pending",
-    formToken: res.data.answer?.formToken
-  };
-}
+    const res = await axios.post(
+      'https://api.micuentaweb.pe/api-payment/V4/Charge/CreatePayment',
+      {
+        amount: data.preciofinal * 100,
+        currency: 'PEN',
+        orderId: data.matricula_id.toString(), // 🔥 IMPORTANTE
+        customer: {
+          email: data.email,
+        },
+      },
+      {
+        headers: {
+          Authorization:
+            'Basic ' +
+            Buffer.from(
+              `${process.env.IZIPAY_USER}:${process.env.IZIPAY_PASSWORD}`,
+            ).toString('base64'),
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    return {
+      status: 'pending',
+      formToken: res.data.answer?.formToken,
+    };
+  }
 
   async confirmarPagoIzipay(formToken: string, data: any) {
-
-  const res = await axios.post(
-    "https://api.micuentaweb.pe/api-payment/V4/Charge/GetPaymentDetails",
-    { formToken },
-    {
-      headers: {
-        Authorization: "Basic " + Buffer.from(
-          `${process.env.IZIPAY_USER}:${process.env.IZIPAY_PASSWORD}`
-        ).toString("base64"),
-        "Content-Type": "application/json"
-      }
-    }
-  );
-
-  const estado = res.data.answer?.orderStatus;
-
-  if (estado === "PAID") {
-    return this.procesarPagoBackend(
-      data,
-      { id: Date.now(), status: "approved", status_detail: "accredited" },
-      "izipay"
+    const res = await axios.post(
+      'https://api.micuentaweb.pe/api-payment/V4/Charge/GetPaymentDetails',
+      { formToken },
+      {
+        headers: {
+          Authorization:
+            'Basic ' +
+            Buffer.from(
+              `${process.env.IZIPAY_USER}:${process.env.IZIPAY_PASSWORD}`,
+            ).toString('base64'),
+          'Content-Type': 'application/json',
+        },
+      },
     );
+
+    const estado = res.data.answer?.orderStatus;
+
+    if (estado === 'PAID') {
+      return this.procesarPagoBackend(
+        data,
+        { id: Date.now(), status: 'approved', status_detail: 'accredited' },
+        'izipay',
+      );
+    }
+
+    return { status: 'pending' };
   }
 
-  return { status: "pending" };
-}
-
-
   async procesarWebhookIzipay(body: any) {
-
-    console.log("📩 WEBHOOK RAW:", body);
+    console.log('📩 WEBHOOK RAW:', body);
 
     const hashRecibido = body['kr-hash'];
     const claveSecreta = process.env.IZIPAY_HMAC_SHA256;
 
     if (!claveSecreta) {
-  throw new Error("❌ Falta IZIPAY_HMAC_SHA256 en .env");
-}
+      throw new Error('❌ Falta IZIPAY_HMAC_SHA256 en .env');
+    }
 
     // 🔐 1. Construir string para firma
     const data = Object.keys(body)
-      .filter(key => key.startsWith('kr-') && key !== 'kr-hash')
+      .filter((key) => key.startsWith('kr-') && key !== 'kr-hash')
       .sort()
-      .map(key => `${key}=${body[key]}`)
+      .map((key) => `${key}=${body[key]}`)
       .join('&');
 
     // 🔐 2. Generar hash local
@@ -420,11 +459,11 @@ async getPagosRealizados() {
 
     // 🔐 3. Validar firma
     if (hashCalculado !== hashRecibido) {
-      console.error("❌ FIRMA INVÁLIDA");
-      throw new Error("Firma inválida");
+      console.error('❌ FIRMA INVÁLIDA');
+      throw new Error('Firma inválida');
     }
 
-    console.log("✅ FIRMA VÁLIDA");
+    console.log('✅ FIRMA VÁLIDA');
 
     // ============================
     // 📊 DATOS IMPORTANTES
@@ -433,13 +472,12 @@ async getPagosRealizados() {
     const orderId = body['kr-answer-orderDetails-orderId'];
     const monto = body['kr-answer-orderDetails-orderTotalAmount'];
 
-    console.log("📊 ESTADO:", estado);
+    console.log('📊 ESTADO:', estado);
 
     // ============================
     // 💾 ACTUALIZAR BD
     // ============================
-    if (estado === "PAID") {
-
+    if (estado === 'PAID') {
       await supabase
         .from('matricula')
         .update({ estado: 'pagado' })
@@ -450,49 +488,50 @@ async getPagosRealizados() {
         .update({ estado: 'pagado' })
         .eq('matricula_id', orderId);
 
-      console.log("💰 Pago confirmado en BD");
+      console.log('💰 Pago confirmado en BD');
 
       // 📄 PDF + 📧 correo
-      const pdfPath = await this.generarPDF({ preciofinal: monto / 100 }, { id: orderId });
+      const pdfPath = await this.generarPDF(
+        { preciofinal: monto / 100 },
+        { id: orderId },
+      );
 
-      await this.enviarCorreo("cliente@email.com", { preciofinal: monto / 100 }, pdfPath);
-
+      await this.enviarCorreo(
+        'cliente@email.com',
+        { preciofinal: monto / 100 },
+        pdfPath,
+      );
     }
 
     return { ok: true };
   }
 
   async buscarPorMatricula(matricula_id: number) {
-  return await this.pagoRepository.findOne({
-    where: {
-      matricula: { id: matricula_id }
-    }
-  });
-}
-
-  async marcarPagado(matricula_id: number, data: any) {
-  const pago = await this.pagoRepository.findOne({
-    where: {
-      matricula: { id: matricula_id }
-    },
-    relations: ["matricula"]
-  });
-
-  if (!pago) {
-    throw new Error("Pago no encontrado");
+    return await this.pagoRepository.findOne({
+      where: {
+        matricula: { id: matricula_id },
+      },
+    });
   }
 
-  pago.estado = "pagado";
-  pago.status_detail = JSON.stringify(data);
-  pago.fechapago = new Date();
+  async marcarPagado(matricula_id: number, data: any) {
+    const pago = await this.pagoRepository.findOne({
+      where: {
+        matricula: { id: matricula_id },
+      },
+      relations: ['matricula'],
+    });
 
-  return await this.pagoRepository.save(pago);
-}
+    if (!pago) {
+      throw new Error('Pago no encontrado');
+    }
 
+    pago.estado = 'pagado';
+    pago.status_detail = JSON.stringify(data);
+    pago.fechapago = new Date();
 
-
-
-
+    return await this.pagoRepository.save(pago);
+  }
 
   // ==============================
   // CORREO
