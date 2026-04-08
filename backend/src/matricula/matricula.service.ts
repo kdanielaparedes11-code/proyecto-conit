@@ -22,7 +22,6 @@ export class MatriculaService {
       throw new BadRequestException('Ya estás matriculado en este grupo');
     }
 
-    // Generar serie simple
     const prefijo = nombreCurso.slice(0, 3).toUpperCase();
     const correlativo = Math.floor(Math.random() * 999999)
       .toString()
@@ -30,36 +29,52 @@ export class MatriculaService {
     const serieGenerada = prefijo + correlativo;
 
     const matricula = await this.matriculaRepo.save({
-      alumno:{ id: alumnoId },
-      grupo:{ id: grupoId },
+      alumno: { id: alumnoId },
+      grupo: { id: grupoId },
 
-      estado:"pendiente",
+      estado: 'pendiente',
 
-      observacion:`Matrícula de ${nombreCurso}`,
-      serie:serieGenerada,
-      beneficio:"NINGUNO",
-      pacademico:"",
+      observacion: `Matrícula de ${nombreCurso}`,
+      serie: serieGenerada,
+      beneficio: 'NINGUNO',
+      pacademico: '',
 
-      idadministrador:1,
-      idcertificado:1,
-      idcontrolacademico:1
+      idadministrador: 1,
+      idcertificado: 1,
+      idcontrolacademico: 1,
     });
-    
 
     return matricula;
   }
 
   async findByAlumno(idalumno: number) {
-  return await this.matriculaRepo.find({
-    where: {
-      alumno: { id: idalumno }
-    },
-    relations: ['grupo'],
-    order: {
-      created_at: 'DESC'
-    }
-  });
-}
+    return await this.matriculaRepo.find({
+      where: {
+        alumno: { id: idalumno },
+      },
+      relations: ['grupo'],
+      order: {
+        created_at: 'DESC',
+      },
+    });
+  }
 
-}
+  async obtenerAlumnosPorCurso(idcurso: number) {
+    const matriculas = await this.matriculaRepo.find({
+      where: {
+        grupo: {
+          curso: { id: idcurso },
+        },
+      },
+      relations: ['alumno', 'grupo'],
+    });
 
+    return matriculas
+      .filter((m) => m.alumno != null)
+      .map((m) => ({
+        ...m.alumno,
+        idmatricula: m.id,
+        grupo_asignado: m.grupo ? m.grupo.nombregrupo : 'Sin grupo',
+      }));
+  }
+}

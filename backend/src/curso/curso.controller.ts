@@ -7,7 +7,7 @@ import {
   Patch,
   Post,
   Body,
-  UseGuards
+  UseGuards,
 } from '@nestjs/common';
 import { CursoService } from './curso.service';
 import { Curso } from './entities/curso.entity';
@@ -26,6 +26,11 @@ export class CursoController {
   @Get(':id')
   async obtenerCurso(@Param('id', ParseIntPipe) id: number) {
     return this.cursoService.obtenerUnoCursoAlumno(id);
+  }
+
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.cursoService.obtenerUno(id);
   }
 
   @Delete(':id')
@@ -47,9 +52,4 @@ export class CursoController {
   update(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
     return this.cursoService.update(id, data);
   }
-
- 
 }
-
-  
-

@@ -17,6 +17,7 @@ export class CursoService {
   async obtenerUno(id: number) {
     return this.cursoRepository.findOne({
       where: { id },
+      relations: ['grupos', 'grupos.docente'],
     });
   }
 

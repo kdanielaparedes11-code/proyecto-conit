@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Alumno } from './entities/alumno.entity';
 import { Usuario } from 'src/usuario/entities/usuario.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AlumnoService {
@@ -16,7 +17,8 @@ export class AlumnoService {
 
   async findAll() {
     return await this.alumnoRepository.find({
-      order: { id: 'DESC' }, //Traemos los alumnos ordenados por id de forma descendente, es decir, los más recientes primero
+      order: { id: 'DESC' },
+      relations: ['matriculas', 'matriculas.grupo', 'matriculas.grupo.curso'],
     });
   }
 
@@ -31,65 +33,86 @@ export class AlumnoService {
 
   async create(data: any) {
     return await this.dataSource.transaction(async (manager) => {
-      let usuarioCreado: Usuario | undefined;
+      const { contrasenia, crearUsuario, ...datosAlumno } = data;
 
-      if (data.crearUsuario) {
-        usuarioCreado = await manager.save(
+      let usuarioCreadoId: number | null = null;
+
+      // 1. Crear usuario
+      if (crearUsuario && contrasenia) {
+        const hashedPassword = await bcrypt.hash(contrasenia, 10);
+
+        const nuevoUsuario = await manager.save(
           manager.create(Usuario, {
-            correo: data.correo,
-            contrasenia: data.contrasenia,
+            correo: datosAlumno.correo,
+            contrasenia: hashedPassword,
             rol: 'ALUMNO',
             idempresa: 1,
           }),
         );
+        usuarioCreadoId = nuevoUsuario.id;
       }
 
-      const alumno = manager.create(Alumno, {
-        nombre: data.nombre,
-        apellido: data.apellido,
-        tipodocumento: data.tipodocumento,
-        numdocumento: data.numdocumento,
-        telefono: Number(data.telefono),
-        direccion: data.direccion,
-        correo: data.correo,
-        lugar_residencia: data.lugar_residencia,
-        departamento: data.departamento,
-        provincia: data.provincia,
-        distrito: data.distrito,
-        estado_civil: data.estado_civil,
+      // 2. Crear alumno
+      const alumnoParams: any = {
+        ...datosAlumno,
         nombre_editado: true,
-        ...(usuarioCreado && { idUsuario: usuarioCreado.id }),
-      });
+      };
+
+      if (usuarioCreadoId) {
+        alumnoParams.idusuario = usuarioCreadoId;
+      }
+
+      const alumno = manager.create(Alumno, alumnoParams);
       return await manager.save(alumno);
     });
   }
 
   async update(id: number, data: any) {
-    const { crearUsuario, contrasenia, ...datosActualizar } = data;
+    return await this.dataSource.transaction(async (manager) => {
+      const alumno = await manager.findOne(Alumno, { where: { id } });
+      if (!alumno) throw new NotFoundException('Alumno no encontrado');
 
-    if (crearUsuario) {
-      const nuevoUsuario = await this.usuarioRepository.save(
-        this.usuarioRepository.create({
-          correo: datosActualizar.correo,
-          contrasenia: contrasenia,
-          rol: 'ALUMNO',
-          idempresa: 1,
-        }),
-      );
-      datosActualizar.idUsuario = nuevoUsuario.id;
-    }
+      const { crearUsuario, contrasenia, ...datosActualizar } = data;
 
-    await this.alumnoRepository.update(id, datosActualizar);
-    return this.findOne(id);
+      if (crearUsuario && contrasenia && !alumno.idusuario) {
+        const hashedPassword = await bcrypt.hash(contrasenia, 10);
+
+        const nuevoUsuario = await manager.save(
+          manager.create(Usuario, {
+            correo: datosActualizar.correo || alumno.correo,
+            contrasenia: hashedPassword,
+            rol: 'ALUMNO',
+            idempresa: 1,
+          }),
+        );
+        datosActualizar.idusuario = nuevoUsuario.id;
+      }
+
+      await manager.update(Alumno, id, datosActualizar);
+      return await manager.findOne(Alumno, { where: { id } });
+    });
   }
 
   async remove(id: number) {
     await this.alumnoRepository.update(id, { estado: false });
+
+    // Inhabilitamos también su usuario
+    const alumno = await this.findOne(id);
+    if (alumno.idusuario) {
+      await this.usuarioRepository.update(alumno.idusuario, { estado: false });
+    }
+
     return { message: 'Alumno inhabilitado correctamente' };
   }
 
   async habilitar(id: number) {
     await this.alumnoRepository.update(id, { estado: true });
+
+    const alumno = await this.findOne(id);
+    if (alumno.idusuario) {
+      await this.usuarioRepository.update(alumno.idusuario, { estado: true });
+    }
+
     return { message: 'Alumno habilitado correctamente' };
   }
 }
