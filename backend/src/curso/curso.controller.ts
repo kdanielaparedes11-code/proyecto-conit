@@ -11,21 +11,36 @@ import {
 } from '@nestjs/common';
 import { CursoService } from './curso.service';
 import { Curso } from './entities/curso.entity';
+import { Grupo } from '../grupo/entities/grupo.entity';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.auth.guard';
+import { Matricula } from '../matricula/entities/matricula.entity';
 
 @Controller('curso')
 @UseGuards(JwtAuthGuard)
 export class CursoController {
-  constructor(private readonly cursoService: CursoService) {}
+  constructor(
+    private readonly cursoService: CursoService
+  ) {}
 
   @Get()
-  async obtenerCursos(): Promise<Curso[]> {
-    return this.cursoService.listarCursosAlumno();
+  findAll() {
+    return this.cursoService.findAll();
   }
 
-  @Get(':id')
-  async obtenerCurso(@Param('id', ParseIntPipe) id: number) {
-    return this.cursoService.obtenerUnoCursoAlumno(id);
+  @Get('/alumno/:id')
+  async obtenerCursos(@Param('id') id: number): Promise<Matricula[]> {
+    return this.cursoService.listarCursosAlumno(id);
+  }
+
+  @Get('/alumno/:idalumno/curso/:idcurso')
+  async obtenerCursoAlumno(
+    @Param('idalumno') idalumno: string,
+    @Param('idcurso') idcurso: string,
+  ) {
+    return this.cursoService.obtenerUnoCursoAlumno(
+      Number(idcurso),
+      Number(idalumno),
+    );
   }
 
   @Get(':id')

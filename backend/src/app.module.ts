@@ -32,6 +32,9 @@ import { MultimediaModule } from './multimedia/multimedia.module';
 import { SoporteModule } from './soporte/soporte.module';
 import { PensionModule } from './pension/pension.module';
 import { DocenteCursoAdicionalModule } from './docente-curso-adicional/docente-curso-adicional.module';
+import { ExamenPreguntaModule } from './examen_pregunta/examen_pregunta.module';
+import { ExamenOpcionModule } from './examen_opcion/examen_opcion.module';
+import { ExamenIntentoModule } from './examen_intento/examen_intento.module';
 
 @Module({
   imports: [
@@ -92,6 +95,9 @@ import { DocenteCursoAdicionalModule } from './docente-curso-adicional/docente-c
     SoporteModule,
     PensionModule,
     DocenteCursoAdicionalModule,
+    ExamenPreguntaModule,
+    ExamenOpcionModule,
+    ExamenIntentoModule,
   ],
   controllers: [AppController],
   providers: [AppService],

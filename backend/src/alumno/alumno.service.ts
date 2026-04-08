@@ -15,6 +15,19 @@ export class AlumnoService {
     private readonly dataSource: DataSource,
   ) {}
 
+  async getPerfil(userId: number) {
+    const alumno = await this.alumnoRepository.findOne({
+      where: { idusuario: userId },
+      relations: ['usuario'], 
+    });
+
+    if (!alumno) {
+      throw new NotFoundException('Alumno no encontrado');
+    }
+
+    return alumno;
+  }
+
   async findAll() {
     return await this.alumnoRepository.find({
       order: { id: 'DESC' },
