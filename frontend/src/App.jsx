@@ -44,6 +44,7 @@ const Alumnos = lazy(() => import("./admin/Alumnos"));
 const Usuarios = lazy(() => import("./admin/Usuarios"));
 const Pagos = lazy(() => import("./admin/Pagos"));
 const ControlSesiones = lazy(() => import("./admin/ControlSesiones"));
+import Certificados from "./admin/Certificados";
 
 // DOCENTE
 import DocenteLayout from "./docente/DocenteLayout";
@@ -175,6 +176,7 @@ export default function App() {
               <Route path="usuarios" element={<Usuarios />} />
               <Route path="pagos" element={<Pagos />} />
               <Route path="sesiones" element={<ControlSesiones />} />
+              <Route path="certificados" element={<Certificados />} />
             </Route>
           </Route>
 

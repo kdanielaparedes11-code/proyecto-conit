@@ -35,6 +35,14 @@ import { DocenteCursoAdicionalModule } from './docente-curso-adicional/docente-c
 import { ExamenPreguntaModule } from './examen_pregunta/examen_pregunta.module';
 import { ExamenOpcionModule } from './examen_opcion/examen_opcion.module';
 import { ExamenIntentoModule } from './examen_intento/examen_intento.module';
+import { GoogleMeetService } from './google-meet/google-meet.service';
+import { GoogleMeetModule } from './google-meet/google-meet.module';
+import { MailService } from './mail/mail.service';
+import { MailModule } from './mail/mail.module';
+import { S3Service } from './s3/s3.service';
+import { S3Module } from './s3/s3.module';
+import { CertificadoModule } from './certificado/certificado.module';
+
 
 @Module({
   imports: [
@@ -98,8 +106,12 @@ import { ExamenIntentoModule } from './examen_intento/examen_intento.module';
     ExamenPreguntaModule,
     ExamenOpcionModule,
     ExamenIntentoModule,
+    GoogleMeetModule,
+    MailModule,
+    S3Module,
+    CertificadoModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, GoogleMeetService, MailService, S3Service],
 })
 export class AppModule {}
