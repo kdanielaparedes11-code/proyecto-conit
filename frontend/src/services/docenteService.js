@@ -1027,6 +1027,9 @@ export const crearTarea = async (payload) => {
         texto_apoyo: tipoApoyo === "texto" ? textoApoyo : null,
         archivo_apoyo_url: archivoApoyoUrl,
         video_apoyo_url: videoApoyoUrl,
+        apoyo_storage_provider: apoyoStorageProvider,
+        apoyo_bucket: apoyoBucket,
+        apoyo_object_key: apoyoObjectKey,
         calificable: Boolean(calificable),
         idmodulo: idmodulo ? Number(idmodulo) : null,
         idleccion: idleccion ? Number(idleccion) : null,
@@ -2470,8 +2473,46 @@ export const getPendientesRevisionByGrupo = async (grupoId) => {
 
 
 
+// ==============================
+// EXÁMENES
+// ==============================
 
+const TIPOS_PREGUNTA_CON_OPCIONES = ["unica", "multiple"];
+const TIPOS_PREGUNTA_TEXTO = ["texto_corto", "texto_largo"];
 
+const normalizarConfiguracionPregunta = (pregunta = {}) => {
+  const tipoPregunta = pregunta.tipo_pregunta || "unica";
+
+  return {
+    tipo_pregunta: tipoPregunta,
+    respuesta_texto:
+      TIPOS_PREGUNTA_TEXTO.includes(tipoPregunta) || tipoPregunta === "numerica"
+        ? (pregunta.respuesta_texto || "").trim() || null
+        : null,
+    texto_placeholder:
+      !TIPOS_PREGUNTA_CON_OPCIONES.includes(tipoPregunta)
+        ? (pregunta.texto_placeholder || "").trim() || null
+        : null,
+    max_caracteres:
+      tipoPregunta === "texto_corto"
+        ? Number(pregunta.max_caracteres || 50)
+        : tipoPregunta === "texto_largo"
+        ? Number(pregunta.max_caracteres || 200)
+        : null,
+    permitir_decimales:
+      tipoPregunta === "numerica"
+        ? Boolean(pregunta.permitir_decimales)
+        : true,
+    tamano_max_mb:
+      tipoPregunta === "archivo"
+        ? Number(pregunta.tamano_max_mb || 10)
+        : 10,
+    extensiones_permitidas:
+      tipoPregunta === "archivo"
+        ? (pregunta.extensiones_permitidas || "").trim() || null
+        : null,
+  };
+};
 
 export const crearExamen = async ({
   leccionId,
@@ -2500,8 +2541,10 @@ export const crearExamen = async ({
 
   if (errExamen) throw new Error(errExamen.message);
 
-  for (let i = 0; i < preguntas.length; i++) {
+  for (let i = 0; i < (preguntas || []).length; i++) {
     const pregunta = preguntas[i];
+    const config = normalizarConfiguracionPregunta(pregunta);
+    const tipoPregunta = config.tipo_pregunta;
 
     const { data: preguntaDB, error: errPregunta } = await supabase
       .from("examen_pregunta")
@@ -2511,27 +2554,135 @@ export const crearExamen = async ({
         puntaje: Number(pregunta.puntaje || 1),
         orden: i + 1,
         estado: true,
+        tipo_pregunta: tipoPregunta,
+        respuesta_texto: config.respuesta_texto,
+        texto_placeholder: config.texto_placeholder,
+        max_caracteres: config.max_caracteres,
+        permitir_decimales: config.permitir_decimales,
+        tamano_max_mb: config.tamano_max_mb,
+        extensiones_permitidas: config.extensiones_permitidas,
       })
       .select()
       .single();
 
     if (errPregunta) throw new Error(errPregunta.message);
 
-    const opciones = (pregunta.opciones || []).map((op, idx) => ({
-      idpregunta: Number(preguntaDB.id),
-      texto: op.texto?.trim(),
-      es_correcta: !!op.es_correcta,
-      orden: idx + 1,
-    }));
+    if (TIPOS_PREGUNTA_CON_OPCIONES.includes(tipoPregunta)) {
+      const opciones = (pregunta.opciones || [])
+        .filter((op) => op.texto?.trim())
+        .map((op, idx) => ({
+          idpregunta: Number(preguntaDB.id),
+          texto: op.texto?.trim(),
+          es_correcta: !!op.es_correcta,
+          orden: idx + 1,
+        }));
 
-    const { error: errOpciones } = await supabase
-      .from("examen_opcion")
-      .insert(opciones);
+      if (opciones.length > 0) {
+        const { error: errOpciones } = await supabase
+          .from("examen_opcion")
+          .insert(opciones);
 
-    if (errOpciones) throw new Error(errOpciones.message);
+        if (errOpciones) throw new Error(errOpciones.message);
+      }
+    }
   }
 
   return examen;
+};
+
+export const getExamenDetalle = async (examenId) => {
+  const idExamen = Number(examenId);
+
+  const { data: examen, error: errExamen } = await supabase
+    .from("examen")
+    .select("*")
+    .eq("id", idExamen)
+    .maybeSingle();
+
+  if (errExamen) throw new Error(errExamen.message);
+  if (!examen) throw new Error("No se encontró el examen.");
+
+  const { data: preguntasDB, error: errPreg } = await supabase
+    .from("examen_pregunta")
+    .select(
+      `
+      id,
+      idexamen,
+      enunciado,
+      puntaje,
+      orden,
+      estado,
+      tipo_pregunta,
+      respuesta_texto,
+      texto_placeholder,
+      max_caracteres,
+      permitir_decimales,
+      tamano_max_mb,
+      extensiones_permitidas
+      `
+    )
+    .eq("idexamen", idExamen)
+    .eq("estado", true)
+    .order("orden", { ascending: true });
+
+  if (errPreg) throw new Error(errPreg.message);
+
+  const preguntaIds = (preguntasDB || []).map((p) => Number(p.id));
+  let opcionesDB = [];
+
+  if (preguntaIds.length > 0) {
+    const { data: opciones, error: errOpciones } = await supabase
+      .from("examen_opcion")
+      .select("id, idpregunta, texto, es_correcta, orden")
+      .in("idpregunta", preguntaIds)
+      .order("orden", { ascending: true });
+
+    if (errOpciones) throw new Error(errOpciones.message);
+    opcionesDB = opciones || [];
+  }
+
+  return {
+    ...examen,
+    preguntas: (preguntasDB || []).map((pregunta) => {
+      const tipo = pregunta.tipo_pregunta || "unica";
+
+      return {
+        id: Number(pregunta.id),
+        enunciado: pregunta.enunciado || "",
+        puntaje: Number(pregunta.puntaje || 1),
+        tipo_pregunta: tipo,
+        respuesta_texto: pregunta.respuesta_texto || "",
+        texto_placeholder: pregunta.texto_placeholder || "",
+        max_caracteres:
+          pregunta.max_caracteres !== null && pregunta.max_caracteres !== undefined
+            ? Number(pregunta.max_caracteres)
+            : tipo === "texto_corto"
+            ? 50
+            : tipo === "texto_largo"
+            ? 200
+            : null,
+        permitir_decimales:
+          pregunta.permitir_decimales !== null && pregunta.permitir_decimales !== undefined
+            ? !!pregunta.permitir_decimales
+            : true,
+        tamano_max_mb:
+          pregunta.tamano_max_mb !== null && pregunta.tamano_max_mb !== undefined
+            ? Number(pregunta.tamano_max_mb)
+            : 10,
+        extensiones_permitidas: pregunta.extensiones_permitidas || "",
+        opciones: TIPOS_PREGUNTA_CON_OPCIONES.includes(tipo)
+          ? opcionesDB
+              .filter((opcion) => Number(opcion.idpregunta) === Number(pregunta.id))
+              .sort((a, b) => Number(a.orden || 0) - Number(b.orden || 0))
+              .map((opcion) => ({
+                id: Number(opcion.id),
+                texto: opcion.texto || "",
+                es_correcta: !!opcion.es_correcta,
+              }))
+          : [],
+      };
+    }),
+  };
 };
 
 export const getExamenesByLeccion = async (leccionId) => {
@@ -2587,7 +2738,10 @@ export const getExamenesByLeccion = async (leccionId) => {
   });
 };
 
-export const getEvaluacionesExamenDisponiblesByGrupo = async (grupoId, examenIdActual = null) => {
+export const getEvaluacionesExamenDisponiblesByGrupo = async (
+  grupoId,
+  examenIdActual = null
+) => {
   const { data, error } = await supabase
     .from("evaluacion_config")
     .select("id, idgrupo, nombre, porcentaje, tipo, idexamen, activa, orden")
@@ -2652,4 +2806,138 @@ export const deleteExamen = async (examenId) => {
   if (error) throw new Error(error.message);
 
   return true;
+};
+
+export const actualizarExamen = async (examenId, datosExamen) => {
+  const idExamen = Number(examenId);
+
+  const { error: errExamen } = await supabase
+    .from("examen")
+    .update({
+      titulo: datosExamen.titulo?.trim(),
+      descripcion: datosExamen.descripcion?.trim() || null,
+      duracion_minutos: Number(datosExamen.duracion_minutos || 30),
+      intentos_permitidos: Number(datosExamen.intentos_permitidos || 1),
+      nota_maxima: Number(datosExamen.nota_maxima || 20),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", idExamen);
+
+  if (errExamen) throw new Error(errExamen.message);
+
+  const { data: preguntasActuales, error: errPreguntasActuales } = await supabase
+    .from("examen_pregunta")
+    .select("id")
+    .eq("idexamen", idExamen);
+
+  if (errPreguntasActuales) throw new Error(errPreguntasActuales.message);
+
+  const preguntaIds = (preguntasActuales || []).map((p) => Number(p.id));
+
+  if (preguntaIds.length > 0) {
+    const { error: errEliminarOpciones } = await supabase
+      .from("examen_opcion")
+      .delete()
+      .in("idpregunta", preguntaIds);
+
+    if (errEliminarOpciones) throw new Error(errEliminarOpciones.message);
+  }
+
+  const { error: errEliminarPreguntas } = await supabase
+    .from("examen_pregunta")
+    .delete()
+    .eq("idexamen", idExamen);
+
+  if (errEliminarPreguntas) throw new Error(errEliminarPreguntas.message);
+
+  for (let i = 0; i < (datosExamen.preguntas || []).length; i++) {
+    const pregunta = datosExamen.preguntas[i];
+    const config = normalizarConfiguracionPregunta(pregunta);
+    const tipoPregunta = config.tipo_pregunta;
+
+    const { data: preguntaDB, error: errPregunta } = await supabase
+      .from("examen_pregunta")
+      .insert({
+        idexamen: idExamen,
+        enunciado: pregunta.enunciado?.trim(),
+        puntaje: Number(pregunta.puntaje || 1),
+        orden: i + 1,
+        estado: true,
+        tipo_pregunta: tipoPregunta,
+        respuesta_texto: config.respuesta_texto,
+        texto_placeholder: config.texto_placeholder,
+        max_caracteres: config.max_caracteres,
+        permitir_decimales: config.permitir_decimales,
+        tamano_max_mb: config.tamano_max_mb,
+        extensiones_permitidas: config.extensiones_permitidas,
+      })
+      .select()
+      .single();
+
+    if (errPregunta) throw new Error(errPregunta.message);
+
+    if (TIPOS_PREGUNTA_CON_OPCIONES.includes(tipoPregunta)) {
+      const opciones = (pregunta.opciones || [])
+        .filter((op) => op.texto?.trim())
+        .map((opcion, idx) => ({
+          idpregunta: Number(preguntaDB.id),
+          texto: opcion.texto?.trim(),
+          es_correcta: !!opcion.es_correcta,
+          orden: idx + 1,
+        }));
+
+      if (opciones.length > 0) {
+        const { error: errOpciones } = await supabase
+          .from("examen_opcion")
+          .insert(opciones);
+
+        if (errOpciones) throw new Error(errOpciones.message);
+      }
+    }
+  }
+
+  return await getExamenDetalle(idExamen);
+};
+
+// ==============================
+// SESIONES EN VIVO
+// ==============================
+
+export const getSesionesVivoByCurso = async (cursoId) => {
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+  const res = await fetch(`${apiUrl}/sesion-vivo/curso/${cursoId}`);
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data?.message || "No se pudieron cargar las sesiones en vivo.");
+  }
+
+  return data || [];
+};
+
+export const crearSesionVivo = async (payload) => {
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+  const res = await fetch(`${apiUrl}/sesion-vivo`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      idcurso: Number(payload.idcurso),
+      titulo: payload.titulo,
+      descripcion: payload.descripcion,
+      fecha: payload.fecha,
+      duracion: Number(payload.duracion),
+    }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data?.message || "No se pudo crear la sesión en vivo.");
+  }
+
+  return data;
 };

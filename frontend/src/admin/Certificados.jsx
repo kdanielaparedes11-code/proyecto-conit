@@ -38,7 +38,7 @@ const CAMPOS = [
 ];
 
 const MUESTRAS = {
-  alumno: "José Díaz Ramírez",
+  alumno: "NOMBRE DESEADO",
   curso: "POR HABER APROBADO SATISFACTORIAMENTE EL CURSO",
   descripcion: "Diseño y desarrollo web con enfoque práctico",
   fecha: "08/04/2026",
