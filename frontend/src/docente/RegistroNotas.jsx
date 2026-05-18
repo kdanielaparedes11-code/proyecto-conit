@@ -529,7 +529,7 @@ const guardarConfigEvaluaciones = async () => {
       await refrescarDatos();
       await procesarCertificadoAutomatico(modalAlumno);
       cerrarModal();
-      alert("Cambios guardados correctamente âœ…");
+      alert("Cambios guardados correctamente ✅");
     } catch (error) {
       console.error("Error guardando notas:", error);
       alert("Ocurrió un error al guardar las notas.");

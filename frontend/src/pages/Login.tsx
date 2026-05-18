@@ -3,13 +3,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Loader2, Eye, EyeOff, AlertTriangle } from "lucide-react";
+import { Loader2, Eye, EyeOff, AlertTriangle, LockKeyhole } from "lucide-react";
 
-// Importamos lo que construimos en los pasos anteriores
 import { loginSchema, LoginFormValues } from "../validations/auth.validation";
 import { login } from "../services/auth.service";
 
-// Importamos componente reCaptcha
 import ReCAPTCHA from "react-google-recaptcha";
 
 export default function Login() {
@@ -17,9 +15,9 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [capsLockOn, setCapsLockOn] = useState(false);
+
   const navigate = useNavigate();
 
-  // Conectamos el formulario con react-hook-form y zod para la validación
   const {
     register,
     handleSubmit,
@@ -29,15 +27,10 @@ export default function Login() {
   });
 
   const verificarMayusculas = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.getModifierState("CapsLock")) {
-      setCapsLockOn(true);
-    } else {
-      setCapsLockOn(false);
-    }
+    setCapsLockOn(e.getModifierState("CapsLock"));
   };
 
   const onSubmit = async (data: LoginFormValues) => {
-    // Validamos que el usuario haya completado el reCAPTCHA antes de enviar el formulario
     if (!captchaToken) {
       toast.error("Por favor completa el reCAPTCHA");
       return;
@@ -46,13 +39,11 @@ export default function Login() {
     try {
       setIsLoading(true);
 
-      // Combinamos los datos del formulario con el token del reCAPTCHA para enviar al backend
       const loginData = {
         ...data,
         recaptchaToken: captchaToken,
       };
 
-      // Llamamos al backend pasando los datos completos, incluyendo el token del reCAPTCHA
       const respuesta = await login(loginData);
       console.log("RESPUESTA LOGIN >>>", respuesta);
 
@@ -65,6 +56,7 @@ export default function Login() {
 
       const base64Url = token.split(".")[1];
       const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+
       const jsonPayload = decodeURIComponent(
         window
           .atob(base64)
@@ -76,21 +68,16 @@ export default function Login() {
       const tokenData = JSON.parse(jsonPayload);
 
       localStorage.removeItem("idalumno");
-
-      // Guardamos la información del usuario en el localStorage para usarla en otras partes de la aplicación
       localStorage.setItem("usuario", JSON.stringify(tokenData));
 
       if (tokenData.idalumno) {
         localStorage.setItem("idalumno", tokenData.idalumno.toString());
       }
 
-      // Buscamos el rol del usuario en el token o en la respuesta del backend, dependiendo de dónde lo envíe el backend
       const userRole = tokenData.rol || respuesta.usuario?.rol;
 
-      // Si todo está bien, mostramos un mensaje de éxito
       toast.success("Inicio de sesión exitoso");
 
-      // Redirigimos al dashboard
       if (userRole === "ADMINISTRADOR") {
         navigate("/admin");
       } else if (userRole === "DOCENTE") {
@@ -102,108 +89,135 @@ export default function Login() {
         navigate("/web");
       }
     } catch (error: any) {
-      // Si el backend rechaza el login, mostramos un mensaje de error
       toast.error(error.message || "Error al iniciar sesión");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const inputClass = (hasError?: boolean) =>
+    `w-full rounded-2xl border px-5 py-4 text-sm outline-none transition placeholder:text-[var(--color-muted-text)] ${
+      hasError
+        ? "border-red-400 bg-red-50 text-red-900 focus:border-red-500 focus:ring-4 focus:ring-red-100"
+        : "border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] focus:border-[var(--color-primary)] focus:ring-4 focus:ring-[color-mix(in_srgb,var(--color-primary)_16%,transparent)]"
+    }`;
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-300 to-slate-400 p-4">
-      <div className="w-full max-w-md p-10 bg-white/20 backdrop-blur-xl rounded-3xl border border-white/30 shadow-2xl relative overflow-hidden">
-        <h2 className="text-3xl font-extrabold text-center text-[#141426] mb-10 tracking-tight uppercase drop-shadow-sm">
-          Accede a tu aula virtual
-        </h2>
+    <main
+      className="relative flex min-h-screen items-center justify-center overflow-hidden p-4 text-[var(--color-text)]"
+      style={{
+        background:
+          "linear-gradient(135deg, var(--color-background), color-mix(in srgb, var(--color-primary) 10%, var(--color-background)))",
+      }}
+    >
+      <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[color-mix(in_srgb,var(--color-primary)_16%,transparent)] blur-3xl" />
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
-          {/* Campo Correo */}
-          <div className="relative">
-            <input
-              id="correo"
-              type="email"
-              placeholder="Correo"
-              className={`w-full py-4 px-6 bg-[#1b2751] text-white placeholder-gray-400 rounded-full shadow-inner focus:outline-none focus:ring-2 focus:ring-[#5573b3] transition-all duration-300 ${
-                errors.correo ? "ring-2 ring-[#894329]" : ""
-              }`}
-              {...register("correo")}
-            />
-            {errors.correo && (
-              <p className="text-[#894329] text-sm mt-2 ml-4 font-bold drop-shadow-sm">
-                {errors.correo.message}
-              </p>
-            )}
+      <div className="pointer-events-none absolute -bottom-28 -left-24 h-80 w-80 rounded-full bg-[color-mix(in_srgb,var(--color-secondary)_10%,transparent)] blur-3xl" />
+
+      <section className="relative z-10 w-full max-w-md">
+        <div className="overflow-hidden rounded-[28px] border border-[var(--color-border)] bg-[var(--color-card)] shadow-xl">
+          <div className="px-8 pt-8 text-center">
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] text-[var(--color-primary)]">
+              <LockKeyhole size={26} />
+            </div>
+
+            <h1 className="text-3xl font-black uppercase tracking-tight text-[var(--color-text)]">
+              Accede a tu aula virtual
+            </h1>
+
+            <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-[var(--color-muted-text)]">
+              Ingresa tus credenciales para continuar a tu panel.
+            </p>
           </div>
 
-          {/* Campo Contraseña */}
-          <div className="relative">
-            <input
-              id="contrasenia"
-              type={showPassword ? "text" : "password"}
-              placeholder="Contraseña"
-              className={`w-full py-4 pl-6 pr-12 bg-[#1b2751] text-white placeholder-gray-400 rounded-full shadow-inner focus:outline-none focus:ring-2 focus:ring-[#5573b3] transition-all duration-300 ${
-                errors.contrasenia ? "ring-2 ring-[#894329]" : ""
-              }`}
-              {...register("contrasenia")}
-              onKeyUp={verificarMayusculas}
-            />
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 px-8 py-8">
+            <div>
+              <input
+                id="correo"
+                type="email"
+                placeholder="Correo"
+                className={inputClass(!!errors.correo)}
+                {...register("correo")}
+              />
+
+              {errors.correo && (
+                <p className="mt-2 text-sm font-semibold text-red-600">
+                  {errors.correo.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <div className="relative">
+                <input
+                  id="contrasenia"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Contraseña"
+                  className={`${inputClass(!!errors.contrasenia)} pr-12`}
+                  {...register("contrasenia")}
+                  onKeyUp={verificarMayusculas}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--color-muted-text)] transition hover:text-[var(--color-primary)]"
+                  tabIndex={-1}
+                  aria-label={
+                    showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                  }
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+
+              {capsLockOn && (
+                <p className="mt-2 flex items-center gap-1 text-sm font-semibold text-amber-600">
+                  <AlertTriangle size={16} />
+                  Mayúsculas activadas
+                </p>
+              )}
+
+              {errors.contrasenia && (
+                <p className="mt-2 text-sm font-semibold text-red-600">
+                  {errors.contrasenia.message}
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-center rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] p-3">
+              <ReCAPTCHA
+                sitekey="6LeBVX0sAAAAABptVURftyu-3F1crVMQnOr2uDoC"
+                onChange={(token: string | null) => setCaptchaToken(token)}
+              />
+            </div>
+
             <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-              tabIndex={-1}
+              type="submit"
+              disabled={isLoading}
+              className="flex w-full items-center justify-center rounded-2xl bg-[var(--color-button-primary)] px-5 py-4 text-base font-black text-[var(--color-button-primary-text)] shadow-lg transition hover:-translate-y-0.5 hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
             >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-3 animate-spin" size={22} />
+                  Iniciando...
+                </>
+              ) : (
+                "Iniciar sesión"
+              )}
             </button>
-          </div>
 
-          {/* Mostramos mensaje de mayúsculas activadas */}
-          {capsLockOn && (
-            <p className="text-amber-600 text-sm mt-1 ml-4 font-semibold flex items-center gap-1">
-              <AlertTriangle size={16} /> Mayúsculas activadas
-            </p>
-          )}
-
-          {errors.contrasenia && (
-            <p className="text-[#894329] text-sm mt-2 ml-4 font-bold drop-shadow-sm">
-              {errors.contrasenia.message}
-            </p>
-          )}
-
-          {/* Widget de reCAPTCHA */}
-          <div className="flex justify-center mt-2 mb-2">
-            <ReCAPTCHA
-              sitekey="6LeBVX0sAAAAABptVURftyu-3F1crVMQnOr2uDoC"
-              onChange={(token: string | null) => setCaptchaToken(token)}
-            />
-          </div>
-
-          {/* Botón Iniciar sesión */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-4 pl-6 bg-[#5573b3] hover:bg-[#344c92] text-white text-lg font-bold rounded-full shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 flex justify-center items-center disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="animate-spin mr-3" size={24} />
-                Iniciando...
-              </>
-            ) : (
-              "Iniciar sesión"
-            )}
-          </button>
-
-          <div className="text-center mt-6">
-            <Link
-              to="/forgot-password"
-              className="text-[#141426] hover:text-[#5573b3] italic font-medium transition-colors text-sm drop-shadow-sm"
-            >
-              ¿Olvidaste tu contraseña?
-            </Link>
-          </div>
-        </form>
-      </div>
-    </div>
+            <div className="text-center">
+              <Link
+                to="/forgot-password"
+                className="text-sm font-semibold italic text-[var(--color-primary)] transition hover:underline"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
+          </form>
+        </div>
+      </section>
+    </main>
   );
 }

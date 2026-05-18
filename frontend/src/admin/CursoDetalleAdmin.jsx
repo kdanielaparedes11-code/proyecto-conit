@@ -109,7 +109,7 @@ function SortableModuloItem({ modulo, children }) {
         className="absolute right-4 top-4 z-20 cursor-grab active:cursor-grabbing rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-[var(--color-muted-text)] shadow-sm hover:bg-[var(--color-background)]"
         title="Arrastrar mÃ³dulo"
       >
-        â‹®â‹®
+        ⋮⋮
       </div>
 
       {children}
@@ -144,7 +144,7 @@ function SortableTareaItem({ tarea, children }) {
         className="absolute right-4 top-4 z-20 cursor-grab active:cursor-grabbing rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-[var(--color-muted-text)] shadow-sm hover:bg-[var(--color-background)]"
         title="Arrastrar tarea"
       >
-        â‹®â‹®
+        ⋮⋮
       </div>
 
       {children}
@@ -182,7 +182,7 @@ function SortableSubModuloItem({ submodulo, children }) {
         className="absolute right-4 top-4 z-20 cursor-grab active:cursor-grabbing rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-[var(--color-muted-text)] shadow-sm hover:bg-[var(--color-background)]"
         title="Arrastrar submÃ³dulo"
       >
-        â‹®â‹®
+        ⋮⋮
       </div>
 
       {children}
@@ -217,7 +217,7 @@ function SortableLeccionItem({ leccion, children }) {
         className="absolute right-4 top-4 z-20 cursor-grab active:cursor-grabbing rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-[var(--color-muted-text)] shadow-sm hover:bg-[var(--color-background)]"
         title="Arrastrar lecciÃ³n"
       >
-        â‹®â‹®
+        ⋮⋮
       </div>
 
       {children}
@@ -253,7 +253,7 @@ function SortableMaterialItem({ material, children }) {
         className="absolute right-4 top-4 z-20 cursor-grab active:cursor-grabbing rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-[var(--color-muted-text)] shadow-sm hover:bg-[var(--color-background)]"
         title="Arrastrar material"
       >
-        â‹®â‹®
+        ⋮⋮
       </div>
 
       {children}
@@ -467,9 +467,9 @@ function FormulaNumericaModal({
 
         <div className="p-6 space-y-5">
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => insertarPlantilla("\frac{#0}{#0}")} className="rounded-xl border px-3 py-2 text-sm hover:bg-[var(--color-background)]">FracciÃ³n</button>
+            <button type="button" onClick={() => insertarPlantilla("\frac{#0}{#0}")} className="rounded-xl border px-3 py-2 text-sm hover:bg-[var(--color-background)]">Fracción</button>
             <button type="button" onClick={() => insertarPlantilla("x^{#0}")} className="rounded-xl border px-3 py-2 text-sm hover:bg-[var(--color-background)]">Potencia</button>
-            <button type="button" onClick={() => insertarPlantilla("\sqrt{#0}")} className="rounded-xl border px-3 py-2 text-sm hover:bg-[var(--color-background)]">RaÃ­z</button>
+            <button type="button" onClick={() => insertarPlantilla("\sqrt{#0}")} className="rounded-xl border px-3 py-2 text-sm hover:bg-[var(--color-background)]">Raíz</button>
             <button type="button" onClick={() => insertarPlantilla("\int_{#0}^{#0}")} className="rounded-xl border px-3 py-2 text-sm hover:bg-[var(--color-background)]">Integral</button>
             <button type="button" onClick={() => insertarPlantilla("\sum_{#0}^{#0}")} className="rounded-xl border px-3 py-2 text-sm hover:bg-[var(--color-background)]">Sumatoria</button>
             <button type="button" onClick={() => insertarPlantilla("\begin{bmatrix}#0 & #0\\ #0 & #0\end{bmatrix}")} className="rounded-xl border px-3 py-2 text-sm hover:bg-[var(--color-background)]">Matriz 2x2</button>
@@ -976,7 +976,7 @@ function CursoDetalleAdmin() {
       limpiarFormSesionVivo();
       setMostrarFormSesionVivo(false);
       await cargarSesionesVivoCurso();
-      alert("SesiÃ³n en vivo creada correctamente âœ…");
+      alert("Sesión en vivo creada correctamente ✅");
     } catch (error) {
       console.error(error);
       alert(error?.message || "No se pudo crear la sesiÃ³n en vivo.");
@@ -1456,7 +1456,7 @@ useEffect(() => {
         activo: data?.activo ?? false,
       });
 
-      alert("ConfiguraciÃ³n de asistencia guardada correctamente âœ…");
+      alert("Configuración de asistencia guardada correctamente ✅");
     } catch (error) {
       console.error(error);
       alert(error?.message || "No se pudo guardar la configuraciÃ³n de asistencia.");
@@ -1561,7 +1561,7 @@ useEffect(() => {
         fechaEmision: new Date().toISOString().slice(0, 10),
       });
 
-      alert(`Certificado emitido automÃ¡ticamente para ${verificacion.alumno.nombreCompleto} âœ…`);
+      alert(`Certificado emitido automáticamente para ${verificacion.alumno.nombreCompleto} ✅`);
     } catch (error) {
       console.error("Error verificando/emitiendo certificado:", error);
     }
@@ -1589,7 +1589,7 @@ useEffect(() => {
         await procesarCertificadoAutomatico(item.idalumno);
       }
 
-      alert("Asistencia guardada correctamente âœ…");
+      alert("Asistencia guardada correctamente ✅");
     } catch (error) {
       console.error(error);
       alert(error?.message || "No se pudo guardar la asistencia");
@@ -1684,7 +1684,7 @@ useEffect(() => {
         idmodulo: moduloDestinoTarea?.id ?? null,
       });
 
-      alert("Tarea creada correctamente âœ…");
+      alert("Tarea creada correctamente ✅");
       limpiarFormTarea();
       setMostrarFormTarea(false);
       await cargarTareasCurso();
@@ -1778,7 +1778,7 @@ useEffect(() => {
       setFormModulo({ titulo: "", descripcion: "" });
       setMostrarFormModulo(false);
       await cargarModulosCurso();
-      alert("MÃ³dulo creado correctamente âœ…");
+      alert("Módulo creado correctamente ✅");
     } catch (error) {
       console.error(error);
       alert(error?.message || "No se pudo crear el mÃ³dulo");
@@ -2010,7 +2010,7 @@ useEffect(() => {
 
       cancelarEdicionModulo();
       await cargarModulosCurso();
-      alert("MÃ³dulo actualizado correctamente âœ…");
+      alert("MÃ³dulo actualizado correctamente ✅");
     } catch (error) {
       console.error(error);
       alert(error?.message || "No se pudo actualizar el mÃ³dulo");
@@ -2085,7 +2085,7 @@ const handleChangeSubModulo = (moduloId, e) => {
       }));
 
       await cargarModulosCurso();
-      alert("SubmÃ³dulo creado correctamente âœ…");
+      alert("Submódulo creado correctamente ✅");
     } catch (error) {
       console.error(error);
       alert(error?.message || "No se pudo crear el submÃ³dulo");
@@ -2229,7 +2229,7 @@ const handleChangeSubModulo = (moduloId, e) => {
       }));
 
       await cargarModulosCurso();
-      alert("LecciÃ³n creada correctamente âœ…");
+      alert("Lección creada correctamente ✅");
     } catch (error) {
       console.error(error);
       alert(error?.message || "No se pudo crear la lecciÃ³n");
@@ -2293,7 +2293,7 @@ const handleChangeSubModulo = (moduloId, e) => {
 
       cancelarEdicionLeccion();
       await cargarModulosCurso();
-      alert("LecciÃ³n actualizada correctamente âœ…");
+      alert("Lección actualizada correctamente ✅");
     } catch (error) {
       console.error(error);
       alert(error?.message || "No se pudo actualizar la lecciÃ³n");
@@ -2466,7 +2466,7 @@ const handleChangeSubModulo = (moduloId, e) => {
       }));
 
       await cargarModulosCurso();
-      alert("Material agregado correctamente âœ…");
+      alert("Material agregado correctamente ✅");
     } catch (error) {
       console.error(error);
       alert(error?.message || "No se pudo agregar el material");
@@ -2600,7 +2600,7 @@ const handleChangeSubModulo = (moduloId, e) => {
 
       cancelarEdicionMaterial();
       await cargarModulosCurso();
-      alert("Material actualizado correctamente âœ…");
+      alert("Material actualizado correctamente ✅");
     } catch (error) {
       console.error(error);
       alert(error?.message || "No se pudo actualizar el material");
@@ -2694,7 +2694,7 @@ const handleChangeSubModulo = (moduloId, e) => {
 
           actualizarNotificacionVideo(notificacionId, {
             estado: "success",
-            mensaje: "Video cargado correctamente âœ…",
+            mensaje: "Video cargado correctamente ✅",
             progreso: 100,
           });
 
@@ -2766,7 +2766,7 @@ const handleChangeSubModulo = (moduloId, e) => {
       if (estado === "available" || estado === "listo") {
         actualizarNotificacionVideo(notificacionId, {
           estado: "success",
-          mensaje: "Video cargado correctamente âœ…",
+          mensaje: "Video cargado correctamente ✅",
           progreso: 100,
         });
 
@@ -2823,7 +2823,7 @@ const handleChangeSubModulo = (moduloId, e) => {
         nota: fila.nota,
       });
 
-      alert("Nota guardada correctamente âœ…");
+      alert("Nota guardada correctamente ✅");
 
       const data = await getEntregasByTarea(tareaDetalle.id);
       setEntregasTarea(data?.entregas || []);
@@ -2908,7 +2908,7 @@ const guardarConfiguracionTarea = async () => {
 
     await cargarTareasCurso();
 
-    alert("La tarea fue vinculada correctamente a la evaluaciÃ³n âœ…");
+    alert("La tarea fue vinculada correctamente a la evaluación ✅");
     cerrarConfigTarea();
   } catch (error) {
     console.error(error);
@@ -3488,10 +3488,10 @@ const guardarConfiguracionTarea = async () => {
 
       if (data.id) {
         await actualizarExamen(data.id, payload);
-        alert("Examen actualizado correctamente âœ…");
+        alert("Examen actualizado correctamente ✅");
       } else {
         await crearExamen(payload);
-        alert("Examen creado correctamente âœ…");
+        alert("Examen creado correctamente ✅");
       }
 
       setExamenEditandoId(null);
@@ -3817,7 +3817,7 @@ const guardarConfiguracionTarea = async () => {
 
       await cargarModulosCurso();
 
-      alert("El examen fue vinculado correctamente a la evaluaciÃ³n âœ…");
+      alert("El examen fue vinculado correctamente a la evaluaciÃ³n ✅");
       cerrarConfigExamen();
     } catch (error) {
       console.error(error);
@@ -4038,7 +4038,7 @@ const guardarConfiguracionTarea = async () => {
               onClick={() => navigate(-1)}
               className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm text-slate-100 backdrop-blur hover:bg-white/15 transition"
             >
-              â† Volver
+              ← Volver
             </button>
 
             <div className="mt-5 flex flex-wrap items-center gap-2">
@@ -5301,8 +5301,8 @@ const guardarConfiguracionTarea = async () => {
                   No hay tareas registradas
                 </p>
                 <p className="text-sm text-[var(--color-muted-text)] mt-2">
-                  Crea la primera tarea de este curso desde el botÃ³n â€œNueva
-                  tareaâ€.
+                  Crea la primera tarea de este curso desde el botón "Nueva
+                  tarea".
                 </p>
               </div>
             ) : (
@@ -5414,7 +5414,7 @@ const guardarConfiguracionTarea = async () => {
                                   </span>
 
                                   <span className="text-lg text-[var(--color-muted-text)]">
-                                    {abierta ? "â–²" : "â–¼"}
+                                    {abierta ? "▲" : "▼"}
                                   </span>
                                 </div>
                               </div>
@@ -5574,7 +5574,7 @@ const guardarConfiguracionTarea = async () => {
                                                   <td className="px-3 py-3">
                                                     {fechaEntrega
                                                       ? fechaEntrega.toLocaleDateString("es-PE")
-                                                      : "â€”"}
+                                                      : "—"}
                                                   </td>
 
                                                   <td className="px-3 py-3">
@@ -5583,7 +5583,7 @@ const guardarConfiguracionTarea = async () => {
                                                           hour: "2-digit",
                                                           minute: "2-digit",
                                                         })
-                                                      : "â€”"}
+                                                      : "—"}
                                                   </td>
 
                                                   <td className="px-3 py-3">
@@ -8238,7 +8238,7 @@ const guardarConfiguracionTarea = async () => {
                   onClick={() => eliminarNotificacionVideo(item.id)}
                   className="text-xs rounded-lg border px-2 py-1 hover:bg-[var(--color-background)]"
                 >
-                  âœ•
+                  ✕
                 </button>
               </div>
 
@@ -8556,7 +8556,7 @@ const guardarConfiguracionTarea = async () => {
                                   >
                                     {String.fromCharCode(65 + index)}.{" "}
                                     {opcion.texto_opcion || opcion.texto}
-                                    {opcion.es_correcta ? " âœ“" : ""}
+                                    {opcion.es_correcta ? " —" : ""}
                                   </div>
                                 ))}
                               </div>

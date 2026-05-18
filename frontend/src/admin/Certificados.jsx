@@ -1120,7 +1120,7 @@ export default function Certificados() {
                       disabled={!curso.completo && !permitirEmisionManual}
                     >
                       {curso.nombrecurso}
-                      {curso.completo ? " âœ…" : " â€” Incompleto"}
+                      {curso.completo ? " ✅" : " — Incompleto"}
                     </option>
                   ))}
                 </select>
