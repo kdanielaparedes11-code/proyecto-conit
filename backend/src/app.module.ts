@@ -55,6 +55,7 @@ import { AsistenciaModule } from './asistencia/asistencia.module';
 import { AsistenciaConfiguracionController } from './asistencia-configuracion/asistencia-configuracion.controller';
 import { EntregaModule } from './entrega/entrega.module';
 import { EstilosModule } from './estilos/estilos.module';
+import { ForoModule } from './foro/foro.module';
 
 @Module({
   imports: [
@@ -133,6 +134,7 @@ import { EstilosModule } from './estilos/estilos.module';
     HistorialAcademicoModule,
     AsistenciaModule,
     EntregaModule,
+    ForoModule,
   ],
 
   controllers: [AppController, AsistenciaConfiguracionController],

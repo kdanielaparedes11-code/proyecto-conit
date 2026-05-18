@@ -237,14 +237,14 @@ export default function RegistroNotas() {
   }, [evaluaciones, modalNotas]);
 
   const modalPromedio = useMemo(() => {
-    if (!evaluaciones.length) return "â€”";
-    if (modalFaltantes > 0) return "â€”";
+    if (!evaluaciones.length) return "—";
+    if (modalFaltantes > 0) return "—";
 
     let suma = 0;
 
     for (const ev of evaluaciones) {
       const valor = Number(modalNotas[ev.id]);
-      if (Number.isNaN(valor)) return "â€”";
+      if (Number.isNaN(valor)) return "—";
       suma += valor * (Number(ev.porcentaje || 0) / 100);
     }
 
@@ -529,7 +529,7 @@ const guardarConfigEvaluaciones = async () => {
       await refrescarDatos();
       await procesarCertificadoAutomatico(modalAlumno);
       cerrarModal();
-      alert("Cambios guardados correctamente âœ…");
+      alert("Cambios guardados correctamente ✅");
     } catch (error) {
       console.error("Error guardando notas:", error);
       alert("Ocurrió un error al guardar las notas.");
@@ -832,7 +832,7 @@ const guardarConfigEvaluaciones = async () => {
                       return (
                         <td key={ev.id} className="px-4 py-4 text-center">
                           <span className="inline-flex min-w-[48px] justify-center rounded-lg bg-[var(--color-background)] px-2.5 py-1.5 text-sm font-medium text-[var(--color-text)]">
-                            {valor ?? "â€”"}
+                            {valor ?? "—"}
                           </span>
                         </td>
                       );
@@ -840,7 +840,7 @@ const guardarConfigEvaluaciones = async () => {
 
                     <td className="px-4 py-4 text-center">
                       {a.faltantes > 0 ? (
-                        <span className="text-[var(--color-muted-text)] font-semibold">â€”</span>
+                        <span className="text-[var(--color-muted-text)] font-semibold">—</span>
                       ) : (
                         <span
                           className={`font-bold ${
@@ -989,7 +989,7 @@ const guardarConfigEvaluaciones = async () => {
                 <InfoBox
                   label="Promedio"
                   value={modalPromedio}
-                  tone={modalPromedio !== "â€”" && Number(modalPromedio) >= 11 ? "emerald" : "slate"}
+                  tone={modalPromedio !== "—" && Number(modalPromedio) >= 11 ? "emerald" : "slate"}
                 />
                 <InfoBox
                   label="Porcentaje total"

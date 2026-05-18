@@ -1491,7 +1491,7 @@ function InfoMiniCard({ label, value, help }) {
 function ChecklistItem({ done, text }) {
   return (
     <div className="flex items-center gap-2 text-sm">
-      <span className={done ? "text-green-500" : "text-yellow-500"}>â—</span>
+      <span className={done ? "text-green-500" : "text-yellow-500"}>●</span>
       {text}
     </div>
   );

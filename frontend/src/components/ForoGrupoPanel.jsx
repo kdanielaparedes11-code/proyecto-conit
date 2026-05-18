@@ -9,6 +9,13 @@ import {
   crearForoRespuesta,
   eliminarForoRespuesta,
 
+  TIPOS_REACCION_FORO,
+  getUsuarioForoActual,
+  getReaccionesForoByPublicaciones,
+  getReaccionesForoByRespuestas,
+  guardarReaccionForoPublicacion,
+  guardarReaccionForoRespuesta,
+
   subirYGuardarAdjuntoForo,
   crearForoAdjuntoEnlaceVideo,
   getForoAdjuntosByPublicacion,
@@ -39,6 +46,20 @@ function esUrlValida(url) {
   }
 }
 
+function esAdjuntoVideo(adjunto) {
+  const tipo = String(adjunto?.tipo || "").toLowerCase();
+
+  return (
+    tipo === "video" ||
+    tipo === "video_vimeo" ||
+    tipo === "enlace_video"
+  );
+}
+
+function tieneVideoEnAdjuntos(adjuntos = []) {
+  return adjuntos.some((adjunto) => esAdjuntoVideo(adjunto));
+}
+
 function nombreTipoAdjunto(tipo) {
   if (tipo === "imagen") return "Imagen";
   if (tipo === "video") return "Video";
@@ -47,7 +68,13 @@ function nombreTipoAdjunto(tipo) {
   return "Archivo";
 }
 
-function AdjuntosForo({ adjuntos = [], puedeModerar = false, onEliminar }) {
+function AdjuntosForo({
+  adjuntos = [],
+  puedeModerar = false,
+  onEliminar,
+  resumenReacciones = null,
+  mostrarReaccionesEnVideo = false,
+}) {
   if (!adjuntos || adjuntos.length === 0) return null;
 
   return (
@@ -111,17 +138,22 @@ function AdjuntosForo({ adjuntos = [], puedeModerar = false, onEliminar }) {
               )}
 
               {tipo === "video" && adjunto.download_url && (
-                <video
-                  controls
-                  className="w-full rounded-2xl border border-slate-200 bg-black"
-                >
-                  <source src={url} type={adjunto.mime_type || "video/mp4"} />
-                  Tu navegador no puede reproducir este video.
-                </video>
+                <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-black">
+                  <video controls className="w-full bg-black">
+                    <source src={url} type={adjunto.mime_type || "video/mp4"} />
+                    Tu navegador no puede reproducir este video.
+                  </video>
+
+                  {mostrarReaccionesEnVideo && (
+                    <div className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-2 text-white shadow-lg backdrop-blur">
+                      <ResumenReaccionesForo resumen={resumenReacciones} />
+                    </div>
+                  )}
+                </div>
               )}
 
               {tipo === "video_vimeo" && (adjunto.embed_url || adjunto.url_externa) && (
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-black">
+                <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-black">
                   <iframe
                     src={adjunto.embed_url || adjunto.url_externa}
                     title={adjunto.nombre_archivo || "Video de Vimeo"}
@@ -129,6 +161,12 @@ function AdjuntosForo({ adjuntos = [], puedeModerar = false, onEliminar }) {
                     allow="autoplay; fullscreen; picture-in-picture"
                     allowFullScreen
                   />
+
+                  {mostrarReaccionesEnVideo && (
+                    <div className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-2 text-white shadow-lg backdrop-blur">
+                      <ResumenReaccionesForo resumen={resumenReacciones} />
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -167,6 +205,102 @@ function AdjuntosForo({ adjuntos = [], puedeModerar = false, onEliminar }) {
   );
 }
 
+function ResumenReaccionesForo({ resumen }) {
+  const conteos = resumen?.conteos || {};
+  const activos = TIPOS_REACCION_FORO.filter(
+    (reaccion) => Number(conteos[reaccion.tipo] || 0) > 0
+  );
+
+  if (activos.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-1">
+      {activos.slice(0, 3).map((reaccion) => (
+        <span
+          key={reaccion.tipo}
+          className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-600"
+          title={reaccion.label}
+        >
+          <span>{reaccion.emoji}</span>
+          <span>{conteos[reaccion.tipo]}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function ReaccionesForo({ resumen, onReaccionar, disabled = false }) {
+  const conteos = resumen?.conteos || {};
+  const miReaccion = resumen?.miReaccion || null;
+
+  const total = Object.values(conteos).reduce(
+    (acc, valor) => acc + Number(valor || 0),
+    0
+  );
+
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-2">
+      {TIPOS_REACCION_FORO.map((reaccion) => {
+        const activa = miReaccion === reaccion.tipo;
+        const cantidad = Number(conteos[reaccion.tipo] || 0);
+
+        return (
+          <button
+            key={reaccion.tipo}
+            type="button"
+            disabled={disabled}
+            onClick={() => onReaccionar?.(reaccion.tipo)}
+            title={reaccion.label}
+            className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm font-bold transition ${
+              activa
+                ? "border-indigo-300 bg-indigo-50 text-indigo-700 shadow-sm"
+                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            } ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
+          >
+            <span className="text-base">{reaccion.emoji}</span>
+            <span>{cantidad}</span>
+          </button>
+        );
+      })}
+
+      {total > 0 && (
+        <span className="text-xs font-semibold text-slate-400">
+          {total} reacción(es)
+        </span>
+      )}
+    </div>
+  );
+}
+
+function construirMapaReacciones(reacciones = [], campoId, usuarioId) {
+  const mapa = {};
+
+  reacciones.forEach((reaccion) => {
+    const key = Number(reaccion[campoId]);
+
+    if (!key) return;
+
+    if (!mapa[key]) {
+      mapa[key] = {
+        total: 0,
+        conteos: {},
+        miReaccion: null,
+      };
+    }
+
+    const tipo = reaccion.tipo;
+
+    mapa[key].total += 1;
+    mapa[key].conteos[tipo] = Number(mapa[key].conteos[tipo] || 0) + 1;
+
+    if (Number(reaccion.idusuario) === Number(usuarioId)) {
+      mapa[key].miReaccion = tipo;
+    }
+  });
+
+  return mapa;
+}
+
 export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
   const [publicaciones, setPublicaciones] = useState([]);
   const [publicacionActiva, setPublicacionActiva] = useState(null);
@@ -186,6 +320,8 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
     contenido: "",
   });
 
+  const publicacionActivaTieneVideo = tieneVideoEnAdjuntos(adjuntosPublicacion);
+
   const [formRespuesta, setFormRespuesta] = useState("");
 
   const [archivosPublicacion, setArchivosPublicacion] = useState([]);
@@ -200,9 +336,23 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
   const [avisosForo, setAvisosForo] = useState([]);
   const [subidasForo, setSubidasForo] = useState([]);
 
+  const [reaccionesPublicacionesMap, setReaccionesPublicacionesMap] = useState({});
+  const [reaccionesRespuestasMap, setReaccionesRespuestasMap] = useState({});
+  const [reaccionandoKey, setReaccionandoKey] = useState(null);
+
   const publicacionActivaRef = useRef(null);
 
   const puedeModerar = modo === "admin" || modo === "docente";
+
+  const usuarioForoActual = useMemo(() => {
+    try {
+      return getUsuarioForoActual();
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const usuarioForoId = Number(usuarioForoActual?.idusuario || 0);
 
   useEffect(() => {
     publicacionActivaRef.current = publicacionActiva;
@@ -275,12 +425,28 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
       setCargando(true);
 
       const data = await getForoPublicacionesByGrupo(grupoId);
-      setPublicaciones(data || []);
+      const listaPublicaciones = data || [];
+
+      setPublicaciones(listaPublicaciones);
+
+      const publicacionIds = listaPublicaciones
+        .map((p) => Number(p.id))
+        .filter(Boolean);
+
+      if (publicacionIds.length > 0) {
+        const reaccionesDB = await getReaccionesForoByPublicaciones(publicacionIds);
+
+        setReaccionesPublicacionesMap(
+          construirMapaReacciones(reaccionesDB, "idpublicacion", usuarioForoId)
+        );
+      } else {
+        setReaccionesPublicacionesMap({});
+      }
 
       const activaActual = publicacionActivaRef.current;
 
       if (activaActual) {
-        const actualizada = (data || []).find(
+        const actualizada = listaPublicaciones.find(
           (p) => Number(p.id) === Number(activaActual.id)
         );
 
@@ -300,10 +466,30 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
       setPublicacionActiva(publicacion);
       setCargandoRespuestas(true);
 
-      const [respuestasDB, adjuntosPublicacionDB] = await Promise.all([
+      const [
+        respuestasDB,
+        adjuntosPublicacionDB,
+        reaccionesPublicacionDB,
+      ] = await Promise.all([
         getForoRespuestasByPublicacion(publicacion.id),
         getForoAdjuntosByPublicacion(publicacion.id),
+        getReaccionesForoByPublicaciones([publicacion.id]),
       ]);
+
+      const mapaReaccionPublicacion = construirMapaReacciones(
+        reaccionesPublicacionDB || [],
+        "idpublicacion",
+        usuarioForoId
+      );
+
+      setReaccionesPublicacionesMap((prev) => ({
+        ...prev,
+        [Number(publicacion.id)]: mapaReaccionPublicacion[Number(publicacion.id)] || {
+          total: 0,
+          conteos: {},
+          miReaccion: null,
+        },
+      }));
 
       const adjuntosPubHydrated = await hidratarAdjuntos(adjuntosPublicacionDB || []);
       setAdjuntosPublicacion(adjuntosPubHydrated);
@@ -314,21 +500,34 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
       const respuestaIds = listaRespuestas.map((r) => Number(r.id)).filter(Boolean);
 
       if (respuestaIds.length > 0) {
-        const adjuntosRespuestasDB = await getForoAdjuntosByRespuestas(respuestaIds);
+        const [adjuntosRespuestasDB, reaccionesRespuestasDB] = await Promise.all([
+          getForoAdjuntosByRespuestas(respuestaIds),
+          getReaccionesForoByRespuestas(respuestaIds),
+        ]);
+
         const adjuntosHydrated = await hidratarAdjuntos(adjuntosRespuestasDB || []);
 
-        const mapa = {};
+        const mapaAdjuntos = {};
 
         adjuntosHydrated.forEach((adj) => {
           const key = Number(adj.idrespuesta);
 
-          if (!mapa[key]) mapa[key] = [];
-          mapa[key].push(adj);
+          if (!mapaAdjuntos[key]) mapaAdjuntos[key] = [];
+          mapaAdjuntos[key].push(adj);
         });
 
-        setAdjuntosRespuestasMap(mapa);
+        setAdjuntosRespuestasMap(mapaAdjuntos);
+
+        setReaccionesRespuestasMap(
+          construirMapaReacciones(
+            reaccionesRespuestasDB || [],
+            "idrespuesta",
+            usuarioForoId
+          )
+        );
       } else {
         setAdjuntosRespuestasMap({});
+        setReaccionesRespuestasMap({});
       }
     } catch (error) {
       alert(error?.message || "No se pudieron cargar las respuestas.");
@@ -749,6 +948,70 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
     }
   };
 
+  const handleReaccionarPublicacion = async (publicacionId, tipo) => {
+    try {
+      setReaccionandoKey(`pub-${publicacionId}`);
+
+      await guardarReaccionForoPublicacion({
+        publicacionId,
+        tipo,
+      });
+
+      const reaccionesDB = await getReaccionesForoByPublicaciones([publicacionId]);
+
+      const mapa = construirMapaReacciones(
+        reaccionesDB || [],
+        "idpublicacion",
+        usuarioForoId
+      );
+
+      setReaccionesPublicacionesMap((prev) => ({
+        ...prev,
+        [Number(publicacionId)]: mapa[Number(publicacionId)] || {
+          total: 0,
+          conteos: {},
+          miReaccion: null,
+        },
+      }));
+    } catch (error) {
+      alert(error?.message || "No se pudo guardar la reacción.");
+    } finally {
+      setReaccionandoKey(null);
+    }
+  };
+
+  const handleReaccionarRespuesta = async (respuestaId, tipo) => {
+    try {
+      setReaccionandoKey(`resp-${respuestaId}`);
+
+      await guardarReaccionForoRespuesta({
+        respuestaId,
+        tipo,
+      });
+
+      const reaccionesDB = await getReaccionesForoByRespuestas([respuestaId]);
+
+      const mapa = construirMapaReacciones(
+        reaccionesDB || [],
+        "idrespuesta",
+        usuarioForoId
+      );
+
+      setReaccionesRespuestasMap((prev) => ({
+        ...prev,
+        [Number(respuestaId)]: mapa[Number(respuestaId)] || {
+          total: 0,
+          conteos: {},
+          miReaccion: null,
+        },
+      }));
+    } catch (error) {
+      alert(error?.message || "No se pudo guardar la reacción.");
+    } finally {
+      setReaccionandoKey(null);
+    }
+  };
+
   return (
     <>
       <div className="fixed right-5 top-5 z-[9999] space-y-3">
@@ -1002,9 +1265,16 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
 
                           <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
                             <span>{publicacion.autor_nombre || "Usuario"}</span>
+
                             <span>
                               {publicacion.total_respuestas || 0} respuesta(s)
                             </span>
+                          </div>
+
+                          <div className="mt-2">
+                            <ResumenReaccionesForo
+                              resumen={reaccionesPublicacionesMap[Number(publicacion.id)]}
+                            />
                           </div>
                         </button>
                       );
@@ -1097,11 +1367,33 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
                       {publicacionActiva.contenido}
                     </p>
 
+                    {!publicacionActivaTieneVideo && (
+                      <ReaccionesForo
+                        resumen={reaccionesPublicacionesMap[Number(publicacionActiva.id)]}
+                        disabled={reaccionandoKey === `pub-${publicacionActiva.id}`}
+                        onReaccionar={(tipo) =>
+                          handleReaccionarPublicacion(publicacionActiva.id, tipo)
+                        }
+                      />
+                    )}
+
                     <AdjuntosForo
                       adjuntos={adjuntosPublicacion}
                       puedeModerar={puedeModerar}
                       onEliminar={handleEliminarAdjuntoPublicacion}
+                      resumenReacciones={reaccionesPublicacionesMap[Number(publicacionActiva.id)]}
+                      mostrarReaccionesEnVideo={publicacionActivaTieneVideo}
                     />
+
+                    {publicacionActivaTieneVideo && (
+                      <ReaccionesForo
+                        resumen={reaccionesPublicacionesMap[Number(publicacionActiva.id)]}
+                        disabled={reaccionandoKey === `pub-${publicacionActiva.id}`}
+                        onReaccionar={(tipo) =>
+                          handleReaccionarPublicacion(publicacionActiva.id, tipo)
+                        }
+                      />
+                    )}
                   </div>
 
                   <div className="flex-1 space-y-4 p-6">
@@ -1153,6 +1445,14 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
                           <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">
                             {respuesta.contenido}
                           </p>
+
+                          <ReaccionesForo
+                            resumen={reaccionesRespuestasMap[Number(respuesta.id)]}
+                            disabled={reaccionandoKey === `resp-${respuesta.id}`}
+                            onReaccionar={(tipo) =>
+                              handleReaccionarRespuesta(respuesta.id, tipo)
+                            }
+                          />
 
                           <AdjuntosForo
                             adjuntos={adjuntosRespuestasMap[Number(respuesta.id)] || []}

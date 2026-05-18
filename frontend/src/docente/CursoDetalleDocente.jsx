@@ -109,7 +109,7 @@ function SortableModuloItem({ modulo, children }) {
         className="absolute right-4 top-4 z-20 cursor-grab active:cursor-grabbing rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-[var(--color-muted-text)] shadow-sm hover:bg-[var(--color-background)]"
         title="Arrastrar módulo"
       >
-        â‹®â‹®
+        ⋮⋮
       </div>
 
       {children}
@@ -144,7 +144,7 @@ function SortableTareaItem({ tarea, children }) {
         className="absolute right-4 top-4 z-20 cursor-grab active:cursor-grabbing rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-[var(--color-muted-text)] shadow-sm hover:bg-[var(--color-background)]"
         title="Arrastrar tarea"
       >
-        â‹®â‹®
+        ⋮⋮
       </div>
 
       {children}
@@ -253,7 +253,7 @@ function SortableMaterialItem({ material, children }) {
         className="absolute right-4 top-4 z-20 cursor-grab active:cursor-grabbing rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-[var(--color-muted-text)] shadow-sm hover:bg-[var(--color-background)]"
         title="Arrastrar material"
       >
-        â‹®â‹®
+        ⋮⋮
       </div>
 
       {children}
@@ -463,7 +463,7 @@ function FormulaNumericaModal({
               onClick={onClose}
               className="rounded-xl bg-white/10 px-3 py-2 text-sm hover:bg-white/20 transition"
             >
-              âœ•
+              ✕
             </button>
           </div>
         </div>
@@ -644,7 +644,7 @@ function FormulaEditorModal({
               onClick={onClose}
               className="rounded-xl bg-white/10 px-3 py-2 text-sm hover:bg-white/20 transition"
             >
-              âœ•
+              ✕
             </button>
           </div>
         </div>
@@ -1015,7 +1015,7 @@ function CursoDetalleAdmin() {
       limpiarFormSesionVivo();
       setMostrarFormSesionVivo(false);
       await cargarSesionesVivoCurso();
-      alert("Sesión en vivo creada correctamente âœ…");
+      alert("Sesión en vivo creada correctamente ✅");
     } catch (error) {
       console.error(error);
       alert(error?.message || "No se pudo crear la sesión en vivo.");
@@ -1628,7 +1628,7 @@ useEffect(() => {
         await procesarCertificadoAutomatico(item.idalumno);
       }
 
-      alert("Asistencia guardada correctamente âœ…");
+      alert("Asistencia guardada correctamente ✅");
     } catch (error) {
       console.error(error);
       alert(error?.message || "No se pudo guardar la asistencia");
@@ -1723,7 +1723,7 @@ useEffect(() => {
         idmodulo: moduloDestinoTarea?.id ?? null,
       });
 
-      alert("Tarea creada correctamente âœ…");
+      alert("Tarea creada correctamente ✅");
       limpiarFormTarea();
       setMostrarFormTarea(false);
       await cargarTareasCurso();
@@ -2360,6 +2360,7 @@ const handleChangeSubModulo = (moduloId, e) => {
       [leccionId]: prev[leccionId] || {
         titulo: "",
         tipo: "texto",
+        descripcion: "",
         contenido_texto: "",
         video_url: "",
         enlace_url: "",
@@ -2436,6 +2437,7 @@ const handleChangeSubModulo = (moduloId, e) => {
           [leccionId]: {
             titulo: "",
             tipo: "texto",
+            descripcion: "",
             contenido_texto: "",
             video_url: "",
             enlace_url: "",
@@ -2468,6 +2470,7 @@ const handleChangeSubModulo = (moduloId, e) => {
       await addMaterialLeccion(leccionId, {
         titulo: data.titulo,
         tipo: data.tipo,
+        descripcion: data.descripcion,
         contenido_texto: data.contenido_texto,
         video_url: data.tipo === "url_video" ? data.video_url : null,
         enlace_url: data.tipo === "enlace" ? data.enlace_url : null,
@@ -2492,6 +2495,7 @@ const handleChangeSubModulo = (moduloId, e) => {
         [leccionId]: {
           titulo: "",
           tipo: "texto",
+          descripcion: "",
           contenido_texto: "",
           video_url: "",
           enlace_url: "",
@@ -2505,7 +2509,7 @@ const handleChangeSubModulo = (moduloId, e) => {
       }));
 
       await cargarModulosCurso();
-      alert("Material agregado correctamente âœ…");
+      alert("Material agregado correctamente ✅");
     } catch (error) {
       console.error(error);
       alert(error?.message || "No se pudo agregar el material");
@@ -2576,6 +2580,7 @@ const handleChangeSubModulo = (moduloId, e) => {
     setFormEditarMaterial({
       titulo: material.titulo || "",
       tipo: material.tipo || "texto",
+      descripcion: material.descripcion || "",
       contenido_texto: material.contenido_texto || "",
       video_url: material.video_url || "",
       enlace_url: material.enlace_url || "",
@@ -2587,6 +2592,7 @@ const handleChangeSubModulo = (moduloId, e) => {
     setFormEditarMaterial({
       titulo: "",
       tipo: "texto",
+      descripcion: "",
       contenido_texto: "",
       video_url: "",
       enlace_url: "",
@@ -2623,6 +2629,7 @@ const handleChangeSubModulo = (moduloId, e) => {
       await actualizarMaterialLeccion(materialId, {
         titulo: formEditarMaterial.titulo,
         tipo: formEditarMaterial.tipo,
+        descripcion: formEditarMaterial.descripcion,
         contenido_texto:
           formEditarMaterial.tipo === "texto"
             ? formEditarMaterial.contenido_texto
@@ -2639,7 +2646,7 @@ const handleChangeSubModulo = (moduloId, e) => {
 
       cancelarEdicionMaterial();
       await cargarModulosCurso();
-      alert("Material actualizado correctamente âœ…");
+      alert("Material actualizado correctamente ✅");
     } catch (error) {
       console.error(error);
       alert(error?.message || "No se pudo actualizar el material");
@@ -2733,7 +2740,7 @@ const handleChangeSubModulo = (moduloId, e) => {
 
           actualizarNotificacionVideo(notificacionId, {
             estado: "success",
-            mensaje: "Video cargado correctamente âœ…",
+            mensaje: "Video cargado correctamente ✅",
             progreso: 100,
           });
 
@@ -2782,6 +2789,7 @@ const handleChangeSubModulo = (moduloId, e) => {
       const material = await addMaterialLeccion(leccionId, {
         titulo: data.titulo,
         tipo: data.tipo,
+        descripcion: data.descripcion,
         contenido_texto: data.contenido_texto,
         video_url: null,
         enlace_url: null,
@@ -2805,7 +2813,7 @@ const handleChangeSubModulo = (moduloId, e) => {
       if (estado === "available" || estado === "listo") {
         actualizarNotificacionVideo(notificacionId, {
           estado: "success",
-          mensaje: "Video cargado correctamente âœ…",
+          mensaje: "Video cargado correctamente ✅",
           progreso: 100,
         });
 
@@ -2862,7 +2870,7 @@ const handleChangeSubModulo = (moduloId, e) => {
         nota: fila.nota,
       });
 
-      alert("Nota guardada correctamente âœ…");
+      alert("Nota guardada correctamente ✅");
 
       const data = await getEntregasByTarea(tareaDetalle.id);
       setEntregasTarea(data?.entregas || []);
@@ -3133,6 +3141,32 @@ const guardarConfiguracionTarea = async () => {
       ...prev,
       [leccionId]: crearExamenVacio(),
     }));
+  };
+
+  const handleChangeExamen = (leccionId, field, value) => {
+    setFormExamen((prev) => {
+      const actual = prev[leccionId] || crearExamenVacio();
+
+      const camposNumericos = [
+        "duracion_minutos",
+        "intentos_permitidos",
+        "nota_maxima",
+      ];
+
+      const valorFinal = camposNumericos.includes(field)
+        ? value === ""
+          ? ""
+          : Number(value)
+        : value;
+
+      return {
+        ...prev,
+        [leccionId]: {
+          ...actual,
+          [field]: valorFinal,
+        },
+      };
+    });
   };
 
   const handleChangePreguntaExamen = (leccionId, preguntaIndex, field, value) => {
@@ -3527,10 +3561,10 @@ const guardarConfiguracionTarea = async () => {
 
       if (data.id) {
         await actualizarExamen(data.id, payload);
-        alert("Examen actualizado correctamente âœ…");
+        alert("Examen actualizado correctamente ✅");
       } else {
         await crearExamen(payload);
-        alert("Examen creado correctamente âœ…");
+        alert("Examen creado correctamente ✅");
       }
 
       setExamenEditandoId(null);
@@ -5482,7 +5516,7 @@ const guardarConfiguracionTarea = async () => {
                                   </span>
 
                                   <span className="text-lg text-[var(--color-muted-text)]">
-                                    {abierta ? "â–²" : "â–¼"}
+                                    {abierta ? "▲" : "▼"}
                                   </span>
                                 </div>
                               </div>
@@ -5643,7 +5677,7 @@ const guardarConfiguracionTarea = async () => {
                                                   <td className="px-3 py-3">
                                                     {fechaEntrega
                                                       ? fechaEntrega.toLocaleDateString("es-PE")
-                                                      : "â€”"}
+                                                      : "—"}
                                                   </td>
 
                                                   <td className="px-3 py-3">
@@ -5652,7 +5686,7 @@ const guardarConfiguracionTarea = async () => {
                                                           hour: "2-digit",
                                                           minute: "2-digit",
                                                         })
-                                                      : "â€”"}
+                                                      : "—"}
                                                   </td>
 
                                                   <td className="px-3 py-3">
@@ -7569,6 +7603,20 @@ const guardarConfiguracionTarea = async () => {
                                                                           </option>
                                                                         </select>
                                                                       </div>
+                                                                      
+                                                                      <div className="md:col-span-2">
+                                                                        <label className="block font-semibold mb-2">
+                                                                          Descripción del material
+                                                                        </label>
+
+                                                                        <textarea
+                                                                          name="descripcion"
+                                                                          value={formMat.descripcion || ""}
+                                                                          onChange={(e) => handleChangeMaterial(leccion.id, e)}
+                                                                          className="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-border)] min-h-[90px]"
+                                                                          placeholder="Ej. Revisa este material antes de la siguiente clase."
+                                                                        />
+                                                                      </div>
 
                                                                       {formMat.tipo ===
                                                                         "texto" && (
@@ -7943,6 +7991,12 @@ const guardarConfiguracionTarea = async () => {
                                                                                           }
                                                                                         </h6>
 
+                                                                                        {material.descripcion && (
+                                                                                          <p className="text-sm text-[var(--color-muted-text)] mt-2 whitespace-pre-line">
+                                                                                            {material.descripcion}
+                                                                                          </p>
+                                                                                        )}
+
                                                                                         {material.tipo ===
                                                                                           "video" &&
                                                                                           material.estado_video && (
@@ -8101,6 +8155,12 @@ const guardarConfiguracionTarea = async () => {
                                                                                             <option value="texto">
                                                                                               Texto
                                                                                             </option>
+                                                                                            <option value="Archivo">
+                                                                                              Archivo
+                                                                                            </option>
+                                                                                            <option value="Video">
+                                                                                              Video
+                                                                                            </option>
                                                                                             <option value="url_video">
                                                                                               URL
                                                                                               de
@@ -8110,6 +8170,23 @@ const guardarConfiguracionTarea = async () => {
                                                                                               Enlace
                                                                                             </option>
                                                                                           </select>
+                                                                                        </div>
+                                                                                        <div className="md:col-span-2">
+                                                                                          <label className="block font-semibold mb-2">
+                                                                                            Descripción del material
+                                                                                          </label>
+
+                                                                                          <textarea
+                                                                                            value={formEditarMaterial.descripcion || ""}
+                                                                                            onChange={(e) =>
+                                                                                              setFormEditarMaterial((prev) => ({
+                                                                                                ...prev,
+                                                                                                descripcion: e.target.value,
+                                                                                              }))
+                                                                                            }
+                                                                                            className="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-border)] min-h-[90px]"
+                                                                                            placeholder="Descripción breve del material"
+                                                                                          />
                                                                                         </div>
 
                                                                                         {formEditarMaterial.tipo ===
@@ -8298,7 +8375,7 @@ const guardarConfiguracionTarea = async () => {
                   onClick={() => eliminarNotificacionVideo(item.id)}
                   className="text-xs rounded-lg border px-2 py-1 hover:bg-[var(--color-background)]"
                 >
-                  âœ•
+                  ✕
                 </button>
               </div>
 
@@ -8616,7 +8693,7 @@ const guardarConfiguracionTarea = async () => {
                                   >
                                     {String.fromCharCode(65 + index)}.{" "}
                                     {opcion.texto_opcion || opcion.texto}
-                                    {opcion.es_correcta ? " âœ“" : ""}
+                                    {opcion.es_correcta ? " —" : ""}
                                   </div>
                                 ))}
                               </div>
