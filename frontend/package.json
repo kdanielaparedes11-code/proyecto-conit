@@ -28,6 +28,7 @@
     "jspdf-autotable": "^5.0.7",
     "konva": "^10.2.3",
     "lucide-react": "^0.574.0",
+    "mathlive": "^0.109.2",
     "mercadopago": "^2.12.0",
     "moment": "^2.30.1",
     "nodemailer": "^8.0.1",

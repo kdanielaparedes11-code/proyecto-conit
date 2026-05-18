@@ -6,7 +6,7 @@ import {
   actualizarEvaluacionesGrupo,
   crearEvaluacionGrupo,
   eliminarEvaluacionGrupo,
-  getTareasCalificablesByGrupo
+  getTareasCalificablesByGrupo,
 } from "../services/docenteService";
 import { verificarEmisionCertificado } from "../services/certificado-verificacion.service";
 import { emitirCertificadoDesdePlantilla } from "../services/certificado-final.service";
@@ -53,8 +53,6 @@ export default function RegistroNotas() {
   const [busquedaAlumno, setBusquedaAlumno] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todos");
 
-  
-
   useEffect(() => {
     const cargarCursos = async () => {
       const data = await getCursosDocente();
@@ -90,23 +88,23 @@ export default function RegistroNotas() {
   }, [grupoId]);
 
   useEffect(() => {
-  const cargarTareasCalificables = async () => {
-    if (!grupoId) {
-      setTareasCalificables([]);
-      return;
-    }
+    const cargarTareasCalificables = async () => {
+      if (!grupoId) {
+        setTareasCalificables([]);
+        return;
+      }
 
-    try {
-      const data = await getTareasCalificablesByGrupo(grupoId);
-      setTareasCalificables(data || []);
-    } catch (error) {
-      console.error("Error cargando tareas calificables:", error);
-      setTareasCalificables([]);
-    }
-  };
+      try {
+        const data = await getTareasCalificablesByGrupo(grupoId);
+        setTareasCalificables(data || []);
+      } catch (error) {
+        console.error("Error cargando tareas calificables:", error);
+        setTareasCalificables([]);
+      }
+    };
 
-  cargarTareasCalificables();
-}, [grupoId]);
+    cargarTareasCalificables();
+  }, [grupoId]);
 
   const cursosUnicos = useMemo(() => {
     const vistos = new Set();
@@ -128,18 +126,15 @@ export default function RegistroNotas() {
   const sumaPorcentajes = useMemo(() => {
     return (evaluaciones || []).reduce(
       (acc, ev) => acc + Number(ev.porcentaje || 0),
-      0
+      0,
     );
   }, [evaluaciones]);
 
-  
   const configuracionCompleta = useMemo(() => {
     return (
-      evaluaciones.length > 0 &&
-      Number(sumaPorcentajes.toFixed(2)) === 100
+      evaluaciones.length > 0 && Number(sumaPorcentajes.toFixed(2)) === 100
     );
   }, [evaluaciones, sumaPorcentajes]);
-
 
   const alumnosOrdenados = useMemo(() => {
     return [...alumnos].sort((a, b) => {
@@ -151,11 +146,14 @@ export default function RegistroNotas() {
 
   const alumnosFiltrados = useMemo(() => {
     return alumnosOrdenados.filter((a) => {
-      const texto = `${a.nombre || ""} ${a.apellido || ""} ${a.numdocumento || ""}`
-        .toLowerCase()
-        .trim();
+      const texto =
+        `${a.nombre || ""} ${a.apellido || ""} ${a.numdocumento || ""}`
+          .toLowerCase()
+          .trim();
 
-      const coincideBusqueda = texto.includes(busquedaAlumno.toLowerCase().trim());
+      const coincideBusqueda = texto.includes(
+        busquedaAlumno.toLowerCase().trim(),
+      );
 
       let coincideEstado = true;
 
@@ -172,7 +170,6 @@ export default function RegistroNotas() {
           Number(a.promedio) < 12;
       } else if (filtroEstado === "desaprobados") {
         coincideEstado = a.faltantes === 0 && Number(a.promedio) < 9;
-
       }
 
       return coincideBusqueda && coincideEstado;
@@ -184,7 +181,7 @@ export default function RegistroNotas() {
     const completos = alumnosOrdenados.filter((a) => a.faltantes === 0).length;
     const incompletos = total - completos;
     const aprobados = alumnosOrdenados.filter(
-      (a) => a.faltantes === 0 && Number(a.promedio) >= 11
+      (a) => a.faltantes === 0 && Number(a.promedio) >= 11,
     ).length;
 
     return { total, completos, incompletos, aprobados };
@@ -237,8 +234,8 @@ export default function RegistroNotas() {
   }, [evaluaciones, modalNotas]);
 
   const modalPromedio = useMemo(() => {
-    if (!evaluaciones.length) return "â€”";
-    if (modalFaltantes > 0) return "â€”";
+    if (!evaluaciones.length) return "—";
+    if (modalFaltantes > 0) return "-”";
 
     let suma = 0;
 
@@ -267,7 +264,7 @@ export default function RegistroNotas() {
 
     if (configuracionCompleta) {
       const confirmado = window.confirm(
-        "Ya existen evaluaciones configuradas y asignadas. ¿Seguro que deseas modificar lo ya configurado?"
+        "Ya existen evaluaciones configuradas y asignadas. ¿Seguro que deseas modificar lo ya configurado?",
       );
 
       if (!confirmado) return;
@@ -290,172 +287,171 @@ export default function RegistroNotas() {
     setConfigOpen(true);
   };
 
-const cerrarConfigEvaluaciones = () => {
-  setConfigOpen(false);
-  setConfigDraft([]);
-};
+  const cerrarConfigEvaluaciones = () => {
+    setConfigOpen(false);
+    setConfigDraft([]);
+  };
 
-const cambiarEvaluacionDraft = (index, field, value) => {
-  setConfigDraft((prev) =>
-    prev.map((item, i) => {
-      if (i !== index) return item;
+  const cambiarEvaluacionDraft = (index, field, value) => {
+    setConfigDraft((prev) =>
+      prev.map((item, i) => {
+        if (i !== index) return item;
 
-      const next = { ...item, [field]: value };
+        const next = { ...item, [field]: value };
 
-      if (field === "tipo") {
-        next.idtarea = null;
-        next.idexamen = null;
-      }
+        if (field === "tipo") {
+          next.idtarea = null;
+          next.idexamen = null;
+        }
 
-      return next;
-    })
-  );
-};
-
-
-const agregarEvaluacionDraft = () => {
-  setConfigDraft((prev) => [
-    ...prev,
-    {
-      id: `new-${Date.now()}`,
-      idgrupo: grupoId,
-      nombre: "",
-      porcentaje: "",
-      tipo: "manual",
-      idtarea: null,
-      idexamen: null,
-      orden: prev.length + 1,
-      activa: true,
-      isNew: true,
-    }
-  ]);
-};
-
-const eliminarEvaluacionDraft = (index) => {
-  setConfigDraft((prev) => prev.filter((_, i) => i !== index));
-};
-
-const totalConfigDraft = useMemo(() => {
-  return (configDraft || []).reduce(
-    (acc, ev) => acc + Number(ev.porcentaje || 0),
-    0
-  );
-}, [configDraft]);
-
-const guardarConfigEvaluaciones = async () => {
-  try {
-    if (!grupoId) return;
-
-    const limpias = configDraft.map((ev, index) => ({
-      ...ev,
-      nombre: String(ev.nombre || "").trim(),
-      porcentaje: Number(ev.porcentaje || 0),
-      orden: index + 1,
-    }));
-
-    if (limpias.length === 0) {
-      alert("Debe existir al menos una evaluación.");
-      return;
-    }
-
-    if (limpias.some((ev) => !ev.nombre)) {
-      alert("Todas las evaluaciones deben tener nombre.");
-      return;
-    }
-
-    if (
-      limpias.some(
-        (ev) =>
-          Number.isNaN(ev.porcentaje) ||
-          ev.porcentaje < 0 ||
-          ev.porcentaje > 100
-      )
-    ) {
-      alert("Cada porcentaje debe estar entre 0 y 100.");
-      return;
-    }
-
-    const suma = limpias.reduce((acc, ev) => acc + Number(ev.porcentaje || 0), 0);
-    if (Number(suma.toFixed(2)) !== 100) {
-      alert("La suma de porcentajes debe ser 100%.");
-      return;
-    }
-
-    setConfigSaving(true);
-
-    const draftIds = new Set(
-      limpias
-        .filter((ev) => !ev.isNew)
-        .map((ev) => Number(ev.id))
+        return next;
+      }),
     );
+  };
 
-    // antes de eliminar evaluaciones, conviene validar si tienen notas registradas
-    const paraEliminar = (evaluaciones || []).filter(
-      (ev) => !draftIds.has(Number(ev.id))
+  const agregarEvaluacionDraft = () => {
+    setConfigDraft((prev) => [
+      ...prev,
+      {
+        id: `new-${Date.now()}`,
+        idgrupo: grupoId,
+        nombre: "",
+        porcentaje: "",
+        tipo: "manual",
+        idtarea: null,
+        idexamen: null,
+        orden: prev.length + 1,
+        activa: true,
+        isNew: true,
+      },
+    ]);
+  };
+
+  const eliminarEvaluacionDraft = (index) => {
+    setConfigDraft((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const totalConfigDraft = useMemo(() => {
+    return (configDraft || []).reduce(
+      (acc, ev) => acc + Number(ev.porcentaje || 0),
+      0,
     );
+  }, [configDraft]);
 
-    if (paraEliminar.length > 0) {
-      const confirmado = window.confirm(
-        "Vas a eliminar evaluaciones existentes. Si esas evaluaciones ya tienen notas registradas, podrían quedar desvinculadas. ¿Deseas continuar?"
-      );
+  const guardarConfigEvaluaciones = async () => {
+    try {
+      if (!grupoId) return;
 
-      if (!confirmado) {
-        setConfigSaving(false);
+      const limpias = configDraft.map((ev, index) => ({
+        ...ev,
+        nombre: String(ev.nombre || "").trim(),
+        porcentaje: Number(ev.porcentaje || 0),
+        orden: index + 1,
+      }));
+
+      if (limpias.length === 0) {
+        alert("Debe existir al menos una evaluación.");
         return;
       }
-    }
 
-    for (const ev of paraEliminar) {
-      await eliminarEvaluacionGrupo(ev.id);
-    }
+      if (limpias.some((ev) => !ev.nombre)) {
+        alert("Todas las evaluaciones deben tener nombre.");
+        return;
+      }
 
-    const existentes = limpias.filter((ev) => !ev.isNew);
-    const nuevas = limpias.filter((ev) => ev.isNew);
+      if (
+        limpias.some(
+          (ev) =>
+            Number.isNaN(ev.porcentaje) ||
+            ev.porcentaje < 0 ||
+            ev.porcentaje > 100,
+        )
+      ) {
+        alert("Cada porcentaje debe estar entre 0 y 100.");
+        return;
+      }
 
-    if (existentes.length > 0) {
-      await actualizarEvaluacionesGrupo(
-        existentes.map((ev, index) => ({
-          id: Number(ev.id),
-          idgrupo: Number(ev.idgrupo || grupoId),
+      const suma = limpias.reduce(
+        (acc, ev) => acc + Number(ev.porcentaje || 0),
+        0,
+      );
+      if (Number(suma.toFixed(2)) !== 100) {
+        alert("La suma de porcentajes debe ser 100%.");
+        return;
+      }
+
+      setConfigSaving(true);
+
+      const draftIds = new Set(
+        limpias.filter((ev) => !ev.isNew).map((ev) => Number(ev.id)),
+      );
+
+      // antes de eliminar evaluaciones, conviene validar si tienen notas registradas
+      const paraEliminar = (evaluaciones || []).filter(
+        (ev) => !draftIds.has(Number(ev.id)),
+      );
+
+      if (paraEliminar.length > 0) {
+        const confirmado = window.confirm(
+          "Vas a eliminar evaluaciones existentes. Si esas evaluaciones ya tienen notas registradas, podrían quedar desvinculadas. ¿Deseas continuar?",
+        );
+
+        if (!confirmado) {
+          setConfigSaving(false);
+          return;
+        }
+      }
+
+      for (const ev of paraEliminar) {
+        await eliminarEvaluacionGrupo(ev.id);
+      }
+
+      const existentes = limpias.filter((ev) => !ev.isNew);
+      const nuevas = limpias.filter((ev) => ev.isNew);
+
+      if (existentes.length > 0) {
+        await actualizarEvaluacionesGrupo(
+          existentes.map((ev, index) => ({
+            id: Number(ev.id),
+            idgrupo: Number(ev.idgrupo || grupoId),
+            nombre: ev.nombre,
+            porcentaje: Number(ev.porcentaje),
+            orden: index + 1,
+            tipo: ev.tipo || "manual",
+            idtarea:
+              ev.tipo === "tarea" && ev.idtarea ? Number(ev.idtarea) : null,
+            idexamen:
+              ev.tipo === "examen" && ev.idexamen ? Number(ev.idexamen) : null,
+            activa: ev.activa ?? true,
+          })),
+        );
+      }
+
+      for (let i = 0; i < nuevas.length; i++) {
+        const ev = nuevas[i];
+        await crearEvaluacionGrupo({
+          idgrupo: Number(grupoId),
           nombre: ev.nombre,
           porcentaje: Number(ev.porcentaje),
-          orden: index + 1,
           tipo: ev.tipo || "manual",
           idtarea:
             ev.tipo === "tarea" && ev.idtarea ? Number(ev.idtarea) : null,
           idexamen:
             ev.tipo === "examen" && ev.idexamen ? Number(ev.idexamen) : null,
-          activa: ev.activa ?? true,
-        }))
-      );
+          orden: existentes.length + i + 1,
+        });
+      }
+
+      await refrescarDatos();
+      cerrarConfigEvaluaciones();
+      alert("Configuración de evaluaciones guardada correctamente ✅");
+    } catch (error) {
+      console.error("Error guardando configuración:", error);
+      alert(error?.message || "Ocurrió un error al guardar la configuración.");
+    } finally {
+      setConfigSaving(false);
     }
-
-    for (let i = 0; i < nuevas.length; i++) {
-      const ev = nuevas[i];
-      await crearEvaluacionGrupo({
-        idgrupo: Number(grupoId),
-        nombre: ev.nombre,
-        porcentaje: Number(ev.porcentaje),
-        tipo: ev.tipo || "manual",
-        idtarea:
-          ev.tipo === "tarea" && ev.idtarea ? Number(ev.idtarea) : null,
-        idexamen:
-          ev.tipo === "examen" && ev.idexamen ? Number(ev.idexamen) : null,
-        orden: existentes.length + i + 1,
-      });
-    }
-
-    await refrescarDatos();
-    cerrarConfigEvaluaciones();
-    alert("Configuración de evaluaciones guardada correctamente ✅");
-  } catch (error) {
-    console.error("Error guardando configuración:", error);
-    alert(error?.message || "Ocurrió un error al guardar la configuración.");
-  } finally {
-    setConfigSaving(false);
-  }
-};
-
+  };
 
   const procesarCertificadoAutomatico = async (alumno) => {
     try {
@@ -493,11 +489,13 @@ const guardarConfigEvaluaciones = async () => {
         fechaEmision: new Date().toISOString().slice(0, 10),
       });
 
-      alert(`Certificado emitido automáticamente para ${verificacion.alumno.nombreCompleto} ✅`);
+      alert(
+        `Certificado emitido automáticamente para ${verificacion.alumno.nombreCompleto} ✅`,
+      );
     } catch (error) {
       console.error("Error verificando/emitiendo certificado:", error);
     }
-  };  
+  };
 
   const guardarModal = async () => {
     try {
@@ -505,7 +503,7 @@ const guardarConfigEvaluaciones = async () => {
 
       const suma = evaluaciones.reduce(
         (acc, ev) => acc + Number(ev.porcentaje || 0),
-        0
+        0,
       );
 
       if (Number(suma.toFixed(2)) !== 100) {
@@ -538,14 +536,14 @@ const guardarConfigEvaluaciones = async () => {
     }
   };
 
-  
   return (
     <div className="space-y-6">
       <section className="rounded-2xl bg-[var(--color-card)] shadow-sm border border-[var(--color-border)] overflow-hidden">
         <div className="bg-gradient-to-r from-[var(--color-sidenav)] via-[var(--color-sidenav)] to-[var(--color-primary)] px-6 py-6 text-white">
           <h1 className="text-3xl font-bold">Registro de Notas</h1>
           <p className="mt-2 text-sm text-white/75">
-            Administra evaluaciones, revisa faltantes y registra notas por grupo.
+            Administra evaluaciones, revisa faltantes y registra notas por
+            grupo.
           </p>
         </div>
 
@@ -577,10 +575,14 @@ const guardarConfigEvaluaciones = async () => {
             {grupoSeleccionado && (
               <div className="mt-4 rounded-xl bg-[var(--color-background)] border border-[var(--color-border)] px-4 py-3">
                 <p className="text-sm text-[var(--color-text)]">
-                  <span className="font-semibold">{grupoSeleccionado.nombre}</span>
+                  <span className="font-semibold">
+                    {grupoSeleccionado.nombre}
+                  </span>
                   {" · "}
                   Grupo {grupoSeleccionado.grupo}
-                  {grupoSeleccionado.horario ? ` · ${grupoSeleccionado.horario}` : ""}
+                  {grupoSeleccionado.horario
+                    ? ` · ${grupoSeleccionado.horario}`
+                    : ""}
                 </p>
               </div>
             )}
@@ -619,8 +621,8 @@ const guardarConfigEvaluaciones = async () => {
             configuracionCompleta
               ? "bg-emerald-50 border-emerald-400 ring-2 ring-emerald-200"
               : evaluaciones.length === 0
-              ? "bg-amber-50 border-amber-400 ring-2 ring-amber-200"
-              : "bg-[var(--color-card)] border-[var(--color-border)]"
+                ? "bg-amber-50 border-amber-400 ring-2 ring-amber-200"
+                : "bg-[var(--color-card)] border-[var(--color-border)]"
           }`}
         >
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -634,11 +636,13 @@ const guardarConfigEvaluaciones = async () => {
 
               {!configuracionCompleta ? (
                 <div className="mt-3 rounded-xl border border-amber-300 bg-amber-100 px-4 py-3 text-sm text-amber-800">
-                  Debes configurar primero las evaluaciones. Cuando el total llegue a 100%, quedará marcado como configurado.
+                  Debes configurar primero las evaluaciones. Cuando el total
+                  llegue a 100%, quedará marcado como configurado.
                 </div>
               ) : (
                 <div className="mt-3 rounded-xl border border-emerald-300 bg-emerald-100 px-4 py-3 text-sm text-emerald-800">
-                  La configuración ya fue completada. Si deseas editarla, el sistema te pedirá confirmación antes de modificarla.
+                  La configuración ya fue completada. Si deseas editarla, el
+                  sistema te pedirá confirmación antes de modificarla.
                 </div>
               )}
             </div>
@@ -652,7 +656,9 @@ const guardarConfigEvaluaciones = async () => {
                     : "bg-slate-900 text-white hover:brightness-95"
                 }`}
               >
-                {configuracionCompleta ? "Editar configuración" : "Configurar evaluaciones"}
+                {configuracionCompleta
+                  ? "Editar configuración"
+                  : "Configurar evaluaciones"}
               </button>
               <div
                 className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold ${
@@ -669,7 +675,9 @@ const guardarConfigEvaluaciones = async () => {
           <div className="mt-4 flex flex-wrap gap-3">
             {evaluaciones.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-amber-300 bg-amber-50 px-4 py-5 text-sm text-amber-800">
-                No hay evaluaciones configuradas para este grupo. Debes completar esta sección antes de continuar con el proceso de notas.
+                No hay evaluaciones configuradas para este grupo. Debes
+                completar esta sección antes de continuar con el proceso de
+                notas.
               </div>
             ) : (
               evaluaciones.map((ev) => (
@@ -681,7 +689,8 @@ const guardarConfigEvaluaciones = async () => {
                     {ev.nombre}
                   </div>
                   <div className="mt-1 text-xs text-[var(--color-muted-text)]">
-                    {ev.porcentaje}% · {ev.tipo === "tarea" ? "Tarea" : "Manual"}
+                    {ev.porcentaje}% ·{" "}
+                    {ev.tipo === "tarea" ? "Tarea" : "Manual"}
                   </div>
                 </div>
               ))
@@ -692,7 +701,9 @@ const guardarConfigEvaluaciones = async () => {
 
       <section className="rounded-2xl bg-[var(--color-card)] shadow-sm border border-[var(--color-border)] overflow-hidden">
         <div className="px-6 py-5 border-b border-[var(--color-border)]">
-          <h2 className="text-xl font-bold text-[var(--color-text)]">Alumnos del grupo</h2>
+          <h2 className="text-xl font-bold text-[var(--color-text)]">
+            Alumnos del grupo
+          </h2>
           <p className="text-sm text-[var(--color-muted-text)] mt-1">
             {grupoId
               ? "Revisa el avance por alumno y registra notas cuando sea necesario."
@@ -704,15 +715,18 @@ const guardarConfigEvaluaciones = async () => {
               <div className="mt-3">
                 {Number(sumaPorcentajes.toFixed(2)) !== 100 ? (
                   <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                    Atención: los porcentajes todavía no suman 100%. El cálculo final puede no ser válido.
+                    Atención: los porcentajes todavía no suman 100%. El cálculo
+                    final puede no ser válido.
                   </div>
                 ) : resumen.incompletos > 0 ? (
                   <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                    Hay alumnos con notas incompletas. Completa las evaluaciones faltantes para ver el promedio final.
+                    Hay alumnos con notas incompletas. Completa las evaluaciones
+                    faltantes para ver el promedio final.
                   </div>
                 ) : (
                   <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                    Todas las evaluaciones están configuradas y los registros están completos.
+                    Todas las evaluaciones están configuradas y los registros
+                    están completos.
                   </div>
                 )}
               </div>
@@ -747,14 +761,14 @@ const guardarConfigEvaluaciones = async () => {
           )}
         </div>
 
-
-
         {!grupoId ? (
           <div className="p-6 text-[var(--color-muted-text)]">
             Selecciona un grupo para visualizar el registro de notas.
           </div>
         ) : loading ? (
-          <div className="p-6 text-[var(--color-muted-text)]">Cargando alumnos...</div>
+          <div className="p-6 text-[var(--color-muted-text)]">
+            Cargando alumnos...
+          </div>
         ) : alumnosFiltrados.length === 0 ? (
           <div className="p-6 text-[var(--color-muted-text)]">
             No se encontraron alumnos con ese filtro.
@@ -840,15 +854,17 @@ const guardarConfigEvaluaciones = async () => {
 
                     <td className="px-4 py-4 text-center">
                       {a.faltantes > 0 ? (
-                        <span className="text-[var(--color-muted-text)] font-semibold">â€”</span>
+                        <span className="text-[var(--color-muted-text)] font-semibold">
+                          â€”
+                        </span>
                       ) : (
                         <span
                           className={`font-bold ${
                             Number(a.promedio) >= 12
                               ? "text-emerald-600"
                               : Number(a.promedio) >= 9
-                              ? "text-yellow-600"
-                              : "text-rose-600"
+                                ? "text-yellow-600"
+                                : "text-rose-600"
                           }`}
                         >
                           {a.promedio}
@@ -880,7 +896,9 @@ const guardarConfigEvaluaciones = async () => {
                       <button
                         onClick={() => {
                           if (!configuracionCompleta) {
-                            alert("Primero debes completar la configuración de evaluaciones al 100%.");
+                            alert(
+                              "Primero debes completar la configuración de evaluaciones al 100%.",
+                            );
                             return;
                           }
                           abrirModal(a);
@@ -989,24 +1007,34 @@ const guardarConfigEvaluaciones = async () => {
                 <InfoBox
                   label="Promedio"
                   value={modalPromedio}
-                  tone={modalPromedio !== "â€”" && Number(modalPromedio) >= 11 ? "emerald" : "slate"}
+                  tone={
+                    modalPromedio !== "â€”" && Number(modalPromedio) >= 11
+                      ? "emerald"
+                      : "slate"
+                  }
                 />
                 <InfoBox
                   label="Porcentaje total"
                   value={`${sumaPorcentajes.toFixed(2)}%`}
-                  tone={Number(sumaPorcentajes.toFixed(2)) === 100 ? "blue" : "amber"}
+                  tone={
+                    Number(sumaPorcentajes.toFixed(2)) === 100
+                      ? "blue"
+                      : "amber"
+                  }
                 />
               </div>
 
               {modalFaltantes > 0 && (
                 <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                  Puedes guardar aunque falten notas, pero el promedio final no se mostrará hasta completar todas las evaluaciones.
+                  Puedes guardar aunque falten notas, pero el promedio final no
+                  se mostrará hasta completar todas las evaluaciones.
                 </div>
               )}
 
               {Number(sumaPorcentajes.toFixed(2)) !== 100 && (
                 <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                  La suma de porcentajes no es 100%. Ajusta la configuración de evaluaciones antes de cerrar el proceso académico.
+                  La suma de porcentajes no es 100%. Ajusta la configuración de
+                  evaluaciones antes de cerrar el proceso académico.
                 </div>
               )}
 
@@ -1036,219 +1064,242 @@ const guardarConfigEvaluaciones = async () => {
       )}
 
       {configOpen && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div
-      className="absolute inset-0 bg-black/45 backdrop-blur-[1px]"
-      onClick={cerrarConfigEvaluaciones}
-    />
-
-    <div className="relative z-10 w-full max-w-4xl rounded-3xl bg-[var(--color-card)] shadow-2xl border border-[var(--color-border)] overflow-hidden">
-      {/* HEADER */}
-      <div className="bg-gradient-to-r from-[var(--color-sidenav)] via-[var(--color-sidenav)] to-[var(--color-primary)] px-6 py-5 text-white">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="text-xl font-bold">Configurar evaluaciones</h3>
-            <p className="text-sm text-white/75 mt-1">
-              Agrega, edita o elimina evaluaciones del grupo seleccionado. Las evaluaciones de tipo tarea se vinculan después desde la sección de tareas del curso.
-            </p>
-          </div>
-
-          <button
-            onClick={cerrarConfigEvaluaciones}
-            className="rounded-lg border border-white/20 px-3 py-1.5 text-sm hover:bg-white/10 transition"
-          >
-            Cerrar
-          </button>
-        </div>
-      </div>
-
-      {/* BODY */}
-      <div className="p-6">
-        {/* TOP ACTIONS */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
-          <button
-            onClick={agregarEvaluacionDraft}
-            className="rounded-xl bg-[var(--color-button-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--color-button-primary)] transition"
-          >
-            Agregar evaluación
-          </button>
-
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold ${
-              Number(totalConfigDraft.toFixed(2)) === 100
-                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                : "bg-amber-50 text-amber-700 border border-amber-200"
-            }`}
-          >
-            Total actual: {totalConfigDraft.toFixed(2)}%
+            className="absolute inset-0 bg-black/45 backdrop-blur-[1px]"
+            onClick={cerrarConfigEvaluaciones}
+          />
+
+          <div className="relative z-10 w-full max-w-4xl rounded-3xl bg-[var(--color-card)] shadow-2xl border border-[var(--color-border)] overflow-hidden">
+            {/* HEADER */}
+            <div className="bg-gradient-to-r from-[var(--color-sidenav)] via-[var(--color-sidenav)] to-[var(--color-primary)] px-6 py-5 text-white">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-bold">Configurar evaluaciones</h3>
+                  <p className="text-sm text-white/75 mt-1">
+                    Agrega, edita o elimina evaluaciones del grupo seleccionado.
+                    Las evaluaciones de tipo tarea se vinculan después desde la
+                    sección de tareas del curso.
+                  </p>
+                </div>
+
+                <button
+                  onClick={cerrarConfigEvaluaciones}
+                  className="rounded-lg border border-white/20 px-3 py-1.5 text-sm hover:bg-white/10 transition"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+
+            {/* BODY */}
+            <div className="p-6">
+              {/* TOP ACTIONS */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+                <button
+                  onClick={agregarEvaluacionDraft}
+                  className="rounded-xl bg-[var(--color-button-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--color-button-primary)] transition"
+                >
+                  Agregar evaluación
+                </button>
+
+                <div
+                  className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold ${
+                    Number(totalConfigDraft.toFixed(2)) === 100
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                      : "bg-amber-50 text-amber-700 border border-amber-200"
+                  }`}
+                >
+                  Total actual: {totalConfigDraft.toFixed(2)}%
+                </div>
+              </div>
+
+              {/* TABLA */}
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[620px]">
+                  <thead className="bg-[var(--color-background)]">
+                    <tr className="border-b border-[var(--color-border)]">
+                      <th className="px-4 py-3 text-left text-sm font-bold text-[var(--color-text)]">
+                        Nombre
+                      </th>
+
+                      <th className="px-4 py-3 text-left text-sm font-bold text-[var(--color-text)]">
+                        Porcentaje (%)
+                      </th>
+
+                      <th className="px-4 py-3 text-left text-sm font-bold text-[var(--color-text)]">
+                        Tipo
+                      </th>
+
+                      <th className="px-4 py-3 text-center text-sm font-bold text-[var(--color-text)]">
+                        Orden
+                      </th>
+
+                      <th className="px-4 py-3 text-center text-sm font-bold text-[var(--color-text)]">
+                        Acción
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {configDraft.map((ev, index) => (
+                      <tr
+                        key={ev.id}
+                        className="border-b border-[var(--color-border)]"
+                      >
+                        {/* NOMBRE */}
+                        <td className="px-4 py-3">
+                          <input
+                            type="text"
+                            value={ev.nombre}
+                            onChange={(e) =>
+                              cambiarEvaluacionDraft(
+                                index,
+                                "nombre",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Ej. Parcial, Proyecto"
+                            disabled={ev.tipo === "tarea"}
+                            className={`w-full rounded-xl border border-[var(--color-border)] px-3 py-2 outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-border)] ${
+                              ev.tipo === "tarea"
+                                ? "bg-[var(--color-background)] text-[var(--color-muted-text)]"
+                                : ""
+                            }`}
+                          />
+                        </td>
+
+                        {/* PORCENTAJE */}
+                        <td className="px-4 py-3">
+                          <div className="relative">
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="0.01"
+                              value={ev.porcentaje}
+                              onChange={(e) =>
+                                cambiarEvaluacionDraft(
+                                  index,
+                                  "porcentaje",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="0 - 100"
+                              className="w-full rounded-xl border border-[var(--color-border)] px-3 py-2 pr-8 outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-border)]"
+                            />
+                            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-medium text-[var(--color-muted-text)]">
+                              %
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* TIPO */}
+                        <td className="px-4 py-3">
+                          <select
+                            value={ev.tipo}
+                            onChange={(e) =>
+                              cambiarEvaluacionDraft(
+                                index,
+                                "tipo",
+                                e.target.value,
+                              )
+                            }
+                            className="w-full rounded-xl border border-[var(--color-border)] px-3 py-2 outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-border)]"
+                          >
+                            <option value="manual">Manual</option>
+                            <option value="tarea">Tarea</option>
+                            <option value="examen">Examen</option>
+                          </select>
+                        </td>
+
+                        {/* ORDEN */}
+                        <td className="px-4 py-3 text-center text-sm font-semibold text-[var(--color-muted-text)]">
+                          {index + 1}
+                        </td>
+
+                        {/* ELIMINAR */}
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            onClick={() => {
+                              const ok = window.confirm(
+                                "¿Seguro que deseas eliminar esta evaluación?",
+                              );
+                              if (ok) eliminarEvaluacionDraft(index);
+                            }}
+                            className="rounded-xl border border-rose-300 px-3 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 transition"
+                          >
+                            Eliminar
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {configDraft.some((ev) => ev.tipo === "tarea") &&
+                tareasCalificables.length === 0 && (
+                  <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                    No hay tareas calificables registradas para este grupo.
+                  </div>
+                )}
+
+              {/* VALIDACIÓN */}
+              <div className="mt-5">
+                {Number(totalConfigDraft.toFixed(2)) !== 100 ? (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                    La suma debe ser 100% antes de guardar.
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                    Configuración válida.
+                  </div>
+                )}
+              </div>
+
+              {/* FOOTER */}
+              <div className="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+                <button
+                  onClick={cerrarConfigEvaluaciones}
+                  className="rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm font-semibold text-[var(--color-text)] hover:bg-[var(--color-background)] transition"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  onClick={guardarConfigEvaluaciones}
+                  disabled={configSaving}
+                  className={`rounded-xl px-5 py-3 text-sm font-semibold text-white transition ${
+                    configSaving
+                      ? "bg-[var(--color-muted-text)] cursor-not-allowed"
+                      : "bg-[var(--color-button-primary)] hover:bg-[var(--color-button-primary)]"
+                  }`}
+                >
+                  {configSaving ? "Guardando..." : "Guardar configuración"}
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-
-        {/* TABLA */}
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[620px]">
-            <thead className="bg-[var(--color-background)]">
-              <tr className="border-b border-[var(--color-border)]">
-                <th className="px-4 py-3 text-left text-sm font-bold text-[var(--color-text)]">
-                  Nombre
-                </th>
-
-                <th className="px-4 py-3 text-left text-sm font-bold text-[var(--color-text)]">
-                  Porcentaje (%)
-                </th>
-
-                <th className="px-4 py-3 text-left text-sm font-bold text-[var(--color-text)]">
-                  Tipo
-                </th>
-
-                <th className="px-4 py-3 text-center text-sm font-bold text-[var(--color-text)]">
-                  Orden
-                </th>
-
-                <th className="px-4 py-3 text-center text-sm font-bold text-[var(--color-text)]">
-                  Acción
-                </th>
-
-              </tr>
-            </thead>
-
-            <tbody>
-              {configDraft.map((ev, index) => (
-                <tr key={ev.id} className="border-b border-[var(--color-border)]">
-                  {/* NOMBRE */}
-                  <td className="px-4 py-3">
-                    <input
-                      type="text"
-                      value={ev.nombre}
-                      onChange={(e) =>
-                        cambiarEvaluacionDraft(index, "nombre", e.target.value)
-                      }
-                      placeholder="Ej. Parcial, Proyecto"
-                      disabled={ev.tipo === "tarea"}
-                      className={`w-full rounded-xl border border-[var(--color-border)] px-3 py-2 outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-border)] ${
-                        ev.tipo === "tarea" ? "bg-[var(--color-background)] text-[var(--color-muted-text)]" : ""
-                      }`}
-                    />
-                  </td>
-
-                  {/* PORCENTAJE */}
-                  <td className="px-4 py-3">
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                        value={ev.porcentaje}
-                        onChange={(e) =>
-                          cambiarEvaluacionDraft(index, "porcentaje", e.target.value)
-                        }
-                        placeholder="0 - 100"
-                        className="w-full rounded-xl border border-[var(--color-border)] px-3 py-2 pr-8 outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-border)]"
-                      />
-                      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-medium text-[var(--color-muted-text)]">
-                        %
-                      </span>
-                    </div>
-                  </td>
-
-                  {/* TIPO */}
-                  <td className="px-4 py-3">
-                    <select
-                      value={ev.tipo}
-                      onChange={(e) =>
-                        cambiarEvaluacionDraft(index, "tipo", e.target.value)
-                      }
-                      className="w-full rounded-xl border border-[var(--color-border)] px-3 py-2 outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-border)]"
-                    >
-                      <option value="manual">Manual</option>
-                      <option value="tarea">Tarea</option>
-                      <option value="examen">Examen</option>
-                    </select>
-                  </td>
-
-                  {/* ORDEN */}
-                  <td className="px-4 py-3 text-center text-sm font-semibold text-[var(--color-muted-text)]">
-                    {index + 1}
-                  </td>
-
-                  {/* ELIMINAR */}
-                  <td className="px-4 py-3 text-center">
-                    <button
-                      onClick={() => {
-                        const ok = window.confirm("¿Seguro que deseas eliminar esta evaluación?");
-                        if (ok) eliminarEvaluacionDraft(index);
-                      }}
-                      className="rounded-xl border border-rose-300 px-3 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 transition"
-                    >
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {configDraft.some((ev) => ev.tipo === "tarea") && tareasCalificables.length === 0 && (
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          No hay tareas calificables registradas para este grupo.
         </div>
       )}
-
-        {/* VALIDACIÓN */}
-        <div className="mt-5">
-          {Number(totalConfigDraft.toFixed(2)) !== 100 ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-              La suma debe ser 100% antes de guardar.
-            </div>
-          ) : (
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              Configuración válida.
-            </div>
-          )}
-        </div>
-
-        {/* FOOTER */}
-        <div className="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
-          <button
-            onClick={cerrarConfigEvaluaciones}
-            className="rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm font-semibold text-[var(--color-text)] hover:bg-[var(--color-background)] transition"
-          >
-            Cancelar
-          </button>
-
-          <button
-            onClick={guardarConfigEvaluaciones}
-            disabled={configSaving}
-            className={`rounded-xl px-5 py-3 text-sm font-semibold text-white transition ${
-              configSaving
-                ? "bg-[var(--color-muted-text)] cursor-not-allowed"
-                : "bg-[var(--color-button-primary)] hover:bg-[var(--color-button-primary)]"
-            }`}
-          >
-            {configSaving ? "Guardando..." : "Guardar configuración"}
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-
     </div>
   );
 }
 
 function ResumenCard({ titulo, valor, color = "slate" }) {
   const styles = {
-    slate: "border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)]",
+    slate:
+      "border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)]",
     emerald: "border-emerald-200 bg-emerald-50 text-emerald-700",
     amber: "border-amber-200 bg-amber-50 text-amber-700",
     blue: "border-[var(--color-primary)] bg-[color-mix(in_srgb,var(--color-primary)_8%,transparent)] text-[var(--color-primary)]",
   };
 
   return (
-    <div className={`rounded-2xl border p-5 shadow-sm ${styles[color] || styles.slate}`}>
+    <div
+      className={`rounded-2xl border p-5 shadow-sm ${styles[color] || styles.slate}`}
+    >
       <div className="text-sm font-semibold opacity-80">{titulo}</div>
       <div className="mt-2 text-3xl font-bold">{valor}</div>
     </div>
@@ -1257,7 +1308,8 @@ function ResumenCard({ titulo, valor, color = "slate" }) {
 
 function InfoBox({ label, value, tone = "slate" }) {
   const styles = {
-    slate: "border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)]",
+    slate:
+      "border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)]",
     emerald: "border-emerald-200 bg-emerald-50 text-emerald-700",
     amber: "border-amber-200 bg-amber-50 text-amber-700",
     blue: "border-[var(--color-primary)] bg-[color-mix(in_srgb,var(--color-primary)_8%,transparent)] text-[var(--color-primary)]",

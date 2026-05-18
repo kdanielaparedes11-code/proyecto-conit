@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm'; // 👈 Se añadió 'In'
 import { SesionVivo } from './entities/sesion-vivo.entity';
 import { Curso } from '../curso/entities/curso.entity';
 import { Grupo } from '../grupo/entities/grupo.entity';
@@ -36,7 +36,20 @@ export class SesionVivoService {
   private toResponseDto(sesion: SesionVivo): SesionVivoResponseDto {
     return {
       id: sesion.id,
-      curso: sesion.curso ? { id: (sesion.curso as any).id } : null,
+      curso: sesion.curso
+        ? {
+            id: (sesion.curso as any).id,
+            // Soporta si la columna se llama nombrecurso o simplemente nombre
+            nombrecurso:
+              (sesion.curso as any).nombrecurso || (sesion.curso as any).nombre,
+          }
+        : null,
+      docente: (sesion as any).docente
+        ? {
+            nombre: (sesion as any).docente.nombre,
+            apellido: (sesion as any).docente.apellido,
+          }
+        : null,
       titulo: sesion.titulo,
       descripcion: sesion.descripcion,
       fecha: sesion.fecha,
@@ -51,7 +64,9 @@ export class SesionVivoService {
   }
 
   private providerToLabel(provider?: string): string {
-    const value = String(provider || 'google').toLowerCase().trim();
+    const value = String(provider || 'google')
+      .toLowerCase()
+      .trim();
 
     if (value === 'google') return 'Google Meet';
     if (value === 'zoom') return 'Zoom';
@@ -61,7 +76,9 @@ export class SesionVivoService {
   }
 
   private normalizarProvider(provider?: string): MeetingProvider {
-    const valor = String(provider || 'google').toLowerCase().trim();
+    const valor = String(provider || 'google')
+      .toLowerCase()
+      .trim();
 
     if (valor === 'google' || valor === 'zoom' || valor === 'teams') {
       return valor;
@@ -73,7 +90,9 @@ export class SesionVivoService {
   }
 
   private normalizarAccessType(accessType?: string): MeetingAccessType {
-    const valor = String(accessType || 'RESTRICTED').toUpperCase().trim();
+    const valor = String(accessType || 'RESTRICTED')
+      .toUpperCase()
+      .trim();
 
     if (valor === 'OPEN' || valor === 'TRUSTED' || valor === 'RESTRICTED') {
       return valor;
@@ -144,6 +163,50 @@ export class SesionVivoService {
     return sesiones.map((sesion) => this.toResponseDto(sesion));
   }
 
+  async obtenerSesionesPorAlumno(
+    idalumno: number,
+  ): Promise<SesionVivoResponseDto[]> {
+    const matriculas = await this.sesionVivoRepository.manager.query(
+      `SELECT idgrupo FROM matricula WHERE idalumno = $1 AND estado = 'pagado'`,
+      [idalumno],
+    );
+
+    const gruposIds = matriculas.map((m: any) => m.idgrupo).filter(Boolean);
+
+    if (gruposIds.length === 0) {
+      return [];
+    }
+
+    const sesiones = await this.sesionVivoRepository.find({
+      where: { idgrupo: In(gruposIds) } as any,
+      relations: ['curso'],
+      order: { fecha: 'ASC' },
+    });
+
+    const gruposConRelaciones = await this.grupoRepository.find({
+      where: { id: In(gruposIds) },
+      relations: ['curso', 'docente'],
+    });
+
+    const mapaGrupos = new Map();
+    gruposConRelaciones.forEach((g) => {
+      mapaGrupos.set(g.id, g);
+    });
+
+    return sesiones.map((sesion) => {
+      const grupoRel = mapaGrupos.get(sesion.idgrupo);
+      if (grupoRel) {
+        if (!sesion.curso && grupoRel.curso) {
+          sesion.curso = grupoRel.curso as any;
+        }
+
+        if (grupoRel.docente) {
+          (sesion as any).docente = grupoRel.docente;
+        }
+      }
+      return this.toResponseDto(sesion);
+    });
+  }
   async obtenerProviderInfoPorGrupo(idgrupo: number) {
     const provider = await this.obtenerProviderDesdeGrupo(Number(idgrupo));
 
@@ -194,7 +257,9 @@ export class SesionVivoService {
       throw new NotFoundException('No se pudo resolver el curso del grupo');
     }
 
-    const provider = await this.obtenerProviderDesdeGrupo(Number(payload.idgrupo));
+    const provider = await this.obtenerProviderDesdeGrupo(
+      Number(payload.idgrupo),
+    );
     const providerService = this.meetingProviderFactory.getProvider(provider);
     const accessType = this.normalizarAccessType(payload.accessType);
 

@@ -21,6 +21,8 @@ import { SesionVivoService } from './sesion-vivo.service';
 import { SesionVivoResponseDto } from './dto/sesion-vivo-response.dto';
 
 @ApiTags('Sesiones en Vivo')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('sesion-vivo')
 export class SesionVivoController {
   constructor(private readonly service: SesionVivoService) {}
@@ -79,17 +81,33 @@ export class SesionVivoController {
     status: 401,
     description: 'No autorizado. Token JWT faltante o inválido.',
   })
-  async obtenerProviderInfo(
-    @Param('idgrupo', ParseIntPipe) idgrupo: number,
-  ) {
+  async obtenerProviderInfo(@Param('idgrupo', ParseIntPipe) idgrupo: number) {
     return this.service.obtenerProviderInfoPorGrupo(idgrupo);
   }
+  @Get('alumno/:idalumno')
+  @ApiOperation({
+    summary: 'Obtener sesiones por alumno',
+    description:
+      'Retorna las sesiones en vivo que pertenecen a los cursos/grupos donde el alumno está matriculado.',
+  })
+  @ApiParam({ name: 'idalumno', description: 'ID del alumno', example: 1 })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de sesiones del alumno obtenida con éxito.',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autorizado. Token JWT faltante o inválido.',
+  })
+  async obtenerPorAlumno(
+    @Param('idalumno', ParseIntPipe) idalumno: number,
+  ): Promise<SesionVivoResponseDto[]> {
+    return this.service.obtenerSesionesPorAlumno(idalumno);
+  }
 
-    @Post()
-    @ApiBearerAuth()
-    @UseGuards(JwtAuthGuard)
-    @ApiOperation({
-      summary: 'Programar una nueva sesión en vivo',
+  @Post()
+  @ApiOperation({
+    summary: 'Programar una nueva sesión en vivo',
     description:
       'Crea una nueva clase en vivo vinculada a un grupo. El proveedor puede depender de la empresa o configuración del grupo.',
   })
@@ -106,7 +124,8 @@ export class SesionVivoController {
           type: 'number',
           example: 1,
           nullable: true,
-          description: 'ID del curso, opcional si la sesión se gestiona por grupo',
+          description:
+            'ID del curso, opcional si la sesión se gestiona por grupo',
         },
         titulo: {
           type: 'string',

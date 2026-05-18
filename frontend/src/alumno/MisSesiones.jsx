@@ -53,22 +53,36 @@ export default function MisSesiones() {
 
   const sesionesOrdenadas = useMemo(() => {
     return [...sesiones].sort(
-      (a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
+      (a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime(),
     );
   }, [sesiones]);
 
   const resumen = useMemo(() => {
     const total = sesiones.length;
 
-    const enVivo = sesiones.filter((s) => estadoSesion(s, ahora) === "envivo").length;
-    const proximas = sesiones.filter((s) => estadoSesion(s, ahora) === "proxima").length;
+    const enVivo = sesiones.filter(
+      (s) => estadoSesion(s, ahora) === "envivo",
+    ).length;
+    const proximas = sesiones.filter(
+      (s) => estadoSesion(s, ahora) === "proxima",
+    ).length;
 
     return { total, enVivo, proximas };
   }, [sesiones, ahora]);
 
   const siguienteSesion = useMemo(() => {
-    return sesionesOrdenadas.find((s) => new Date(s.fecha).getTime() > ahora.getTime()) || null;
-  }, [sesionesOrdenadas, ahora]);
+    // Filtramos solo las que están en el futuro
+    const proximas = sesiones.filter(
+      (s) => new Date(s.fecha).getTime() > ahora.getTime(),
+    );
+    // Las ordenamos de la más cercana a la más lejana (ascendente)
+    proximas.sort(
+      (a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime(),
+    );
+
+    // Retornamos la primera (la más inmediata)
+    return proximas.length > 0 ? proximas[0] : null;
+  }, [sesiones, ahora]);
 
   const eventos = useMemo(() => {
     return sesiones.map((s) => {
@@ -89,26 +103,63 @@ export default function MisSesiones() {
       setLoading(true);
       setError("");
 
-      // Puedes cambiar este endpoint más adelante por uno filtrado por alumno
-      const res = await api.get("/sesion-vivo");
+      const usuarioString = localStorage.getItem("usuario");
+
+      if (!usuarioString) {
+        setError(
+          "No se detectó una sesión activa. Por favor, vuelve a iniciar sesión.",
+        );
+        setLoading(false);
+        return;
+      }
+
+      const usuarioLogueado = JSON.parse(usuarioString);
+
+      console.log("Usuario desde localStorage:", usuarioLogueado);
+
+      const idAlumno =
+        usuarioLogueado.id ||
+        usuarioLogueado.idalumno ||
+        usuarioLogueado.id_usuario ||
+        usuarioLogueado.usuarioId;
+
+      if (!idAlumno) {
+        console.error("No se encontró el ID en el objeto:", usuarioLogueado);
+        setError(
+          "No pudimos identificar tu cuenta. Por favor, inicia sesión nuevamente.",
+        );
+        setLoading(false);
+        return;
+      }
+
+      // Ahora sí hacemos la petición con un ID válido (ej. /sesion-vivo/alumno/5)
+      const res = await api.get(`/sesion-vivo/alumno/${idAlumno}`);
       const lista = Array.isArray(res.data) ? res.data : [];
 
       setSesiones(lista);
     } catch (err) {
       console.error("Error cargando sesiones:", err);
-      setError("No se pudieron cargar las sesiones.");
+      setError("No se pudieron cargar tus sesiones. Inténtalo más tarde.");
       setSesiones([]);
     } finally {
       setLoading(false);
     }
   }
 
-  function tiempoRestante(fecha) {
-    const inicio = new Date(fecha).getTime();
-    const diff = inicio - ahora.getTime();
+  function tiempoRestante(sesion, ahora) {
+    const inicio = new Date(sesion.fecha).getTime();
+    const duracionMin = Number(sesion.duracion || 60);
+    const fin = inicio + duracionMin * 60000;
+    const actual = ahora.getTime();
 
-    if (diff <= 0) return "EN_VIVO";
+    // Si ya pasó la hora de fin de la clase
+    if (actual > fin) return "FINALIZADA";
 
+    // Si estamos dentro del horario de la clase
+    if (actual >= inicio && actual <= fin) return "EN_VIVO";
+
+    // Si aún no empieza, calculamos la cuenta regresiva normal
+    const diff = inicio - actual;
     const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
     const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -128,7 +179,8 @@ export default function MisSesiones() {
       <div className="rounded-3xl bg-gradient-to-r from-indigo-600 to-blue-600 p-6 text-white shadow-sm">
         <h1 className="text-2xl font-bold">Mis Sesiones</h1>
         <p className="mt-2 text-sm text-indigo-100">
-          Consulta tus clases en vivo, revisa el calendario y entra a tus sesiones.
+          Consulta tus clases en vivo, revisa el calendario y entra a tus
+          sesiones.
         </p>
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -163,7 +215,9 @@ export default function MisSesiones() {
                 Tu clase comienza pronto
               </p>
               <p className="text-sm text-amber-700">
-                <span className="font-medium">{notificacion.titulo || "Sesión"}</span>
+                <span className="font-medium">
+                  {notificacion.titulo || "Sesión"}
+                </span>
                 {" • "}
                 {formatearFechaHora(notificacion.fecha)}
               </p>
@@ -218,7 +272,8 @@ export default function MisSesiones() {
                   No tienes sesiones registradas
                 </h3>
                 <p className="mt-2 text-sm text-slate-500">
-                  Cuando se programen clases en vivo, aparecerán aquí.
+                  Cuando se programen clases en vivo para tus cursos, aparecerán
+                  aquí.
                 </p>
               </div>
             ) : (
@@ -226,12 +281,24 @@ export default function MisSesiones() {
                 <table className="min-w-full text-sm">
                   <thead className="bg-slate-50 text-slate-600">
                     <tr>
-                      <th className="px-5 py-4 text-left font-semibold">Fecha</th>
-                      <th className="px-5 py-4 text-left font-semibold">Curso</th>
-                      <th className="px-5 py-4 text-left font-semibold">Docente</th>
-                      <th className="px-5 py-4 text-left font-semibold">Estado</th>
-                      <th className="px-5 py-4 text-left font-semibold">Cuenta regresiva</th>
-                      <th className="px-5 py-4 text-left font-semibold">Acción</th>
+                      <th className="px-5 py-4 text-left font-semibold">
+                        Fecha
+                      </th>
+                      <th className="px-5 py-4 text-left font-semibold">
+                        Curso
+                      </th>
+                      <th className="px-5 py-4 text-left font-semibold">
+                        Docente
+                      </th>
+                      <th className="px-5 py-4 text-left font-semibold">
+                        Estado
+                      </th>
+                      <th className="px-5 py-4 text-left font-semibold">
+                        Cuenta regresiva
+                      </th>
+                      <th className="px-5 py-4 text-left font-semibold">
+                        Acción
+                      </th>
                     </tr>
                   </thead>
 
@@ -241,7 +308,7 @@ export default function MisSesiones() {
                       const docente = obtenerDocente(s);
                       const estado = estadoSesion(s, ahora);
                       const puedeEntrar = puedeEntrarSesion(s, ahora);
-                      const t = tiempoRestante(s.fecha);
+                      const t = tiempoRestante(s, ahora);
 
                       return (
                         <tr
@@ -278,9 +345,14 @@ export default function MisSesiones() {
                           </td>
 
                           <td className="px-5 py-4 align-top">
-                            {t === "EN_VIVO" ? (
-                              <span className="inline-flex rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
-                                🔴 EN VIVO
+                            {t === "FINALIZADA" ? (
+                              <span className="text-slate-400 font-medium italic">
+                                Clase finalizada
+                              </span>
+                            ) : t === "EN_VIVO" ? (
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700 animate-pulse">
+                                <div className="h-2 w-2 rounded-full bg-red-600"></div>
+                                EN VIVO
                               </span>
                             ) : (
                               <div className="flex flex-wrap items-center gap-2">
@@ -379,7 +451,9 @@ export default function MisSesiones() {
                     />
                     <InfoLine
                       icon={<UserRound size={16} />}
-                      text={obtenerDocente(siguienteSesion) || "Docente por asignar"}
+                      text={
+                        obtenerDocente(siguienteSesion) || "Docente por asignar"
+                      }
                     />
                     <InfoLine
                       icon={<Clock3 size={16} />}
@@ -507,7 +581,6 @@ function puedeEntrarSesion(sesion, ahora) {
   const fin = inicio + duracionMin * 60000;
   const actual = ahora.getTime();
 
-  // Permitir entrar desde 10 minutos antes hasta el fin de la sesión
   return actual >= inicio - 10 * 60 * 1000 && actual <= fin;
 }
 

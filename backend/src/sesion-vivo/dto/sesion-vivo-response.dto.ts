@@ -1,6 +1,10 @@
 export class SesionVivoResponseDto {
   id: number;
-  curso: { id: number } | null;
+  curso: { id: number; nombrecurso?: string } | null;
+  docente?: {
+    nombre: string;
+    apellido: string;
+  } | null;
   titulo: string;
   descripcion: string | null;
   fecha: Date;

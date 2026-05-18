@@ -53,6 +53,7 @@
     "rxjs": "^7.8.2",
     "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.28",
+    "xlsx": "^0.18.5",
     "xlsx-js-style": "^1.2.0",
     "zod": "^4.3.6"
   },
@@ -69,6 +70,7 @@
     "@types/passport-jwt": "^4.0.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@types/xlsx": "^0.0.35",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.24",
     "eslint": "^9.39.1",
