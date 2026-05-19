@@ -1124,7 +1124,7 @@ export class CertificadoService {
         count(*) filter (where lower(a.estado) = 'falta')::int as faltas,
         count(*)::int as total
       from asistencia a
-      where a.idcurso = $1
+      where a.idgrupo = $1
         and a.idalumno = $2
       `,
       [idgrupo, idalumno],
@@ -1363,7 +1363,7 @@ export class CertificadoService {
         count(*) filter (where lower(estado) = 'tardanza')::int as tardanzas,
         count(*)::int as total
       from asistencia
-      where idcurso = $1 and idalumno = $2
+      where idgrupo = $1 and idalumno = $2
       `,
       [idgrupo, idalumno],
     );

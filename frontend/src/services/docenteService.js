@@ -2484,6 +2484,7 @@ export const addMaterialLeccion = async (leccionId, payload) => {
   let mimeType = null;
   let contenidoTexto = payload.contenido_texto || null;
   let enlaceUrl = payload.enlace_url || null;
+  let descripcion = payload.descripcion?.trim() || null;
 
   let storageProvider = null;
   let bucket = null;
@@ -2573,6 +2574,7 @@ export const addMaterialLeccion = async (leccionId, payload) => {
     idleccion: Number(leccionId),
     titulo: payload.titulo.trim(),
     tipo: payload.tipo,
+     descripcion,
     contenido_texto: contenidoTexto,
     archivo_url: archivoUrl,
     video_url: videoUrl,
@@ -2604,9 +2606,13 @@ export const actualizarMaterialLeccion = async (materialId, payload) => {
   const body = {};
 
   if (payload.titulo !== undefined) body.titulo = payload.titulo?.trim() || "";
+  if (payload.descripcion !== undefined) {
+    body.descripcion = payload.descripcion?.trim() || null;
+  }
   if (payload.contenido_texto !== undefined) {
     body.contenido_texto = payload.contenido_texto || null;
   }
+
   if (payload.video_url !== undefined) body.video_url = payload.video_url || null;
   if (payload.embed_url !== undefined) body.embed_url = payload.embed_url || null;
   if (payload.vimeo_video_id !== undefined) body.vimeo_video_id = payload.vimeo_video_id || null;
@@ -3913,8 +3919,19 @@ export const crearSesionVivo = async (payload) => {
 };
 
 // ======================================================
-// FORO POR GRUPO
+// FORO POR GRUPO - BACKEND
 // ======================================================
+
+export const TIPOS_REACCION_FORO = [
+  { tipo: "like", emoji: "👍", label: "Me gusta" },
+  { tipo: "love", emoji: "❤️", label: "Me encanta" },
+  { tipo: "haha", emoji: "😂", label: "Me divierte" },
+  { tipo: "wow", emoji: "😮", label: "Me sorprende" },
+  { tipo: "sad", emoji: "😢", label: "Me entristece" },
+];
+
+const getForoApiUrl = () =>
+  import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const getUsuarioSesionActualForo = () => {
   const token = localStorage.getItem("token");
@@ -3936,40 +3953,32 @@ const getUsuarioSesionActualForo = () => {
   }
 };
 
-const getAutorForoActual = async () => {
-  const usuario = getUsuarioSesionActualForo();
-
-  let autorNombre = usuario.correo || "Usuario";
-  let autorRol = usuario.rol || "USUARIO";
-
-  if (String(usuario.rol || "").toUpperCase().includes("DOCENTE")) {
-    const { data: docente } = await supabase
-      .from("docente")
-      .select("nombre, apellido, correo")
-      .eq("usuarioId", Number(usuario.idusuario))
-      .maybeSingle();
-
-    if (docente) {
-      autorNombre =
-        `${docente.nombre || ""} ${docente.apellido || ""}`.trim() ||
-        docente.correo ||
-        autorNombre;
-    }
-
-    autorRol = "DOCENTE";
-  }
-
-  if (String(usuario.rol || "").toUpperCase().includes("ADMIN")) {
-    autorNombre = usuario.correo ? `Administrador (${usuario.correo})` : "Administrador";
-    autorRol = "ADMIN";
-  }
-
-  return {
-    idusuario: usuario.idusuario,
-    autor_nombre: autorNombre,
-    autor_rol: autorRol,
-  };
+export const getUsuarioForoActual = () => {
+  return getUsuarioSesionActualForo();
 };
+
+const fetchForoApi = async (path, options = {}) => {
+  const apiUrl = getForoApiUrl();
+
+  const headers = getAuthHeadersApi(options.headers || {});
+
+  const res = await fetch(`${apiUrl}${path}`, {
+    ...options,
+    headers,
+  });
+
+  const data = await leerRespuestaApi(res);
+
+  if (!res.ok) {
+    throw new Error(data?.message || "Error en el módulo de foro.");
+  }
+
+  return data;
+};
+
+// ======================================================
+// PUBLICACIONES
+// ======================================================
 
 export const getForoPublicacionesByGrupo = async (grupoId) => {
   const idGrupo = Number(grupoId);
@@ -3978,48 +3987,11 @@ export const getForoPublicacionesByGrupo = async (grupoId) => {
     throw new Error("Grupo inválido para cargar el foro.");
   }
 
-  const { data: publicaciones, error } = await supabase
-    .from("foro_publicacion")
-    .select("*")
-    .eq("idgrupo", idGrupo)
-    .eq("estado", "ACTIVO")
-    .order("fijado", { ascending: false })
-    .order("updated_at", { ascending: false });
-
-  if (error) throw new Error(error.message);
-
-  const lista = publicaciones || [];
-  if (lista.length === 0) return [];
-
-  const ids = lista.map((p) => Number(p.id)).filter(Boolean);
-
-  const { data: respuestas, error: errorRespuestas } = await supabase
-    .from("foro_respuesta")
-    .select("id, idpublicacion, created_at")
-    .in("idpublicacion", ids)
-    .eq("estado", "ACTIVO");
-
-  if (errorRespuestas) throw new Error(errorRespuestas.message);
-
-  const contador = new Map();
-  const ultimaRespuesta = new Map();
-
-  (respuestas || []).forEach((r) => {
-    const key = Number(r.idpublicacion);
-
-    contador.set(key, (contador.get(key) || 0) + 1);
-
-    const actual = ultimaRespuesta.get(key);
-    if (!actual || new Date(r.created_at) > new Date(actual)) {
-      ultimaRespuesta.set(key, r.created_at);
-    }
+  const data = await fetchForoApi(`/foro/grupo/${idGrupo}/publicaciones`, {
+    method: "GET",
   });
 
-  return lista.map((p) => ({
-    ...p,
-    total_respuestas: contador.get(Number(p.id)) || 0,
-    ultima_respuesta_at: ultimaRespuesta.get(Number(p.id)) || null,
-  }));
+  return Array.isArray(data) ? data : [];
 };
 
 export const crearForoPublicacion = async ({ grupoId, titulo, contenido }) => {
@@ -4037,106 +4009,73 @@ export const crearForoPublicacion = async ({ grupoId, titulo, contenido }) => {
     throw new Error("El contenido de la publicación es obligatorio.");
   }
 
-  const autor = await getAutorForoActual();
-
-  const { data, error } = await supabase
-    .from("foro_publicacion")
-    .insert({
-      idgrupo: idGrupo,
-      idusuario: autor.idusuario,
-      autor_nombre: autor.autor_nombre,
-      autor_rol: autor.autor_rol,
+  return await fetchForoApi(`/foro/grupo/${idGrupo}/publicaciones`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
       titulo: titulo.trim(),
       contenido: contenido.trim(),
-      estado: "ACTIVO",
-      fijado: false,
-      cerrado: false,
-      updated_at: new Date().toISOString(),
-    })
-    .select()
-    .single();
-
-  if (error) throw new Error(error.message);
-  return data;
+    }),
+  });
 };
 
 export const actualizarForoPublicacion = async (publicacionId, payload) => {
-  const body = {
-    updated_at: new Date().toISOString(),
-  };
-
-  if (payload.titulo !== undefined) {
-    body.titulo = payload.titulo?.trim() || "";
-  }
-
-  if (payload.contenido !== undefined) {
-    body.contenido = payload.contenido?.trim() || "";
-  }
-
-  const { data, error } = await supabase
-    .from("foro_publicacion")
-    .update(body)
-    .eq("id", Number(publicacionId))
-    .select()
-    .single();
-
-  if (error) throw new Error(error.message);
-  return data;
+  return await fetchForoApi(`/foro/publicaciones/${Number(publicacionId)}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload || {}),
+  });
 };
 
 export const eliminarForoPublicacion = async (publicacionId) => {
-  const { error } = await supabase
-    .from("foro_publicacion")
-    .update({
-      estado: "ELIMINADO",
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", Number(publicacionId));
+  await fetchForoApi(`/foro/publicaciones/${Number(publicacionId)}`, {
+    method: "DELETE",
+  });
 
-  if (error) throw new Error(error.message);
   return true;
 };
 
 export const toggleFijarForoPublicacion = async (publicacionId, fijado) => {
-  const { data, error } = await supabase
-    .from("foro_publicacion")
-    .update({
+  return await fetchForoApi(`/foro/publicaciones/${Number(publicacionId)}/fijar`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
       fijado: Boolean(fijado),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", Number(publicacionId))
-    .select()
-    .single();
-
-  if (error) throw new Error(error.message);
-  return data;
+    }),
+  });
 };
 
 export const toggleCerrarForoPublicacion = async (publicacionId, cerrado) => {
-  const { data, error } = await supabase
-    .from("foro_publicacion")
-    .update({
+  return await fetchForoApi(`/foro/publicaciones/${Number(publicacionId)}/cerrar`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
       cerrado: Boolean(cerrado),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", Number(publicacionId))
-    .select()
-    .single();
-
-  if (error) throw new Error(error.message);
-  return data;
+    }),
+  });
 };
 
-export const getForoRespuestasByPublicacion = async (publicacionId) => {
-  const { data, error } = await supabase
-    .from("foro_respuesta")
-    .select("*")
-    .eq("idpublicacion", Number(publicacionId))
-    .eq("estado", "ACTIVO")
-    .order("created_at", { ascending: true });
+// ======================================================
+// RESPUESTAS
+// ======================================================
 
-  if (error) throw new Error(error.message);
-  return data || [];
+export const getForoRespuestasByPublicacion = async (publicacionId) => {
+  const data = await fetchForoApi(
+    `/foro/publicaciones/${Number(publicacionId)}/respuestas`,
+    {
+      method: "GET",
+    }
+  );
+
+  return Array.isArray(data) ? data : [];
 };
 
 export const crearForoRespuesta = async ({ publicacionId, contenido }) => {
@@ -4144,56 +4083,108 @@ export const crearForoRespuesta = async ({ publicacionId, contenido }) => {
     throw new Error("La respuesta no puede estar vacía.");
   }
 
-  const { data: publicacion, error: errPublicacion } = await supabase
-    .from("foro_publicacion")
-    .select("id, cerrado")
-    .eq("id", Number(publicacionId))
-    .maybeSingle();
-
-  if (errPublicacion) throw new Error(errPublicacion.message);
-  if (!publicacion) throw new Error("No se encontró la publicación.");
-  if (publicacion.cerrado) {
-    throw new Error("Esta publicación está cerrada y ya no acepta respuestas.");
-  }
-
-  const autor = await getAutorForoActual();
-
-  const { data, error } = await supabase
-    .from("foro_respuesta")
-    .insert({
-      idpublicacion: Number(publicacionId),
-      idusuario: autor.idusuario,
-      autor_nombre: autor.autor_nombre,
-      autor_rol: autor.autor_rol,
-      contenido: contenido.trim(),
-      estado: "ACTIVO",
-    })
-    .select()
-    .single();
-
-  if (error) throw new Error(error.message);
-
-  await supabase
-    .from("foro_publicacion")
-    .update({
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", Number(publicacionId));
-
-  return data;
+  return await fetchForoApi(
+    `/foro/publicaciones/${Number(publicacionId)}/respuestas`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contenido: contenido.trim(),
+      }),
+    }
+  );
 };
 
 export const eliminarForoRespuesta = async (respuestaId) => {
-  const { error } = await supabase
-    .from("foro_respuesta")
-    .update({
-      estado: "ELIMINADO",
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", Number(respuestaId));
+  await fetchForoApi(`/foro/respuestas/${Number(respuestaId)}`, {
+    method: "DELETE",
+  });
 
-  if (error) throw new Error(error.message);
   return true;
+};
+
+// ======================================================
+// REACCIONES DEL FORO
+// ======================================================
+
+export const getReaccionesForoByPublicaciones = async (publicacionIds = []) => {
+  const ids = publicacionIds.map(Number).filter(Boolean);
+
+  if (ids.length === 0) return [];
+
+  const data = await fetchForoApi(
+    `/foro/reacciones/publicaciones?ids=${ids.join(",")}`,
+    {
+      method: "GET",
+    }
+  );
+
+  return Array.isArray(data) ? data : [];
+};
+
+export const getReaccionesForoByRespuestas = async (respuestaIds = []) => {
+  const ids = respuestaIds.map(Number).filter(Boolean);
+
+  if (ids.length === 0) return [];
+
+  const data = await fetchForoApi(
+    `/foro/reacciones/respuestas?ids=${ids.join(",")}`,
+    {
+      method: "GET",
+    }
+  );
+
+  return Array.isArray(data) ? data : [];
+};
+
+export const guardarReaccionForoPublicacion = async ({
+  publicacionId,
+  tipo,
+}) => {
+  if (!publicacionId) {
+    throw new Error("Publicación inválida para reaccionar.");
+  }
+
+  if (!tipo) {
+    throw new Error("Selecciona una reacción.");
+  }
+
+  return await fetchForoApi(
+    `/foro/publicaciones/${Number(publicacionId)}/reacciones`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ tipo }),
+    }
+  );
+};
+
+export const guardarReaccionForoRespuesta = async ({
+  respuestaId,
+  tipo,
+}) => {
+  if (!respuestaId) {
+    throw new Error("Respuesta inválida para reaccionar.");
+  }
+
+  if (!tipo) {
+    throw new Error("Selecciona una reacción.");
+  }
+
+  return await fetchForoApi(
+    `/foro/respuestas/${Number(respuestaId)}/reacciones`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ tipo }),
+    }
+  );
 };
 
 // ======================================================
@@ -4209,7 +4200,7 @@ export const subirAdjuntoForo = async ({ file, grupoId }) => {
     throw new Error("Grupo inválido para subir adjunto.");
   }
 
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+  const apiUrl = getForoApiUrl();
 
   const formData = new FormData();
   formData.append("file", file);
@@ -4254,9 +4245,12 @@ export const crearForoAdjunto = async ({
     throw new Error("El tipo de adjunto es obligatorio.");
   }
 
-  const { data, error } = await supabase
-    .from("foro_adjunto")
-    .insert({
+  return await fetchForoApi("/foro/adjuntos", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
       idpublicacion: idpublicacion ? Number(idpublicacion) : null,
       idrespuesta: idrespuesta ? Number(idrespuesta) : null,
       tipo,
@@ -4272,13 +4266,8 @@ export const crearForoAdjunto = async ({
       vimeo_video_id,
       vimeo_uri,
       estado_video,
-      estado: "ACTIVO",
-    })
-    .select()
-    .single();
-
-  if (error) throw new Error(error.message);
-  return data;
+    }),
+  });
 };
 
 export const subirVideoForoVimeo = async ({
@@ -4320,7 +4309,6 @@ export const subirYGuardarAdjuntoForo = async ({
       nombre_archivo: file.name,
       mime_type: file.type || "video/mp4",
       tamano_bytes: file.size || null,
-      storage_provider: "vimeo",
       video_url: subida.videoUrl || null,
       embed_url: subida.embedUrl || null,
       url_externa: subida.videoUrl || subida.embedUrl || null,
@@ -4370,27 +4358,25 @@ export const crearForoAdjuntoEnlaceVideo = async ({
 };
 
 export const getForoAdjuntosByPublicacion = async (publicacionId) => {
-  const { data, error } = await supabase
-    .from("foro_adjunto")
-    .select("*")
-    .eq("idpublicacion", Number(publicacionId))
-    .eq("estado", "ACTIVO")
-    .order("created_at", { ascending: true });
+  const data = await fetchForoApi(
+    `/foro/publicaciones/${Number(publicacionId)}/adjuntos`,
+    {
+      method: "GET",
+    }
+  );
 
-  if (error) throw new Error(error.message);
-  return data || [];
+  return Array.isArray(data) ? data : [];
 };
 
 export const getForoAdjuntosByRespuesta = async (respuestaId) => {
-  const { data, error } = await supabase
-    .from("foro_adjunto")
-    .select("*")
-    .eq("idrespuesta", Number(respuestaId))
-    .eq("estado", "ACTIVO")
-    .order("created_at", { ascending: true });
+  const data = await fetchForoApi(
+    `/foro/respuestas/${Number(respuestaId)}/adjuntos`,
+    {
+      method: "GET",
+    }
+  );
 
-  if (error) throw new Error(error.message);
-  return data || [];
+  return Array.isArray(data) ? data : [];
 };
 
 export const getForoAdjuntosByPublicaciones = async (publicacionIds = []) => {
@@ -4398,15 +4384,11 @@ export const getForoAdjuntosByPublicaciones = async (publicacionIds = []) => {
 
   if (ids.length === 0) return [];
 
-  const { data, error } = await supabase
-    .from("foro_adjunto")
-    .select("*")
-    .in("idpublicacion", ids)
-    .eq("estado", "ACTIVO")
-    .order("created_at", { ascending: true });
+  const resultados = await Promise.all(
+    ids.map((id) => getForoAdjuntosByPublicacion(id))
+  );
 
-  if (error) throw new Error(error.message);
-  return data || [];
+  return resultados.flat();
 };
 
 export const getForoAdjuntosByRespuestas = async (respuestaIds = []) => {
@@ -4414,15 +4396,14 @@ export const getForoAdjuntosByRespuestas = async (respuestaIds = []) => {
 
   if (ids.length === 0) return [];
 
-  const { data, error } = await supabase
-    .from("foro_adjunto")
-    .select("*")
-    .in("idrespuesta", ids)
-    .eq("estado", "ACTIVO")
-    .order("created_at", { ascending: true });
+  const data = await fetchForoApi(
+    `/foro/respuestas/adjuntos?ids=${ids.join(",")}`,
+    {
+      method: "GET",
+    }
+  );
 
-  if (error) throw new Error(error.message);
-  return data || [];
+  return Array.isArray(data) ? data : [];
 };
 
 export const getForoAdjuntoDownloadUrl = async (objectKey) => {
@@ -4430,7 +4411,7 @@ export const getForoAdjuntoDownloadUrl = async (objectKey) => {
     throw new Error("No se encontró el archivo del adjunto.");
   }
 
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+  const apiUrl = getForoApiUrl();
 
   const res = await fetch(`${apiUrl}/s3/presign-download`, {
     method: "POST",
@@ -4450,13 +4431,9 @@ export const getForoAdjuntoDownloadUrl = async (objectKey) => {
 };
 
 export const eliminarForoAdjunto = async (adjuntoId) => {
-  const { error } = await supabase
-    .from("foro_adjunto")
-    .update({
-      estado: "ELIMINADO",
-    })
-    .eq("id", Number(adjuntoId));
+  await fetchForoApi(`/foro/adjuntos/${Number(adjuntoId)}`, {
+    method: "DELETE",
+  });
 
-  if (error) throw new Error(error.message);
   return true;
 };

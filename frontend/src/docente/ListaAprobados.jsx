@@ -554,7 +554,7 @@ function ListaAprobados() {
                   className="absolute right-3 top-3 text-sm text-[var(--color-muted-text)] hover:text-[var(--color-text)]"
                   title="Limpiar"
                 >
-                  âœ•
+                  ✕
                 </button>
               )}
 
@@ -805,7 +805,7 @@ function ListaAprobados() {
                         return (
                           <td key={ev.id} className="px-4 py-4 text-center">
                             <span className="inline-flex min-w-[52px] justify-center rounded-lg bg-[var(--color-background)] px-2.5 py-1.5 text-sm font-medium text-[var(--color-text)]">
-                              {valor ?? "â€”"}
+                              {valor ?? "—"}
                             </span>
                           </td>
                         );
@@ -813,7 +813,7 @@ function ListaAprobados() {
 
                       <td className="px-4 py-4 text-center">
                         {r.faltantes > 0 ? (
-                          <span className="font-semibold text-[var(--color-muted-text)]">â€”</span>
+                          <span className="font-semibold text-[var(--color-muted-text)]">—</span>
                         ) : (
                           <span
                             className={`font-bold ${
