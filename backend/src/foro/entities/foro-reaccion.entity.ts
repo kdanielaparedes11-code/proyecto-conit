@@ -1,10 +1,14 @@
 import {
-  Column,
-  CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { ForoPublicacion } from './foro-publicacion.entity';
+import { ForoRespuesta } from './foro-respuesta.entity';
 
 @Entity({ name: 'foro_reaccion' })
 export class ForoReaccion {
@@ -28,4 +32,16 @@ export class ForoReaccion {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updated_at: Date;
+
+  @ManyToOne(() => ForoPublicacion, (publicacion) => publicacion.reacciones, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'idpublicacion' })
+  publicacion: ForoPublicacion;
+
+  @ManyToOne(() => ForoRespuesta, (respuesta) => respuesta.reacciones, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'idrespuesta' })
+  respuesta: ForoRespuesta;
 }

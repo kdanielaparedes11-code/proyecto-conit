@@ -1,10 +1,17 @@
 import {
-  Column,
-  CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
 } from 'typeorm';
+import { Grupo } from '../../grupo/entities/grupo.entity';
+import { ForoRespuesta } from './foro-respuesta.entity';
+import { ForoAdjunto } from './foro-adjunto.entity';
+import { ForoReaccion } from './foro-reaccion.entity';
 
 @Entity({ name: 'foro_publicacion' })
 export class ForoPublicacion {
@@ -17,7 +24,12 @@ export class ForoPublicacion {
   @Column({ name: 'idusuario', type: 'integer', nullable: true })
   idusuario: number | null;
 
-  @Column({ name: 'autor_nombre', type: 'varchar', length: 180, nullable: true })
+  @Column({
+    name: 'autor_nombre',
+    type: 'varchar',
+    length: 180,
+    nullable: true,
+  })
   autor_nombre: string | null;
 
   @Column({ name: 'autor_rol', type: 'varchar', length: 40, nullable: true })
@@ -43,4 +55,17 @@ export class ForoPublicacion {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updated_at: Date;
+
+  @ManyToOne(() => Grupo, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'idgrupo' })
+  grupo: Grupo;
+
+  @OneToMany(() => ForoRespuesta, (respuesta) => respuesta.publicacion)
+  respuestas: ForoRespuesta[];
+
+  @OneToMany(() => ForoAdjunto, (adjunto) => adjunto.publicacion)
+  adjuntos: ForoAdjunto[];
+
+  @OneToMany(() => ForoReaccion, (reaccion) => reaccion.publicacion)
+  reacciones: ForoReaccion[];
 }

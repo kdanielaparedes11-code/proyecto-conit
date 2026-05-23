@@ -25,6 +25,7 @@ import LayoutEstudiante from "./alumno/LayoutEstudiante";
 import HomePage from "./alumno/HomePage";
 import MisCursos from "./alumno/MisCursos";
 import CursoDetalle from "./alumno/CursoDetalle";
+import ForoGrupo from "./alumno/ForoGrupo";
 import MisSesiones from "./alumno/MisSesiones";
 import MisCertificados from "./alumno/MisCertificados";
 import Biblioteca from "./alumno/Biblioteca";
@@ -51,8 +52,6 @@ const Certificados = lazy(() => import("./admin/Certificados"));
 const PerfilAdministrador = lazy(() => import("./admin/PerfilAdministrador"));
 const GestionWeb = lazy(() => import("./admin/GestionWeb"));
 const ConfigurarEstilos = lazy(() => import("./admin/ConfigurarEstilos"));
-
-
 
 // DOCENTE
 import DocenteLayout from "./docente/DocenteLayout";
@@ -166,6 +165,7 @@ export default function App() {
               <Route index element={<HomePage />} />
               <Route path="mis-cursos" element={<MisCursos />} />
               <Route path="mis-cursos/:id" element={<CursoDetalle />} />
+              <Route path="foro/:idgrupo" element={<ForoGrupo />} />
               <Route path="mis-sesiones" element={<MisSesiones />} />
               <Route path="mis-certificados" element={<MisCertificados />} />
               <Route path="soporte" element={<Soporte />} />

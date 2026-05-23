@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { MessageCircle, Send, Paperclip } from "lucide-react";
 import {
   getForoPublicacionesByGrupo,
   crearForoPublicacion,
@@ -8,14 +9,12 @@ import {
   getForoRespuestasByPublicacion,
   crearForoRespuesta,
   eliminarForoRespuesta,
-
   TIPOS_REACCION_FORO,
   getUsuarioForoActual,
   getReaccionesForoByPublicaciones,
   getReaccionesForoByRespuestas,
   guardarReaccionForoPublicacion,
   guardarReaccionForoRespuesta,
-
   subirYGuardarAdjuntoForo,
   crearForoAdjuntoEnlaceVideo,
   getForoAdjuntosByPublicacion,
@@ -24,9 +23,11 @@ import {
   eliminarForoAdjunto,
 } from "../services/docenteService";
 
+// ==========================================
+// FUNCIONES AUXILIARES GLOBALES
+// ==========================================
 function formatearFecha(fecha) {
   if (!fecha) return "-";
-
   try {
     return new Date(fecha).toLocaleString("es-PE", {
       dateStyle: "short",
@@ -48,12 +49,7 @@ function esUrlValida(url) {
 
 function esAdjuntoVideo(adjunto) {
   const tipo = String(adjunto?.tipo || "").toLowerCase();
-
-  return (
-    tipo === "video" ||
-    tipo === "video_vimeo" ||
-    tipo === "enlace_video"
-  );
+  return tipo === "video" || tipo === "video_vimeo" || tipo === "enlace_video";
 }
 
 function tieneVideoEnAdjuntos(adjuntos = []) {
@@ -68,6 +64,34 @@ function nombreTipoAdjunto(tipo) {
   return "Archivo";
 }
 
+function construirMapaReacciones(reacciones = [], campoId, usuarioId) {
+  const mapa = {};
+  reacciones.forEach((reaccion) => {
+    const key = Number(reaccion[campoId]);
+    if (!key) return;
+
+    if (!mapa[key]) {
+      mapa[key] = {
+        total: 0,
+        conteos: {},
+        miReaccion: null,
+      };
+    }
+
+    const tipo = reaccion.tipo;
+    mapa[key].total += 1;
+    mapa[key].conteos[tipo] = Number(mapa[key].conteos[tipo] || 0) + 1;
+
+    if (Number(reaccion.idusuario) === Number(usuarioId)) {
+      mapa[key].miReaccion = tipo;
+    }
+  });
+  return mapa;
+}
+
+// ==========================================
+// SUBCOMPONENTES RENDERIZABLES
+// ==========================================
 function AdjuntosForo({
   adjuntos = [],
   puedeModerar = false,
@@ -80,7 +104,7 @@ function AdjuntosForo({
   return (
     <div className="mt-4 space-y-3">
       <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-400">
-        Adjuntos
+        Adjuntos del tema
       </p>
 
       <div className="grid grid-cols-1 gap-3">
@@ -98,17 +122,15 @@ function AdjuntosForo({
                   <span className="rounded-full bg-white px-2 py-1 text-[11px] font-bold text-slate-600">
                     {nombreTipoAdjunto(tipo)}
                   </span>
-
                   <p className="mt-2 text-sm font-bold text-slate-800">
-                    {adjunto.nombre_archivo || "Adjunto"}
+                    {adjunto.nombre_archivo || "Archivo Adjunto"}
                   </p>
-
                   {adjunto.tamano_bytes && (
                     <p className="text-xs text-slate-400">
-                      {(Number(adjunto.tamano_bytes) / 1024 / 1024).toFixed(2)} MB
+                      {(Number(adjunto.tamano_bytes) / 1024 / 1024).toFixed(2)}{" "}
+                      MB
                     </p>
                   )}
-
                   {tipo === "video_vimeo" && adjunto.estado_video && (
                     <p className="mt-1 text-xs font-semibold text-indigo-500">
                       Estado: {adjunto.estado_video}
@@ -127,7 +149,7 @@ function AdjuntosForo({
                 )}
               </div>
 
-              {tipo === "imagen" && adjunto.download_url && (
+              {tipo === "imagen" && url !== "#" && (
                 <a href={url} target="_blank" rel="noreferrer">
                   <img
                     src={url}
@@ -137,13 +159,12 @@ function AdjuntosForo({
                 </a>
               )}
 
-              {tipo === "video" && adjunto.download_url && (
+              {tipo === "video" && url !== "#" && (
                 <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-black">
                   <video controls className="w-full bg-black">
                     <source src={url} type={adjunto.mime_type || "video/mp4"} />
                     Tu navegador no puede reproducir este video.
                   </video>
-
                   {mostrarReaccionesEnVideo && (
                     <div className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-2 text-white shadow-lg backdrop-blur">
                       <ResumenReaccionesForo resumen={resumenReacciones} />
@@ -152,23 +173,23 @@ function AdjuntosForo({
                 </div>
               )}
 
-              {tipo === "video_vimeo" && (adjunto.embed_url || adjunto.url_externa) && (
-                <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-black">
-                  <iframe
-                    src={adjunto.embed_url || adjunto.url_externa}
-                    title={adjunto.nombre_archivo || "Video de Vimeo"}
-                    className="h-[260px] w-full md:h-[380px]"
-                    allow="autoplay; fullscreen; picture-in-picture"
-                    allowFullScreen
-                  />
-
-                  {mostrarReaccionesEnVideo && (
-                    <div className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-2 text-white shadow-lg backdrop-blur">
-                      <ResumenReaccionesForo resumen={resumenReacciones} />
-                    </div>
-                  )}
-                </div>
-              )}
+              {tipo === "video_vimeo" &&
+                (adjunto.embed_url || adjunto.url_externa) && (
+                  <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-black">
+                    <iframe
+                      src={adjunto.embed_url || adjunto.url_externa}
+                      title={adjunto.nombre_archivo || "Video de Vimeo"}
+                      className="h-[260px] w-full md:h-[380px]"
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      allowFullScreen
+                    />
+                    {mostrarReaccionesEnVideo && (
+                      <div className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-2 text-white shadow-lg backdrop-blur">
+                        <ResumenReaccionesForo resumen={resumenReacciones} />
+                      </div>
+                    )}
+                  </div>
+                )}
 
               {tipo === "enlace_video" && adjunto.url_externa && (
                 <a
@@ -181,7 +202,7 @@ function AdjuntosForo({
                 </a>
               )}
 
-              {tipo === "archivo" && adjunto.download_url && (
+              {tipo === "archivo" && url !== "#" && (
                 <a
                   href={url}
                   target="_blank"
@@ -190,12 +211,6 @@ function AdjuntosForo({
                 >
                   Ver / descargar archivo
                 </a>
-              )}
-
-              {adjunto.object_key && !adjunto.download_url && (
-                <p className="text-sm text-red-500">
-                  No se pudo generar la URL temporal del archivo.
-                </p>
               )}
             </div>
           );
@@ -208,7 +223,7 @@ function AdjuntosForo({
 function ResumenReaccionesForo({ resumen }) {
   const conteos = resumen?.conteos || {};
   const activos = TIPOS_REACCION_FORO.filter(
-    (reaccion) => Number(conteos[reaccion.tipo] || 0) > 0
+    (reaccion) => Number(conteos[reaccion.tipo] || 0) > 0,
   );
 
   if (activos.length === 0) return null;
@@ -232,10 +247,9 @@ function ResumenReaccionesForo({ resumen }) {
 function ReaccionesForo({ resumen, onReaccionar, disabled = false }) {
   const conteos = resumen?.conteos || {};
   const miReaccion = resumen?.miReaccion || null;
-
   const total = Object.values(conteos).reduce(
     (acc, valor) => acc + Number(valor || 0),
-    0
+    0,
   );
 
   return (
@@ -272,36 +286,10 @@ function ReaccionesForo({ resumen, onReaccionar, disabled = false }) {
   );
 }
 
-function construirMapaReacciones(reacciones = [], campoId, usuarioId) {
-  const mapa = {};
-
-  reacciones.forEach((reaccion) => {
-    const key = Number(reaccion[campoId]);
-
-    if (!key) return;
-
-    if (!mapa[key]) {
-      mapa[key] = {
-        total: 0,
-        conteos: {},
-        miReaccion: null,
-      };
-    }
-
-    const tipo = reaccion.tipo;
-
-    mapa[key].total += 1;
-    mapa[key].conteos[tipo] = Number(mapa[key].conteos[tipo] || 0) + 1;
-
-    if (Number(reaccion.idusuario) === Number(usuarioId)) {
-      mapa[key].miReaccion = tipo;
-    }
-  });
-
-  return mapa;
-}
-
-export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
+// ==========================================
+// COMPONENTE PRINCIPAL EXPORTADO
+// ==========================================
+export default function ForoGrupoPanel({ grupoId, modo = "estudiante" }) {
   const [publicaciones, setPublicaciones] = useState([]);
   const [publicacionActiva, setPublicacionActiva] = useState(null);
   const [respuestas, setRespuestas] = useState([]);
@@ -319,9 +307,7 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
     titulo: "",
     contenido: "",
   });
-
   const publicacionActivaTieneVideo = tieneVideoEnAdjuntos(adjuntosPublicacion);
-
   const [formRespuesta, setFormRespuesta] = useState("");
 
   const [archivosPublicacion, setArchivosPublicacion] = useState([]);
@@ -336,12 +322,13 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
   const [avisosForo, setAvisosForo] = useState([]);
   const [subidasForo, setSubidasForo] = useState([]);
 
-  const [reaccionesPublicacionesMap, setReaccionesPublicacionesMap] = useState({});
+  const [reaccionesPublicacionesMap, setReaccionesPublicacionesMap] = useState(
+    {},
+  );
   const [reaccionesRespuestasMap, setReaccionesRespuestasMap] = useState({});
   const [reaccionandoKey, setReaccionandoKey] = useState(null);
 
   const publicacionActivaRef = useRef(null);
-
   const puedeModerar = modo === "admin" || modo === "docente";
 
   const usuarioForoActual = useMemo(() => {
@@ -360,35 +347,19 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
 
   const mostrarAvisoForo = (tipo, mensaje) => {
     const id = `${Date.now()}-${Math.random()}`;
-
-    setAvisosForo((prev) => [
-      ...prev,
-      {
-        id,
-        tipo,
-        mensaje,
-      },
-    ]);
-
+    setAvisosForo((prev) => [...prev, { id, tipo, mensaje }]);
     setTimeout(() => {
       setAvisosForo((prev) => prev.filter((aviso) => aviso.id !== id));
     }, 5500);
   };
 
   const agregarSubidaForo = ({ id, titulo, estado }) => {
-    setSubidasForo((prev) => [
-      ...prev,
-      {
-        id,
-        titulo,
-        estado,
-      },
-    ]);
+    setSubidasForo((prev) => [...prev, { id, titulo, estado }]);
   };
 
   const actualizarSubidaForo = (id, patch) => {
     setSubidasForo((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...patch } : item))
+      prev.map((item) => (item.id === id ? { ...item, ...patch } : item)),
     );
   };
 
@@ -402,31 +373,23 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
     return await Promise.all(
       adjuntos.map(async (adjunto) => {
         if (!adjunto.object_key) return adjunto;
-
         try {
-          const downloadUrl = await getForoAdjuntoDownloadUrl(adjunto.object_key);
-
-          return {
-            ...adjunto,
-            download_url: downloadUrl,
-          };
+          const downloadUrl = await getForoAdjuntoDownloadUrl(
+            adjunto.object_key,
+          );
+          return { ...adjunto, download_url: downloadUrl };
         } catch {
-          return {
-            ...adjunto,
-            download_url: null,
-          };
+          return { ...adjunto, download_url: null };
         }
-      })
+      }),
     );
   };
 
   const cargarPublicaciones = async () => {
     try {
       setCargando(true);
-
       const data = await getForoPublicacionesByGrupo(grupoId);
       const listaPublicaciones = data || [];
-
       setPublicaciones(listaPublicaciones);
 
       const publicacionIds = listaPublicaciones
@@ -434,22 +397,20 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
         .filter(Boolean);
 
       if (publicacionIds.length > 0) {
-        const reaccionesDB = await getReaccionesForoByPublicaciones(publicacionIds);
-
+        const reaccionesDB =
+          await getReaccionesForoByPublicaciones(publicacionIds);
         setReaccionesPublicacionesMap(
-          construirMapaReacciones(reaccionesDB, "idpublicacion", usuarioForoId)
+          construirMapaReacciones(reaccionesDB, "idpublicacion", usuarioForoId),
         );
       } else {
         setReaccionesPublicacionesMap({});
       }
 
       const activaActual = publicacionActivaRef.current;
-
       if (activaActual) {
         const actualizada = listaPublicaciones.find(
-          (p) => Number(p.id) === Number(activaActual.id)
+          (p) => Number(p.id) === Number(activaActual.id),
         );
-
         setPublicacionActiva(actualizada || null);
       }
     } catch (error) {
@@ -466,64 +427,63 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
       setPublicacionActiva(publicacion);
       setCargandoRespuestas(true);
 
-      const [
-        respuestasDB,
-        adjuntosPublicacionDB,
-        reaccionesPublicacionDB,
-      ] = await Promise.all([
-        getForoRespuestasByPublicacion(publicacion.id),
-        getForoAdjuntosByPublicacion(publicacion.id),
-        getReaccionesForoByPublicaciones([publicacion.id]),
-      ]);
+      const [respuestasDB, adjuntosPublicacionDB, reaccionesPublicacionDB] =
+        await Promise.all([
+          getForoRespuestasByPublicacion(publicacion.id),
+          getForoAdjuntosByPublicacion(publicacion.id),
+          getReaccionesForoByPublicaciones([publicacion.id]),
+        ]);
 
       const mapaReaccionPublicacion = construirMapaReacciones(
         reaccionesPublicacionDB || [],
         "idpublicacion",
-        usuarioForoId
+        usuarioForoId,
       );
 
       setReaccionesPublicacionesMap((prev) => ({
         ...prev,
-        [Number(publicacion.id)]: mapaReaccionPublicacion[Number(publicacion.id)] || {
-          total: 0,
-          conteos: {},
-          miReaccion: null,
-        },
+        [Number(publicacion.id)]: mapaReaccionPublicacion[
+          Number(publicacion.id)
+        ] || { total: 0, conteos: {}, miReaccion: null },
       }));
 
-      const adjuntosPubHydrated = await hidratarAdjuntos(adjuntosPublicacionDB || []);
+      const adjuntosPubHydrated = await hidratarAdjuntos(
+        adjuntosPublicacionDB || [],
+      );
       setAdjuntosPublicacion(adjuntosPubHydrated);
 
       const listaRespuestas = respuestasDB || [];
       setRespuestas(listaRespuestas);
 
-      const respuestaIds = listaRespuestas.map((r) => Number(r.id)).filter(Boolean);
+      const respuestaIds = listaRespuestas
+        .map((r) => Number(r.id))
+        .filter(Boolean);
 
       if (respuestaIds.length > 0) {
-        const [adjuntosRespuestasDB, reaccionesRespuestasDB] = await Promise.all([
-          getForoAdjuntosByRespuestas(respuestaIds),
-          getReaccionesForoByRespuestas(respuestaIds),
-        ]);
+        const [adjuntosRespuestasDB, reaccionesRespuestasDB] =
+          await Promise.all([
+            getForoAdjuntosByRespuestas(respuestaIds),
+            getReaccionesForoByRespuestas(respuestaIds),
+          ]);
 
-        const adjuntosHydrated = await hidratarAdjuntos(adjuntosRespuestasDB || []);
-
+        const adjuntosHydrated = await hidratarAdjuntos(
+          adjuntosRespuestasDB || [],
+        );
         const mapaAdjuntos = {};
 
         adjuntosHydrated.forEach((adj) => {
           const key = Number(adj.idrespuesta);
-
           if (!mapaAdjuntos[key]) mapaAdjuntos[key] = [];
           mapaAdjuntos[key].push(adj);
         });
 
         setAdjuntosRespuestasMap(mapaAdjuntos);
-
         setReaccionesRespuestasMap(
           construirMapaReacciones(
             reaccionesRespuestasDB || [],
             "idrespuesta",
-            usuarioForoId
-          )
+            usuarioForoId,
+          ),
         );
       } else {
         setAdjuntosRespuestasMap({});
@@ -542,11 +502,9 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
     videoExterno = "",
   }) => {
     const jobId = `pub-${publicacion.id}-${Date.now()}`;
-
     const tieneVideoSubido = archivos.some((file) =>
-      String(file.type || "").startsWith("video/")
+      String(file.type || "").startsWith("video/"),
     );
-
     const tituloJob = tieneVideoSubido
       ? `Subiendo video: ${publicacion.titulo}`
       : `Subiendo adjuntos: ${publicacion.titulo}`;
@@ -560,13 +518,11 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
     try {
       for (const file of archivos) {
         const esVideo = String(file.type || "").startsWith("video/");
-
         actualizarSubidaForo(jobId, {
           estado: esVideo
             ? `Subiendo video a Vimeo: ${file.name}`
             : `Subiendo archivo: ${file.name}`,
         });
-
         await subirYGuardarAdjuntoForo({
           file,
           grupoId,
@@ -575,46 +531,33 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
       }
 
       if (videoExterno.trim()) {
-        actualizarSubidaForo(jobId, {
-          estado: "Guardando enlace de video...",
-        });
-
+        actualizarSubidaForo(jobId, { estado: "Guardando enlace de video..." });
         await crearForoAdjuntoEnlaceVideo({
           idpublicacion: publicacion.id,
           url: videoExterno.trim(),
         });
       }
 
-      actualizarSubidaForo(jobId, {
-        estado: "Completado",
-      });
-
+      actualizarSubidaForo(jobId, { estado: "Completado" });
       mostrarAvisoForo(
         "success",
         tieneVideoSubido
           ? "Video listo, publicación actualizada."
-          : "Adjuntos listos, publicación actualizada."
+          : "Adjuntos listos, publicación actualizada.",
       );
-
       await cargarPublicaciones();
 
       const activaActual = publicacionActivaRef.current;
-
       if (activaActual && Number(activaActual.id) === Number(publicacion.id)) {
         await cargarRespuestas(publicacion);
       }
-
       removerSubidaForo(jobId);
     } catch (error) {
-      actualizarSubidaForo(jobId, {
-        estado: "Error al subir adjuntos",
-      });
-
+      actualizarSubidaForo(jobId, { estado: "Error al subir adjuntos" });
       mostrarAvisoForo(
         "error",
-        error?.message || "No se pudieron subir los adjuntos del foro."
+        error?.message || "No se pudieron subir los adjuntos del foro.",
       );
-
       removerSubidaForo(jobId);
     }
   };
@@ -626,9 +569,8 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
     videoExterno = "",
   }) => {
     const jobId = `resp-${respuesta.id}-${Date.now()}`;
-
     const tieneVideoSubido = archivos.some((file) =>
-      String(file.type || "").startsWith("video/")
+      String(file.type || "").startsWith("video/"),
     );
 
     agregarSubidaForo({
@@ -642,13 +584,11 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
     try {
       for (const file of archivos) {
         const esVideo = String(file.type || "").startsWith("video/");
-
         actualizarSubidaForo(jobId, {
           estado: esVideo
             ? `Subiendo video a Vimeo: ${file.name}`
             : `Subiendo archivo: ${file.name}`,
         });
-
         await subirYGuardarAdjuntoForo({
           file,
           grupoId,
@@ -657,46 +597,33 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
       }
 
       if (videoExterno.trim()) {
-        actualizarSubidaForo(jobId, {
-          estado: "Guardando enlace de video...",
-        });
-
+        actualizarSubidaForo(jobId, { estado: "Guardando enlace de video..." });
         await crearForoAdjuntoEnlaceVideo({
           idrespuesta: respuesta.id,
           url: videoExterno.trim(),
         });
       }
 
-      actualizarSubidaForo(jobId, {
-        estado: "Completado",
-      });
-
+      actualizarSubidaForo(jobId, { estado: "Completado" });
       mostrarAvisoForo(
         "success",
         tieneVideoSubido
           ? "Video listo, respuesta actualizada."
-          : "Adjunto listo, respuesta actualizada."
+          : "Adjunto listo, respuesta actualizada.",
       );
 
       const activaActual = publicacionActivaRef.current;
-
       if (activaActual && Number(activaActual.id) === Number(publicacion.id)) {
         await cargarRespuestas(publicacion);
       }
-
       await cargarPublicaciones();
-
       removerSubidaForo(jobId);
     } catch (error) {
-      actualizarSubidaForo(jobId, {
-        estado: "Error al subir adjuntos",
-      });
-
+      actualizarSubidaForo(jobId, { estado: "Error al subir adjuntos" });
       mostrarAvisoForo(
         "error",
-        error?.message || "No se pudieron subir los adjuntos de la respuesta."
+        error?.message || "No se pudieron subir los adjuntos de la respuesta.",
       );
-
       removerSubidaForo(jobId);
     }
   };
@@ -708,44 +635,41 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
 
   const publicacionesFiltradas = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
-
     if (!q) return publicaciones;
 
     return publicaciones.filter((p) => {
       return (
-        String(p.titulo || "").toLowerCase().includes(q) ||
-        String(p.contenido || "").toLowerCase().includes(q) ||
-        String(p.autor_nombre || "").toLowerCase().includes(q)
+        String(p.titulo || "")
+          .toLowerCase()
+          .includes(q) ||
+        String(p.content || p.contenido || "")
+          .toLowerCase()
+          .includes(q) ||
+        String(p.autor_nombre || "")
+          .toLowerCase()
+          .includes(q)
       );
     });
   }, [publicaciones, busqueda]);
 
   const handleSeleccionarArchivosPublicacion = (e) => {
     const files = Array.from(e.target.files || []);
-
-    if (files.length > 3) {
+    if (files.length > 3)
       alert("Solo puedes adjuntar hasta 3 archivos por publicación.");
-    }
-
     setArchivosPublicacion(files.slice(0, 3));
   };
 
   const handleSeleccionarArchivosRespuesta = (e) => {
     const files = Array.from(e.target.files || []);
-
-    if (files.length > 1) {
+    if (files.length > 1)
       alert("Solo puedes adjuntar 1 archivo por respuesta.");
-    }
-
     setArchivosRespuesta(files.slice(0, 1));
   };
 
   const handleCrearPublicacion = async (e) => {
     e.preventDefault();
-
     try {
       setGuardando(true);
-
       if (
         videoExternoPublicacion.trim() &&
         !esUrlValida(videoExternoPublicacion.trim())
@@ -755,12 +679,10 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
 
       const archivosSeleccionados = [...archivosPublicacion];
       const videoExternoSeleccionado = videoExternoPublicacion.trim();
-
       const tieneAdjuntos =
         archivosSeleccionados.length > 0 || videoExternoSeleccionado;
-
       const tieneVideoSubido = archivosSeleccionados.some((file) =>
-        String(file.type || "").startsWith("video/")
+        String(file.type || "").startsWith("video/"),
       );
 
       const nuevaPublicacion = await crearForoPublicacion({
@@ -769,11 +691,7 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
         contenido: formPublicacion.contenido,
       });
 
-      setFormPublicacion({
-        titulo: "",
-        contenido: "",
-      });
-
+      setFormPublicacion({ titulo: "", contenido: "" });
       setArchivosPublicacion([]);
       setVideoExternoPublicacion("");
       setFileKeyPublicacion((prev) => prev + 1);
@@ -785,10 +703,9 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
         mostrarAvisoForo(
           "info",
           tieneVideoSubido
-            ? "Publicación creada. El video se está subiendo en segundo plano."
-            : "Publicación creada. Los adjuntos se están subiendo en segundo plano."
+            ? "Publicación creada. El video se sube en segundo plano."
+            : "Publicación creada. Adjuntos subiendo.",
         );
-
         subirAdjuntosPublicacionEnSegundoPlano({
           publicacion: nuevaPublicacion,
           archivos: archivosSeleccionados,
@@ -806,12 +723,10 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
 
   const handleResponder = async (e) => {
     e.preventDefault();
-
     if (!publicacionActiva) return;
 
     try {
       setGuardandoRespuesta(true);
-
       if (
         videoExternoRespuesta.trim() &&
         !esUrlValida(videoExternoRespuesta.trim())
@@ -821,12 +736,10 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
 
       const archivosSeleccionados = [...archivosRespuesta];
       const videoExternoSeleccionado = videoExternoRespuesta.trim();
-
       const tieneAdjuntos =
         archivosSeleccionados.length > 0 || videoExternoSeleccionado;
-
       const tieneVideoSubido = archivosSeleccionados.some((file) =>
-        String(file.type || "").startsWith("video/")
+        String(file.type || "").startsWith("video/"),
       );
 
       const nuevaRespuesta = await crearForoRespuesta({
@@ -846,10 +759,9 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
         mostrarAvisoForo(
           "info",
           tieneVideoSubido
-            ? "Respuesta creada. El video se está subiendo en segundo plano."
-            : "Respuesta creada. El adjunto se está subiendo en segundo plano."
+            ? "Respuesta creada. Video subiendo."
+            : "Respuesta creada. Adjunto subiendo.",
         );
-
         subirAdjuntosRespuestaEnSegundoPlano({
           respuesta: nuevaRespuesta,
           publicacion: publicacionActiva,
@@ -869,17 +781,14 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
   const handleEliminarPublicacion = async (publicacion) => {
     const ok = window.confirm("¿Eliminar esta publicación del foro?");
     if (!ok) return;
-
     try {
       await eliminarForoPublicacion(publicacion.id);
-
       if (publicacionActiva?.id === publicacion.id) {
         setPublicacionActiva(null);
         setRespuestas([]);
         setAdjuntosPublicacion([]);
         setAdjuntosRespuestasMap({});
       }
-
       await cargarPublicaciones();
     } catch (error) {
       alert(error?.message || "No se pudo eliminar la publicación.");
@@ -889,7 +798,6 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
   const handleEliminarRespuesta = async (respuesta) => {
     const ok = window.confirm("¿Eliminar esta respuesta?");
     if (!ok) return;
-
     try {
       await eliminarForoRespuesta(respuesta.id);
       await cargarRespuestas(publicacionActiva);
@@ -902,7 +810,6 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
   const handleEliminarAdjuntoPublicacion = async (adjunto) => {
     const ok = window.confirm("¿Eliminar este adjunto?");
     if (!ok) return;
-
     try {
       await eliminarForoAdjunto(adjunto.id);
       await cargarRespuestas(publicacionActiva);
@@ -914,7 +821,6 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
   const handleEliminarAdjuntoRespuesta = async (adjunto) => {
     const ok = window.confirm("¿Eliminar este adjunto?");
     if (!ok) return;
-
     try {
       await eliminarForoAdjunto(adjunto.id);
       await cargarRespuestas(publicacionActiva);
@@ -936,7 +842,6 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
     try {
       await toggleCerrarForoPublicacion(publicacion.id, !publicacion.cerrado);
       await cargarPublicaciones();
-
       if (publicacionActiva?.id === publicacion.id) {
         setPublicacionActiva({
           ...publicacionActiva,
@@ -951,20 +856,15 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
   const handleReaccionarPublicacion = async (publicacionId, tipo) => {
     try {
       setReaccionandoKey(`pub-${publicacionId}`);
-
-      await guardarReaccionForoPublicacion({
+      await guardarReaccionForoPublicacion({ publicacionId, tipo });
+      const reaccionesDB = await getReaccionesForoByPublicaciones([
         publicacionId,
-        tipo,
-      });
-
-      const reaccionesDB = await getReaccionesForoByPublicaciones([publicacionId]);
-
+      ]);
       const mapa = construirMapaReacciones(
         reaccionesDB || [],
         "idpublicacion",
-        usuarioForoId
+        usuarioForoId,
       );
-
       setReaccionesPublicacionesMap((prev) => ({
         ...prev,
         [Number(publicacionId)]: mapa[Number(publicacionId)] || {
@@ -983,20 +883,13 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
   const handleReaccionarRespuesta = async (respuestaId, tipo) => {
     try {
       setReaccionandoKey(`resp-${respuestaId}`);
-
-      await guardarReaccionForoRespuesta({
-        respuestaId,
-        tipo,
-      });
-
+      await guardarReaccionForoRespuesta({ respuestaId, tipo });
       const reaccionesDB = await getReaccionesForoByRespuestas([respuestaId]);
-
       const mapa = construirMapaReacciones(
         reaccionesDB || [],
         "idrespuesta",
-        usuarioForoId
+        usuarioForoId,
       );
-
       setReaccionesRespuestasMap((prev) => ({
         ...prev,
         [Number(respuestaId)]: mapa[Number(respuestaId)] || {
@@ -1018,13 +911,7 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
         {avisosForo.map((aviso) => (
           <div
             key={aviso.id}
-            className={`w-[340px] rounded-2xl border px-4 py-3 text-sm font-semibold shadow-lg ${
-              aviso.tipo === "success"
-                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                : aviso.tipo === "error"
-                ? "border-red-200 bg-red-50 text-red-700"
-                : "border-indigo-200 bg-indigo-50 text-indigo-700"
-            }`}
+            className={`w-[340px] rounded-2xl border px-4 py-3 text-sm font-semibold shadow-lg ${aviso.tipo === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : aviso.tipo === "error" ? "border-red-200 bg-red-50 text-red-700" : "border-indigo-200 bg-indigo-50 text-indigo-700"}`}
           >
             {aviso.mensaje}
           </div>
@@ -1041,11 +928,9 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
               <p className="text-sm font-black text-slate-900">
                 {subida.titulo}
               </p>
-
               <p className="mt-1 text-xs font-semibold text-slate-500">
                 {subida.estado}
               </p>
-
               {subida.estado !== "Completado" &&
                 subida.estado !== "Error al subir adjuntos" && (
                   <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
@@ -1063,143 +948,124 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-200">
               Foro del grupo
             </p>
-
             <h3 className="mt-2 text-2xl font-black tracking-tight">
               Discusiones y comunicados
             </h3>
-
             <p className="mt-2 max-w-2xl text-sm text-indigo-100">
-              Crea publicaciones, responde dudas y comparte imágenes, videos o archivos.
+              Crea publicaciones, responde dudas y comparte archivos de apoyo.
             </p>
           </div>
 
           <div className="grid grid-cols-1 gap-6 p-6 xl:grid-cols-[420px_1fr]">
             <div className="space-y-5">
-              <form
-                onSubmit={handleCrearPublicacion}
-                className="space-y-4 rounded-3xl border border-slate-200 bg-slate-50 p-5"
-              >
-                <div>
-                  <h4 className="text-lg font-black text-slate-900">
-                    Nueva publicación
-                  </h4>
-
-                  <p className="text-sm text-slate-500">
-                    Puedes crear un tema, aviso o material complementario.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="text-sm font-semibold text-slate-700">
-                    Título
-                  </label>
-
-                  <input
-                    value={formPublicacion.titulo}
-                    onChange={(e) =>
-                      setFormPublicacion((prev) => ({
-                        ...prev,
-                        titulo: e.target.value,
-                      }))
-                    }
-                    className="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                    placeholder="Ej. Material complementario de la clase"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-semibold text-slate-700">
-                    Contenido
-                  </label>
-
-                  <textarea
-                    value={formPublicacion.contenido}
-                    onChange={(e) =>
-                      setFormPublicacion((prev) => ({
-                        ...prev,
-                        contenido: e.target.value,
-                      }))
-                    }
-                    rows={5}
-                    className="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                    placeholder="Escribe el mensaje..."
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-semibold text-slate-700">
-                    Adjuntar archivos
-                  </label>
-
-                  <input
-                    key={fileKeyPublicacion}
-                    type="file"
-                    multiple
-                    accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.txt"
-                    onChange={handleSeleccionarArchivosPublicacion}
-                    className="mt-1 w-full rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-3 text-sm text-slate-600"
-                  />
-
-                  <p className="mt-1 text-xs text-slate-400">
-                    Máximo 3 archivos. Imágenes 5 MB, archivos 20 MB, videos a Vimeo.
-                  </p>
-
-                  {archivosPublicacion.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      {archivosPublicacion.map((file) => (
-                        <p
-                          key={`${file.name}-${file.size}`}
-                          className="text-xs font-semibold text-slate-500"
-                        >
-                          📎 {file.name}
-                        </p>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label className="text-sm font-semibold text-slate-700">
-                    Enlace de video externo
-                  </label>
-
-                  <input
-                    value={videoExternoPublicacion}
-                    onChange={(e) => setVideoExternoPublicacion(e.target.value)}
-                    className="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                    placeholder="https://vimeo.com/... o https://youtube.com/..."
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={guardando}
-                  className={`w-full rounded-2xl px-5 py-3 text-sm font-bold text-white transition ${
-                    guardando
-                      ? "cursor-not-allowed bg-slate-400"
-                      : "bg-indigo-600 hover:bg-indigo-700"
-                  }`}
+              {puedeModerar && (
+                <form
+                  onSubmit={handleCrearPublicacion}
+                  className="space-y-4 rounded-3xl border border-slate-200 bg-slate-50 p-5"
                 >
-                  {guardando ? "Publicando..." : "Publicar"}
-                </button>
-              </form>
+                  <div>
+                    <h4 className="text-lg font-black text-slate-900">
+                      Nueva publicación
+                    </h4>
+                    <p className="text-sm text-slate-500">
+                      Crea un tema o aviso general.
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-slate-700">
+                      Título
+                    </label>
+                    <input
+                      value={formPublicacion.titulo}
+                      onChange={(e) =>
+                        setFormPublicacion((prev) => ({
+                          ...prev,
+                          titulo: e.target.value,
+                        }))
+                      }
+                      className="mt-1 w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+                      placeholder="Ej. Material complementario"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-slate-700">
+                      Contenido
+                    </label>
+                    <textarea
+                      value={formPublicacion.contenido}
+                      onChange={(e) =>
+                        setFormPublicacion((prev) => ({
+                          ...prev,
+                          contenido: e.target.value,
+                        }))
+                      }
+                      rows={5}
+                      className="mt-1 w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+                      placeholder="Escribe el mensaje..."
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-slate-700">
+                      Adjuntar archivos
+                    </label>
+                    <input
+                      key={fileKeyPublicacion}
+                      type="file"
+                      multiple
+                      accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.zip"
+                      onChange={handleSeleccionarArchivosPublicacion}
+                      className="mt-1 w-full rounded-2xl border border-dashed bg-white px-4 py-3 text-sm text-slate-600"
+                    />
+                    {archivosPublicacion.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        {archivosPublicacion.map((f) => (
+                          <p
+                            key={f.name}
+                            className="text-xs font-semibold text-slate-500"
+                          >
+                            📎 {f.name}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-slate-700">
+                      Video Externo
+                    </label>
+                    <input
+                      value={videoExternoPublicacion}
+                      onChange={(e) =>
+                        setVideoExternoPublicacion(e.target.value)
+                      }
+                      className="mt-1 w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+                      placeholder="Enlace de YouTube o Vimeo"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={guardando}
+                    className={`w-full rounded-2xl px-5 py-3 text-sm font-bold text-white transition ${guardando ? "bg-slate-400" : "bg-indigo-600 hover:bg-indigo-700"}`}
+                  >
+                    {guardando ? "Publicando..." : "Publicar"}
+                  </button>
+                </form>
+              )}
 
               <div className="rounded-3xl border border-slate-200 bg-white p-5">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h4 className="text-lg font-black text-slate-900">
-                      Publicaciones
+                      Temas del Foro
                     </h4>
-
                     <p className="text-sm text-slate-500">
-                      {publicaciones.length} tema(s) creado(s)
+                      {publicaciones.length} hilo(s) activo(s)
                     </p>
                   </div>
-
                   <button
                     type="button"
                     onClick={cargarPublicaciones}
-                    className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
+                    className="rounded-xl border px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
                   >
                     Actualizar
                   </button>
@@ -1208,72 +1074,64 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
                 <input
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
-                  className="mt-4 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+                  className="mt-4 w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
                   placeholder="Buscar en el foro..."
                 />
 
                 <div className="mt-4 max-h-[560px] space-y-3 overflow-y-auto pr-1">
                   {cargando ? (
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+                    <div className="text-sm text-slate-500">
                       Cargando publicaciones...
                     </div>
                   ) : publicacionesFiltradas.length === 0 ? (
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+                    <div className="text-sm text-slate-500">
                       No hay publicaciones todavía.
                     </div>
                   ) : (
-                    publicacionesFiltradas.map((publicacion) => {
+                    publicacionesFiltradas.map((pub) => {
                       const activa =
-                        Number(publicacionActiva?.id) === Number(publicacion.id);
-
+                        Number(publicacionActiva?.id) === Number(pub.id);
                       return (
                         <button
-                          key={publicacion.id}
+                          key={pub.id}
                           type="button"
-                          onClick={() => cargarRespuestas(publicacion)}
-                          className={`w-full rounded-2xl border p-4 text-left transition ${
-                            activa
-                              ? "border-indigo-300 bg-indigo-50"
-                              : "border-slate-200 bg-white hover:bg-slate-50"
-                          }`}
+                          onClick={() => {
+                            cargarRespuestas(pub);
+                          }}
+                          className={`w-full rounded-2xl border p-4 text-left transition ${activa ? "border-indigo-300 bg-indigo-50" : "border-slate-200 bg-white hover:bg-slate-50"}`}
                         >
                           <div className="flex flex-wrap items-center gap-2">
-                            {publicacion.fijado && (
-                              <span className="rounded-full bg-amber-100 px-2 py-1 text-[11px] font-bold text-amber-700">
+                            {pub.fijado && (
+                              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
                                 Fijado
                               </span>
                             )}
-
-                            {publicacion.cerrado && (
-                              <span className="rounded-full bg-slate-200 px-2 py-1 text-[11px] font-bold text-slate-600">
+                            {pub.cerrado && (
+                              <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-600">
                                 Cerrado
                               </span>
                             )}
-
-                            <span className="rounded-full bg-indigo-100 px-2 py-1 text-[11px] font-bold text-indigo-700">
-                              {publicacion.autor_rol || "USUARIO"}
+                            <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-700">
+                              {pub.autor_rol}
                             </span>
                           </div>
-
                           <h5 className="mt-2 font-black text-slate-900">
-                            {publicacion.titulo}
+                            {pub.titulo}
                           </h5>
-
                           <p className="mt-1 line-clamp-2 text-sm text-slate-500">
-                            {publicacion.contenido}
+                            {pub.contenido}
                           </p>
-
-                          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
-                            <span>{publicacion.autor_nombre || "Usuario"}</span>
-
+                          <div className="mt-3 flex justify-between text-xs text-slate-400">
+                            <span>{pub.autor_nombre}</span>
                             <span>
-                              {publicacion.total_respuestas || 0} respuesta(s)
+                              {pub.total_respuestas || 0} respuesta(s)
                             </span>
                           </div>
-
                           <div className="mt-2">
                             <ResumenReaccionesForo
-                              resumen={reaccionesPublicacionesMap[Number(publicacion.id)]}
+                              resumen={
+                                reaccionesPublicacionesMap[Number(pub.id)]
+                              }
                             />
                           </div>
                         </button>
@@ -1289,15 +1147,14 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
                 <div className="flex h-full min-h-[520px] items-center justify-center p-8 text-center">
                   <div>
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-100 text-3xl">
-                      💬
+                      📥
                     </div>
-
                     <h4 className="mt-4 text-xl font-black text-slate-900">
-                      Selecciona una publicación
+                      Selecciona una discusión
                     </h4>
-
                     <p className="mt-2 max-w-md text-sm text-slate-500">
-                      Al elegir una publicación podrás ver sus respuestas, adjuntos y participar en la conversación.
+                      Elige un tema de la lista de la izquierda para ver el
+                      contenido completo, descargar adjuntos y participar.
                     </p>
                   </div>
                 </div>
@@ -1312,24 +1169,20 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
                               Fijado
                             </span>
                           )}
-
                           {publicacionActiva.cerrado && (
                             <span className="rounded-full bg-slate-200 px-2 py-1 text-xs font-bold text-slate-600">
                               Cerrado
                             </span>
                           )}
-
                           <span className="rounded-full bg-indigo-100 px-2 py-1 text-xs font-bold text-indigo-700">
-                            {publicacionActiva.autor_rol || "USUARIO"}
+                            {publicacionActiva.autor_rol}
                           </span>
                         </div>
-
                         <h4 className="mt-3 text-2xl font-black text-slate-900">
                           {publicacionActiva.titulo}
                         </h4>
-
                         <p className="mt-1 text-xs text-slate-400">
-                          Publicado por {publicacionActiva.autor_nombre || "Usuario"} ·{" "}
+                          Por {publicacionActiva.autor_nombre} ·{" "}
                           {formatearFecha(publicacionActiva.created_at)}
                         </p>
                       </div>
@@ -1338,23 +1191,29 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
                         <div className="flex flex-wrap gap-2">
                           <button
                             type="button"
-                            onClick={() => handleToggleFijado(publicacionActiva)}
-                            className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100"
+                            onClick={() =>
+                              handleToggleFijado(publicacionActiva)
+                            }
+                            className="rounded-xl border bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
                           >
-                            {publicacionActiva.fijado ? "Quitar fijado" : "Fijar"}
+                            {publicacionActiva.fijado ? "Desfijar" : "Fijar"}
                           </button>
-
                           <button
                             type="button"
-                            onClick={() => handleToggleCerrado(publicacionActiva)}
-                            className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100"
+                            onClick={() =>
+                              handleToggleCerrado(publicacionActiva)
+                            }
+                            className="rounded-xl border bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
                           >
-                            {publicacionActiva.cerrado ? "Reabrir" : "Cerrar"}
+                            {publicacionActiva.cerrado
+                              ? "Reabrir"
+                              : "Cerrar Tema"}
                           </button>
-
                           <button
                             type="button"
-                            onClick={() => handleEliminarPublicacion(publicacionActiva)}
+                            onClick={() =>
+                              handleEliminarPublicacion(publicacionActiva)
+                            }
                             className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-100"
                           >
                             Eliminar
@@ -1363,16 +1222,25 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
                       )}
                     </div>
 
-                    <p className="mt-5 whitespace-pre-wrap rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-700">
+                    <p className="mt-5 whitespace-pre-wrap rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-700 shadow-sm">
                       {publicacionActiva.contenido}
                     </p>
 
                     {!publicacionActivaTieneVideo && (
                       <ReaccionesForo
-                        resumen={reaccionesPublicacionesMap[Number(publicacionActiva.id)]}
-                        disabled={reaccionandoKey === `pub-${publicacionActiva.id}`}
+                        resumen={
+                          reaccionesPublicacionesMap[
+                            Number(publicacionActiva.id)
+                          ]
+                        }
+                        disabled={
+                          reaccionandoKey === `pub-${publicacionActiva.id}`
+                        }
                         onReaccionar={(tipo) =>
-                          handleReaccionarPublicacion(publicacionActiva.id, tipo)
+                          handleReaccionarPublicacion(
+                            publicacionActiva.id,
+                            tipo,
+                          )
                         }
                       />
                     )}
@@ -1381,81 +1249,61 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
                       adjuntos={adjuntosPublicacion}
                       puedeModerar={puedeModerar}
                       onEliminar={handleEliminarAdjuntoPublicacion}
-                      resumenReacciones={reaccionesPublicacionesMap[Number(publicacionActiva.id)]}
+                      resumenReacciones={
+                        reaccionesPublicacionesMap[Number(publicacionActiva.id)]
+                      }
                       mostrarReaccionesEnVideo={publicacionActivaTieneVideo}
                     />
-
-                    {publicacionActivaTieneVideo && (
-                      <ReaccionesForo
-                        resumen={reaccionesPublicacionesMap[Number(publicacionActiva.id)]}
-                        disabled={reaccionandoKey === `pub-${publicacionActiva.id}`}
-                        onReaccionar={(tipo) =>
-                          handleReaccionarPublicacion(publicacionActiva.id, tipo)
-                        }
-                      />
-                    )}
                   </div>
 
-                  <div className="flex-1 space-y-4 p-6">
-                    <div className="flex items-center justify-between">
-                      <h5 className="font-black text-slate-900">Respuestas</h5>
-
-                      <span className="text-xs text-slate-400">
-                        {respuestas.length} respuesta(s)
-                      </span>
-                    </div>
+                  <div className="flex-1 space-y-4 p-6 bg-slate-50/50">
+                    <h5 className="font-black text-slate-900 text-sm tracking-wide uppercase">
+                      Hilo de Respuestas
+                    </h5>
 
                     {cargandoRespuestas ? (
-                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-                        Cargando respuestas...
+                      <div className="text-sm text-slate-500">
+                        Cargando comentarios...
                       </div>
                     ) : respuestas.length === 0 ? (
-                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-                        Aún no hay respuestas.
+                      <div className="text-sm text-slate-400 italic">
+                        No hay respuestas en este tema todavía.
                       </div>
                     ) : (
-                      respuestas.map((respuesta) => (
+                      respuestas.map((answer) => (
                         <div
-                          key={respuesta.id}
-                          className="rounded-2xl border border-slate-200 bg-white p-4"
+                          key={answer.id}
+                          className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-2"
                         >
-                          <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="flex justify-between items-start">
                             <div>
                               <p className="text-sm font-black text-slate-900">
-                                {respuesta.autor_nombre || "Usuario"}
+                                {answer.autor_nombre}{" "}
+                                <span className="text-xs font-normal text-slate-400">
+                                  ({answer.autor_rol})
+                                </span>
                               </p>
-
-                              <p className="text-xs text-slate-400">
-                                {respuesta.autor_rol || "USUARIO"} ·{" "}
-                                {formatearFecha(respuesta.created_at)}
+                              <p className="text-[11px] text-slate-400">
+                                {formatearFecha(answer.created_at)}
                               </p>
                             </div>
-
                             {puedeModerar && (
                               <button
                                 type="button"
-                                onClick={() => handleEliminarRespuesta(respuesta)}
-                                className="rounded-lg px-2 py-1 text-xs font-bold text-red-500 hover:bg-red-50"
+                                onClick={() => handleEliminarRespuesta(answer)}
+                                className="text-xs text-red-500 font-bold hover:underline"
                               >
                                 Eliminar
                               </button>
                             )}
                           </div>
-
-                          <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">
-                            {respuesta.contenido}
+                          <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                            {answer.contenido}
                           </p>
-
-                          <ReaccionesForo
-                            resumen={reaccionesRespuestasMap[Number(respuesta.id)]}
-                            disabled={reaccionandoKey === `resp-${respuesta.id}`}
-                            onReaccionar={(tipo) =>
-                              handleReaccionarRespuesta(respuesta.id, tipo)
-                            }
-                          />
-
                           <AdjuntosForo
-                            adjuntos={adjuntosRespuestasMap[Number(respuesta.id)] || []}
+                            adjuntos={
+                              adjuntosRespuestasMap[Number(answer.id)] || []
+                            }
                             puedeModerar={puedeModerar}
                             onEliminar={handleEliminarAdjuntoRespuesta}
                           />
@@ -1466,66 +1314,55 @@ export default function ForoGrupoPanel({ grupoId, modo = "docente" }) {
 
                   <form
                     onSubmit={handleResponder}
-                    className="border-t border-slate-200 bg-slate-50 p-5"
+                    className="border-t border-slate-200 bg-white p-5"
                   >
                     {publicacionActiva.cerrado ? (
-                      <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-500">
-                        Esta publicación está cerrada. No se pueden agregar más respuestas.
+                      <div className="rounded-2xl bg-slate-100 p-4 text-sm text-slate-500 text-center font-medium">
+                        🔒 Esta publicación ha sido cerrada y no admite nuevas
+                        respuestas.
                       </div>
                     ) : (
                       <div className="space-y-3">
                         <textarea
                           value={formRespuesta}
                           onChange={(e) => setFormRespuesta(e.target.value)}
-                          rows={3}
-                          className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                          placeholder="Escribe una respuesta..."
+                          rows={2}
+                          className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                          placeholder="Escribe tu aporte o respuesta al tema..."
+                          required
                         />
-
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                           <div>
-                            <label className="text-sm font-semibold text-slate-700">
-                              Adjuntar archivo
+                            <label className="text-xs font-bold text-slate-500 uppercase">
+                              Adjuntar un archivo
                             </label>
-
                             <input
                               key={fileKeyRespuesta}
                               type="file"
-                              accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.txt"
+                              accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.zip"
                               onChange={handleSeleccionarArchivosRespuesta}
-                              className="mt-1 w-full rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-3 text-sm text-slate-600"
+                              className="mt-1 w-full rounded-xl border border-dashed bg-slate-50 px-3 py-2 text-xs text-slate-600"
                             />
-
-                            {archivosRespuesta.length > 0 && (
-                              <p className="mt-1 text-xs font-semibold text-slate-500">
-                                📎 {archivosRespuesta[0].name}
-                              </p>
-                            )}
                           </div>
-
                           <div>
-                            <label className="text-sm font-semibold text-slate-700">
-                              Enlace de video
+                            <label className="text-xs font-bold text-slate-500 uppercase">
+                              Video complementario (URL)
                             </label>
-
                             <input
                               value={videoExternoRespuesta}
-                              onChange={(e) => setVideoExternoRespuesta(e.target.value)}
-                              className="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                              placeholder="https://vimeo.com/... o https://youtube.com/..."
+                              onChange={(e) =>
+                                setVideoExternoRespuesta(e.target.value)
+                              }
+                              className="mt-1 w-full rounded-xl border bg-slate-50 px-3 py-2 text-xs outline-none"
+                              placeholder="Enlace de YouTube o Vimeo"
                             />
                           </div>
                         </div>
-
-                        <div className="flex justify-end">
+                        <div className="flex justify-end pt-2">
                           <button
                             type="submit"
                             disabled={guardandoRespuesta}
-                            className={`rounded-2xl px-5 py-3 text-sm font-bold text-white transition ${
-                              guardandoRespuesta
-                                ? "cursor-not-allowed bg-slate-400"
-                                : "bg-indigo-600 hover:bg-indigo-700"
-                            }`}
+                            className={`rounded-xl px-6 py-2.5 text-sm font-bold text-white transition ${guardandoRespuesta ? "bg-slate-400" : "bg-indigo-600 hover:bg-indigo-700"}`}
                           >
                             {guardandoRespuesta ? "Enviando..." : "Responder"}
                           </button>

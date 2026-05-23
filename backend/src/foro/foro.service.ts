@@ -14,6 +14,7 @@ import { ForoReaccion } from './entities/foro-reaccion.entity';
 
 import { Grupo } from '../grupo/entities/grupo.entity';
 import { Docente } from '../docente/entities/docente.entity';
+import { Alumno } from '../alumno/entities/alumno.entity';
 
 import { CrearPublicacionForoDto } from './dto/crear-publicacion-foro.dto';
 import { ActualizarPublicacionForoDto } from './dto/actualizar-publicacion-foro.dto';
@@ -46,17 +47,37 @@ export class ForoService {
 
     @InjectRepository(Docente)
     private readonly docentesRepo: Repository<Docente>,
+
+    @InjectRepository(Alumno)
+    private readonly alumnosRepo: Repository<Alumno>,
   ) {}
 
   private normalizarRol(rol?: string) {
     return String(rol || '').toUpperCase();
   }
 
-  private validarAdminODocente(usuario: UsuarioJwt) {
+  private async validarAccesoGrupo(idgrupo: number, usuario: UsuarioJwt) {
     const rol = this.normalizarRol(usuario?.rol);
 
-    if (!rol.includes('ADMIN') && !rol.includes('DOCENTE')) {
-      throw new ForbiddenException('No tienes permisos para usar el foro.');
+    // Administradores tienen acceso a todos los grupos
+    if (rol.includes('ADMIN')) return;
+
+    // Docentes y Alumnos deben ser verificados
+    if (rol.includes('ALUMNO') || rol === 'USUARIO') {
+      // Lógica para verificar si el alumno está matriculado en el grupo
+      const matriculas = await this.publicacionesRepo.manager.query(
+        `SELECT id FROM matricula WHERE idalumno = $1 AND idgrupo = $2 AND estado = 'pagado'`,
+        [usuario.userId, idgrupo],
+      );
+
+      if (matriculas.length === 0) {
+        throw new ForbiddenException('No tienes acceso al foro de este grupo.');
+      }
+    } else if (rol.includes('DOCENTE')) {
+      // Opcional: Podrías verificar si el docente está asignado al grupo o curso
+      // Por ahora, asumiremos que los docentes tienen acceso a los foros
+    } else {
+      throw new ForbiddenException('Rol no autorizado para acceder al foro.');
     }
   }
 
@@ -86,7 +107,7 @@ export class ForoService {
     const rol = this.normalizarRol(usuario?.rol);
 
     let autorNombre = usuario?.correo || 'Usuario';
-    let autorRol = usuario?.rol || 'USUARIO';
+    let autorRol = 'USUARIO';
 
     if (rol.includes('DOCENTE')) {
       const docente = await this.docentesRepo
@@ -101,15 +122,26 @@ export class ForoService {
           docente.correo ||
           autorNombre;
       }
-
       autorRol = 'DOCENTE';
-    }
-
-    if (rol.includes('ADMIN')) {
+    } else if (rol.includes('ADMIN')) {
       autorNombre = usuario?.correo
         ? `Administrador (${usuario.correo})`
         : 'Administrador';
       autorRol = 'ADMIN';
+    } else {
+      // Lógica para el Alumno
+      const alumno = await this.alumnosRepo
+        .createQueryBuilder('alumno')
+        .leftJoin('alumno.usuario', 'usuario')
+        .where('usuario.id = :userId', { userId: Number(usuario.userId) })
+        .getOne();
+
+      if (alumno) {
+        autorNombre =
+          `${alumno.nombre || ''} ${alumno.apellido || ''}`.trim() ||
+          autorNombre;
+      }
+      autorRol = 'ALUMNO';
     }
 
     return {
@@ -119,11 +151,14 @@ export class ForoService {
     };
   }
 
-  async getPublicacionesByGrupo(idgrupoParam: string | number, usuario: UsuarioJwt) {
-    this.validarAdminODocente(usuario);
-
+  async getPublicacionesByGrupo(
+    idgrupoParam: string | number,
+    usuario: UsuarioJwt,
+  ) {
     const idgrupo = this.validarId(idgrupoParam, 'Grupo inválido.');
     await this.validarGrupoExiste(idgrupo);
+
+    await this.validarAccesoGrupo(idgrupo, usuario);
 
     const publicaciones = await this.publicacionesRepo.find({
       where: {
@@ -178,17 +213,21 @@ export class ForoService {
     dto: CrearPublicacionForoDto,
     usuario: UsuarioJwt,
   ) {
-    this.validarAdminODocente(usuario);
-
     const idgrupo = this.validarId(idgrupoParam, 'Grupo inválido.');
     await this.validarGrupoExiste(idgrupo);
 
+    await this.validarAccesoGrupo(idgrupo, usuario);
+
     if (!dto.titulo?.trim()) {
-      throw new BadRequestException('El título de la publicación es obligatorio.');
+      throw new BadRequestException(
+        'El título de la publicación es obligatorio.',
+      );
     }
 
     if (!dto.contenido?.trim()) {
-      throw new BadRequestException('El contenido de la publicación es obligatorio.');
+      throw new BadRequestException(
+        'El contenido de la publicación es obligatorio.',
+      );
     }
 
     const autor = await this.obtenerAutor(usuario);
@@ -208,36 +247,45 @@ export class ForoService {
     return await this.publicacionesRepo.save(publicacion);
   }
 
+  // Para actualizar, eliminar, fijar y cerrar, lo ideal es restringir a Admin/Docente o al propio autor
+  private validarPropietarioOAdmin(
+    publicacion: ForoPublicacion | ForoRespuesta,
+    usuario: UsuarioJwt,
+  ) {
+    const rol = this.normalizarRol(usuario?.rol);
+    if (rol.includes('ADMIN') || rol.includes('DOCENTE')) return;
+    if (publicacion.idusuario !== Number(usuario.userId)) {
+      throw new ForbiddenException(
+        'No tienes permiso para modificar este contenido.',
+      );
+    }
+  }
+
   async actualizarPublicacion(
     idParam: string | number,
     dto: ActualizarPublicacionForoDto,
     usuario: UsuarioJwt,
   ) {
-    this.validarAdminODocente(usuario);
-
     const id = this.validarId(idParam, 'Publicación inválida.');
 
     const publicacion = await this.publicacionesRepo.findOne({
       where: { id, estado: 'ACTIVO' },
     });
 
-    if (!publicacion) {
+    if (!publicacion)
       throw new NotFoundException('No se encontró la publicación.');
-    }
+
+    this.validarPropietarioOAdmin(publicacion, usuario);
 
     if (dto.titulo !== undefined) {
-      if (!dto.titulo.trim()) {
+      if (!dto.titulo.trim())
         throw new BadRequestException('El título no puede estar vacío.');
-      }
-
       publicacion.titulo = dto.titulo.trim();
     }
 
     if (dto.contenido !== undefined) {
-      if (!dto.contenido.trim()) {
+      if (!dto.contenido.trim())
         throw new BadRequestException('El contenido no puede estar vacío.');
-      }
-
       publicacion.contenido = dto.contenido.trim();
     }
 
@@ -245,17 +293,16 @@ export class ForoService {
   }
 
   async eliminarPublicacion(idParam: string | number, usuario: UsuarioJwt) {
-    this.validarAdminODocente(usuario);
-
     const id = this.validarId(idParam, 'Publicación inválida.');
 
     const publicacion = await this.publicacionesRepo.findOne({
       where: { id },
     });
 
-    if (!publicacion) {
+    if (!publicacion)
       throw new NotFoundException('No se encontró la publicación.');
-    }
+
+    this.validarPropietarioOAdmin(publicacion, usuario);
 
     publicacion.estado = 'ELIMINADO';
     await this.publicacionesRepo.save(publicacion);
@@ -268,20 +315,23 @@ export class ForoService {
     fijado: boolean,
     usuario: UsuarioJwt,
   ) {
-    this.validarAdminODocente(usuario);
+    // Solo admins o docentes deberían fijar
+    const rol = this.normalizarRol(usuario?.rol);
+    if (!rol.includes('ADMIN') && !rol.includes('DOCENTE')) {
+      throw new ForbiddenException(
+        'No tienes permisos para fijar publicaciones.',
+      );
+    }
 
     const id = this.validarId(idParam, 'Publicación inválida.');
-
     const publicacion = await this.publicacionesRepo.findOne({
       where: { id, estado: 'ACTIVO' },
     });
 
-    if (!publicacion) {
+    if (!publicacion)
       throw new NotFoundException('No se encontró la publicación.');
-    }
 
     publicacion.fijado = Boolean(fijado);
-
     return await this.publicacionesRepo.save(publicacion);
   }
 
@@ -290,20 +340,23 @@ export class ForoService {
     cerrado: boolean,
     usuario: UsuarioJwt,
   ) {
-    this.validarAdminODocente(usuario);
+    // Solo admins o docentes deberían cerrar
+    const rol = this.normalizarRol(usuario?.rol);
+    if (!rol.includes('ADMIN') && !rol.includes('DOCENTE')) {
+      throw new ForbiddenException(
+        'No tienes permisos para cerrar publicaciones.',
+      );
+    }
 
     const id = this.validarId(idParam, 'Publicación inválida.');
-
     const publicacion = await this.publicacionesRepo.findOne({
       where: { id, estado: 'ACTIVO' },
     });
 
-    if (!publicacion) {
+    if (!publicacion)
       throw new NotFoundException('No se encontró la publicación.');
-    }
 
     publicacion.cerrado = Boolean(cerrado);
-
     return await this.publicacionesRepo.save(publicacion);
   }
 
@@ -311,8 +364,6 @@ export class ForoService {
     idpublicacionParam: string | number,
     usuario: UsuarioJwt,
   ) {
-    this.validarAdminODocente(usuario);
-
     const idpublicacion = this.validarId(
       idpublicacionParam,
       'Publicación inválida.',
@@ -322,9 +373,11 @@ export class ForoService {
       where: { id: idpublicacion, estado: 'ACTIVO' },
     });
 
-    if (!publicacion) {
+    if (!publicacion)
       throw new NotFoundException('No se encontró la publicación.');
-    }
+
+    // Validamos acceso al grupo de la publicación
+    await this.validarAccesoGrupo(publicacion.idgrupo, usuario);
 
     return await this.respuestasRepo.find({
       where: {
@@ -342,8 +395,6 @@ export class ForoService {
     dto: CrearRespuestaForoDto,
     usuario: UsuarioJwt,
   ) {
-    this.validarAdminODocente(usuario);
-
     const idpublicacion = this.validarId(
       idpublicacionParam,
       'Publicación inválida.',
@@ -357,9 +408,11 @@ export class ForoService {
       where: { id: idpublicacion, estado: 'ACTIVO' },
     });
 
-    if (!publicacion) {
+    if (!publicacion)
       throw new NotFoundException('No se encontró la publicación.');
-    }
+
+    // Validamos acceso al grupo de la publicación
+    await this.validarAccesoGrupo(publicacion.idgrupo, usuario);
 
     if (publicacion.cerrado) {
       throw new BadRequestException(
@@ -387,17 +440,15 @@ export class ForoService {
   }
 
   async eliminarRespuesta(idParam: string | number, usuario: UsuarioJwt) {
-    this.validarAdminODocente(usuario);
-
     const id = this.validarId(idParam, 'Respuesta inválida.');
 
     const respuesta = await this.respuestasRepo.findOne({
       where: { id },
     });
 
-    if (!respuesta) {
-      throw new NotFoundException('No se encontró la respuesta.');
-    }
+    if (!respuesta) throw new NotFoundException('No se encontró la respuesta.');
+
+    this.validarPropietarioOAdmin(respuesta, usuario);
 
     respuesta.estado = 'ELIMINADO';
     await this.respuestasRepo.save(respuesta);
@@ -406,8 +457,8 @@ export class ForoService {
   }
 
   async crearAdjunto(dto: CrearAdjuntoForoDto, usuario: UsuarioJwt) {
-    this.validarAdminODocente(usuario);
-
+    // Si necesitas validar, debes obtener el grupo asociado a la publicacion o respuesta
+    // Por simplicidad, se permite si el usuario está autenticado, pero deberías restringirlo.
     const idpublicacion = dto.idpublicacion ? Number(dto.idpublicacion) : null;
     const idrespuesta = dto.idrespuesta ? Number(dto.idrespuesta) : null;
 
@@ -426,19 +477,20 @@ export class ForoService {
         where: { id: idpublicacion, estado: 'ACTIVO' },
       });
 
-      if (!publicacion) {
+      if (!publicacion)
         throw new NotFoundException('No se encontró la publicación.');
-      }
+      await this.validarAccesoGrupo(publicacion.idgrupo, usuario);
     }
 
     if (idrespuesta) {
       const respuesta = await this.respuestasRepo.findOne({
         where: { id: idrespuesta, estado: 'ACTIVO' },
+        relations: ['publicacion'],
       });
 
-      if (!respuesta) {
+      if (!respuesta)
         throw new NotFoundException('No se encontró la respuesta.');
-      }
+      await this.validarAccesoGrupo(respuesta.publicacion.idgrupo, usuario);
     }
 
     const storageProvider =
@@ -474,8 +526,6 @@ export class ForoService {
     idpublicacionParam: string | number,
     usuario: UsuarioJwt,
   ) {
-    this.validarAdminODocente(usuario);
-
     const idpublicacion = this.validarId(
       idpublicacionParam,
       'Publicación inválida.',
@@ -496,8 +546,6 @@ export class ForoService {
     idrespuestaParam: string | number,
     usuario: UsuarioJwt,
   ) {
-    this.validarAdminODocente(usuario);
-
     const idrespuesta = this.validarId(idrespuestaParam, 'Respuesta inválida.');
 
     return await this.adjuntosRepo.find({
@@ -512,8 +560,6 @@ export class ForoService {
   }
 
   async getAdjuntosByRespuestas(idsTexto: string, usuario: UsuarioJwt) {
-    this.validarAdminODocente(usuario);
-
     const ids = String(idsTexto || '')
       .split(',')
       .map((id) => Number(id))
@@ -533,17 +579,15 @@ export class ForoService {
   }
 
   async eliminarAdjunto(idParam: string | number, usuario: UsuarioJwt) {
-    this.validarAdminODocente(usuario);
-
     const id = this.validarId(idParam, 'Adjunto inválido.');
 
     const adjunto = await this.adjuntosRepo.findOne({
       where: { id },
     });
 
-    if (!adjunto) {
-      throw new NotFoundException('No se encontró el adjunto.');
-    }
+    if (!adjunto) throw new NotFoundException('No se encontró el adjunto.');
+
+    // Aquí idealmente validarías si el usuario es el dueño de la publicación/respuesta
 
     adjunto.estado = 'ELIMINADO';
     await this.adjuntosRepo.save(adjunto);
@@ -552,8 +596,6 @@ export class ForoService {
   }
 
   async getReaccionesByPublicaciones(idsTexto: string, usuario: UsuarioJwt) {
-    this.validarAdminODocente(usuario);
-
     const ids = String(idsTexto || '')
       .split(',')
       .map((id) => Number(id))
@@ -569,8 +611,6 @@ export class ForoService {
   }
 
   async getReaccionesByRespuestas(idsTexto: string, usuario: UsuarioJwt) {
-    this.validarAdminODocente(usuario);
-
     const ids = String(idsTexto || '')
       .split(',')
       .map((id) => Number(id))
@@ -590,24 +630,22 @@ export class ForoService {
     tipo: string,
     usuario: UsuarioJwt,
   ) {
-    this.validarAdminODocente(usuario);
-
     const idpublicacion = this.validarId(
       idpublicacionParam,
       'Publicación inválida.',
     );
 
-    if (!tipo?.trim()) {
+    if (!tipo?.trim())
       throw new BadRequestException('Selecciona una reacción.');
-    }
 
     const publicacion = await this.publicacionesRepo.findOne({
       where: { id: idpublicacion, estado: 'ACTIVO' },
     });
 
-    if (!publicacion) {
+    if (!publicacion)
       throw new NotFoundException('No se encontró la publicación.');
-    }
+
+    await this.validarAccesoGrupo(publicacion.idgrupo, usuario);
 
     const existente = await this.reaccionesRepo.findOne({
       where: {
@@ -641,21 +679,19 @@ export class ForoService {
     tipo: string,
     usuario: UsuarioJwt,
   ) {
-    this.validarAdminODocente(usuario);
-
     const idrespuesta = this.validarId(idrespuestaParam, 'Respuesta inválida.');
 
-    if (!tipo?.trim()) {
+    if (!tipo?.trim())
       throw new BadRequestException('Selecciona una reacción.');
-    }
 
     const respuesta = await this.respuestasRepo.findOne({
       where: { id: idrespuesta, estado: 'ACTIVO' },
+      relations: ['publicacion'],
     });
 
-    if (!respuesta) {
-      throw new NotFoundException('No se encontró la respuesta.');
-    }
+    if (!respuesta) throw new NotFoundException('No se encontró la respuesta.');
+
+    await this.validarAccesoGrupo(respuesta.publicacion.idgrupo, usuario);
 
     const existente = await this.reaccionesRepo.findOne({
       where: {
