@@ -4,6 +4,7 @@ import {
   obtenerCurso,
   eliminarCurso,
   habilitarCurso,
+  obtenerGruposPorCurso,
 } from "../services/curso.service";
 import CursoModal from "../components/CursoModal";
 import toast from "react-hot-toast";
@@ -29,6 +30,11 @@ export default function Cursos() {
   const [cursoEditar, setCursoEditar] = useState(null);
   const [cursoInhabilitar, setCursoInhabilitar] = useState(null);
   const [cursoHabilitar, setCursoHabilitar] = useState(null);
+
+  const [cursoSeleccionado, setCursoSeleccionado] = useState(null);
+  const [gruposCurso, setGruposCurso] = useState([]);
+  const [cargandoGrupos, setCargandoGrupos] = useState(false);
+  const [mostrarSelectorGrupos, setMostrarSelectorGrupos] = useState(false);
 
   const cargarCursos = async () => {
     try {
@@ -86,6 +92,40 @@ export default function Cursos() {
   const handleNuevo = () => {
     setCursoEditar(null);
     setMostrarModal(true);
+  };
+
+  const abrirSelectorGrupo = async (curso) => {
+    try {
+      if (curso.estado === false) {
+        toast.error("Este curso está inhabilitado.");
+        return;
+      }
+
+      setCursoSeleccionado(curso);
+      setGruposCurso([]);
+      setMostrarSelectorGrupos(true);
+      setCargandoGrupos(true);
+
+      const data = await obtenerGruposPorCurso(curso.id);
+      setGruposCurso(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Error cargando grupos del curso:", error);
+      toast.error(error?.message || "No se pudieron cargar los grupos del curso");
+    } finally {
+      setCargandoGrupos(false);
+    }
+  };
+
+  const entrarAlGrupo = (grupo) => {
+    const cursoId = cursoSeleccionado?.id || grupo?.curso?.id;
+
+    if (!cursoId || !grupo?.id) {
+      toast.error("No se pudo identificar el curso o grupo.");
+      return;
+    }
+
+    setMostrarSelectorGrupos(false);
+    navigate(`/admin/cursos/${cursoId}/grupos/${grupo.id}`);
   };
 
   const cursosFiltrados = cursos.filter((curso) => {
@@ -221,7 +261,7 @@ export default function Cursos() {
                     return (
                       <tr
                         key={curso.id}
-                        onClick={() => navigate(`/admin/cursos/${curso.id}`)}
+                        onClick={() => abrirSelectorGrupo(curso)}
                         className={`group cursor-pointer transition-colors ${
                           esInactivo
                             ? "bg-[var(--color-background)] opacity-70"
@@ -342,6 +382,20 @@ export default function Cursos() {
         />
       )}
 
+      {mostrarSelectorGrupos && (
+        <SelectorGrupoModal
+          curso={cursoSeleccionado}
+          grupos={gruposCurso}
+          loading={cargandoGrupos}
+          onClose={() => {
+            setMostrarSelectorGrupos(false);
+            setCursoSeleccionado(null);
+            setGruposCurso([]);
+          }}
+          onSelect={entrarAlGrupo}
+        />
+      )}
+
       {cursoInhabilitar && (
         <ConfirmacionModal
           tipo="danger"
@@ -432,6 +486,98 @@ function ConfirmacionModal({
             }`}
           >
             {textoConfirmar}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SelectorGrupoModal({ curso, grupos, loading, onClose, onSelect }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-2xl">
+        <div className="border-b border-[var(--color-border)] bg-[var(--color-background)] px-6 py-5">
+          <h3 className="text-xl font-black text-[var(--color-text)]">
+            Seleccionar grupo
+          </h3>
+          <p className="mt-1 text-sm text-[var(--color-muted-text)]">
+            Elige a qué grupo del curso{" "}
+            <span className="font-bold text-[var(--color-text)]">
+              {curso?.nombrecurso || "seleccionado"}
+            </span>{" "}
+            deseas entrar.
+          </p>
+        </div>
+
+        <div className="max-h-[420px] overflow-y-auto p-6">
+          {loading ? (
+            <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] p-6 text-center text-sm font-semibold text-[var(--color-muted-text)]">
+              Cargando grupos...
+            </div>
+          ) : grupos.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-background)] p-6 text-center">
+              <p className="font-bold text-[var(--color-text)]">
+                Este curso aún no tiene grupos.
+              </p>
+              <p className="mt-1 text-sm text-[var(--color-muted-text)]">
+                Crea o asigna un grupo para poder entrar al detalle.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {grupos.map((grupo) => {
+                const docenteNombre = [
+                  grupo?.docente?.nombre,
+                  grupo?.docente?.apellido,
+                ]
+                  .filter(Boolean)
+                  .join(" ");
+
+                return (
+                  <button
+                    key={grupo.id}
+                    type="button"
+                    onClick={() => onSelect(grupo)}
+                    className="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] p-4 text-left transition hover:border-[var(--color-primary)] hover:bg-[color-mix(in_srgb,var(--color-primary)_7%,transparent)]"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <h4 className="text-base font-black text-[var(--color-text)]">
+                          {grupo.nombregrupo || `Grupo ${grupo.id}`}
+                        </h4>
+
+                        <p className="mt-1 text-sm text-[var(--color-muted-text)]">
+                          Docente:{" "}
+                          <span className="font-semibold">
+                            {docenteNombre || "Sin docente asignado"}
+                          </span>
+                        </p>
+
+                        <p className="mt-1 text-xs text-[var(--color-muted-text)]">
+                          {grupo.modalidad || "Modalidad no definida"} ·{" "}
+                          {grupo.horario || "Horario no definido"}
+                        </p>
+                      </div>
+
+                      <span className="rounded-xl bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] px-3 py-1.5 text-xs font-bold text-[var(--color-primary)]">
+                        Entrar
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end border-t border-[var(--color-border)] bg-[var(--color-background)] px-6 py-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl px-4 py-2 font-semibold text-[var(--color-text)] transition hover:bg-[var(--color-card)]"
+          >
+            Cancelar
           </button>
         </div>
       </div>

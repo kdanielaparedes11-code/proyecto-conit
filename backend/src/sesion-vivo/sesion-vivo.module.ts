@@ -10,12 +10,16 @@ import { MeetingProviderFactory } from '../meeting/meeting-provider.factory';
 import { ZoomMeetingService } from '../zoom-meeting/zoom-meeting.service';
 import { TeamsMeetingService } from '../teams-meeting/teams-meeting.service';
 import { Grupo } from '../grupo/entities/grupo.entity';
+import { MeetingProviderConfigModule } from '../meeting-provider-config/meeting-provider-config.module';
+import { ConfiguracionSesionesVivoModule } from '../configuracion-sesiones-vivo/configuracion-sesiones-vivo.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([SesionVivo, Curso, Grupo]),
     GoogleMeetModule,
     EmpresaModule,
+    MeetingProviderConfigModule,
+    ConfiguracionSesionesVivoModule,
   ],
   controllers: [SesionVivoController],
   providers: [
