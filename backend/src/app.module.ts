@@ -56,6 +56,7 @@ import { AsistenciaConfiguracionController } from './asistencia-configuracion/as
 import { EntregaModule } from './entrega/entrega.module';
 import { EstilosModule } from './estilos/estilos.module';
 import { ForoModule } from './foro/foro.module';
+import { TareaEntregaModule } from './tarea-entrega/tarea-entrega.module';
 import { MeetingProviderConfigModule } from './meeting-provider-config/meeting-provider-config.module';
 import { ConfiguracionSesionesVivoModule } from './configuracion-sesiones-vivo/configuracion-sesiones-vivo.module';
 
@@ -138,10 +139,18 @@ import { ConfiguracionSesionesVivoModule } from './configuracion-sesiones-vivo/c
     AsistenciaModule,
     EntregaModule,
     ForoModule,
+    TareaEntregaModule,
     ConfiguracionSesionesVivoModule,
   ],
 
   controllers: [AppController, AsistenciaConfiguracionController],
-  providers: [AppService, GoogleMeetService, MailService, S3Service, VimeoService, VimeoController],
+  providers: [
+    AppService,
+    GoogleMeetService,
+    MailService,
+    S3Service,
+    VimeoService,
+    VimeoController,
+  ],
 })
 export class AppModule {}
