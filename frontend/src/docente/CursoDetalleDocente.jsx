@@ -317,12 +317,7 @@ function VideoEmbed({ url }) {
   );
 }
 
-function FormulaNumericaModal({
-  open,
-  initialValue = "",
-  onClose,
-  onInsert,
-}) {
+function FormulaNumericaModal({ open, initialValue = "", onClose, onInsert }) {
   const mathFieldRef = useRef(null);
   const [latex, setLatex] = useState(initialValue || "");
   const [tabActiva, setTabActiva] = useState("estructuras");
@@ -336,7 +331,11 @@ function FormulaNumericaModal({
       { label: "Subíndice", icono: "xₙ", value: "_{}" },
       { label: "Paréntesis", icono: "( )", value: "\\left(\\right)" },
       { label: "Valor absoluto", icono: "|x|", value: "\\left|\\right|" },
-      { label: "Sistema", icono: "{", value: "\\begin{cases}  & \\\\  & \\end{cases}" },
+      {
+        label: "Sistema",
+        icono: "{",
+        value: "\\begin{cases}  & \\\\  & \\end{cases}",
+      },
       { label: "Sumatoria", icono: "Σ", value: "\\sum_{}^{}" },
       { label: "Integral", icono: "∫", value: "\\int_{}^{}" },
       { label: "Límite", icono: "lim", value: "\\lim_{x\\to }" },
@@ -359,10 +358,22 @@ function FormulaNumericaModal({
     ejemplos: [
       { label: "Área del círculo", icono: "A=πr²", value: "A=\\pi r^{2}" },
       { label: "Pitágoras", icono: "a²+b²=c²", value: "a^{2}+b^{2}=c^{2}" },
-      { label: "Fórmula cuadrática", icono: "x=(-b±√Δ)/2a", value: "x=\\frac{-b\\pm\\sqrt{b^{2}-4ac}}{2a}" },
+      {
+        label: "Fórmula cuadrática",
+        icono: "x=(-b±√Δ)/2a",
+        value: "x=\\frac{-b\\pm\\sqrt{b^{2}-4ac}}{2a}",
+      },
       { label: "Promedio", icono: "x̄", value: "\\frac{x_{1}+x_{2}+x_{3}}{3}" },
-      { label: "Regla de tres", icono: "a/b=c/x", value: "\\frac{a}{b}=\\frac{c}{x}" },
-      { label: "Pendiente", icono: "m", value: "m=\\frac{y_{2}-y_{1}}{x_{2}-x_{1}}" },
+      {
+        label: "Regla de tres",
+        icono: "a/b=c/x",
+        value: "\\frac{a}{b}=\\frac{c}{x}",
+      },
+      {
+        label: "Pendiente",
+        icono: "m",
+        value: "m=\\frac{y_{2}-y_{1}}{x_{2}-x_{1}}",
+      },
     ],
   };
 
@@ -454,7 +465,8 @@ function FormulaNumericaModal({
             <div>
               <h3 className="text-xl font-bold">Editor de fórmula</h3>
               <p className="text-sm text-white/75 mt-1">
-                Inserta una fórmula usando herramientas rápidas, similar al editor de ecuaciones de Word.
+                Inserta una fórmula usando herramientas rápidas, similar al
+                editor de ecuaciones de Word.
               </p>
             </div>
 
@@ -587,12 +599,7 @@ function FormulaNumericaModal({
   );
 }
 
-function FormulaEditorModal({
-  open,
-  initialLatex = "",
-  onClose,
-  onInsert,
-}) {
+function FormulaEditorModal({ open, initialLatex = "", onClose, onInsert }) {
   const mathFieldRef = useRef(null);
   const [latex, setLatex] = useState(initialLatex || "");
 
@@ -633,7 +640,9 @@ function FormulaEditorModal({
         <div className="bg-gradient-to-r from-[var(--color-sidenav)] via-[var(--color-sidenav)] to-[var(--color-primary)] px-6 py-5 text-white">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h3 className="text-xl font-bold">Insertar fórmula en el enunciado</h3>
+              <h3 className="text-xl font-bold">
+                Insertar fórmula en el enunciado
+              </h3>
               <p className="text-sm text-white/75 mt-1">
                 La fórmula se agregará al texto de la pregunta.
               </p>
@@ -757,8 +766,10 @@ function CursoDetalleAdmin() {
     activo: false,
   });
 
-  const [cargandoConfigAsistencia, setCargandoConfigAsistencia] = useState(false);
-  const [guardandoConfigAsistencia, setGuardandoConfigAsistencia] = useState(false);
+  const [cargandoConfigAsistencia, setCargandoConfigAsistencia] =
+    useState(false);
+  const [guardandoConfigAsistencia, setGuardandoConfigAsistencia] =
+    useState(false);
 
   //Filtrado asistencia
   const [busquedaAsistencia, setBusquedaAsistencia] = useState("");
@@ -823,7 +834,6 @@ function CursoDetalleAdmin() {
   const [subidaMaterialEstado, setSubidaMaterialEstado] = useState({});
 
   const [notificacionesVideo, setNotificacionesVideo] = useState([]);
-  
 
   // ==============================
   // EXAMENES
@@ -857,7 +867,7 @@ function CursoDetalleAdmin() {
   const [cargandoBanco, setCargandoBanco] = useState(false);
   const [agregandoBanco, setAgregandoBanco] = useState(false);
   const [busquedaBanco, setBusquedaBanco] = useState("");
-  
+
   //Sensores de arrastrado
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -929,7 +939,7 @@ function CursoDetalleAdmin() {
     fecha: "",
     duracion: 60,
     accessType: "RESTRICTED",
-  });  
+  });
 
   // ==============================
   // CARGAR SESIONES EN VIVO
@@ -1246,12 +1256,12 @@ function CursoDetalleAdmin() {
         setLoading(true);
 
         const [cursoData, alumnosData, asistenciaData, configAsistenciaData] =
-        await Promise.all([
-          getCursoById(id),
-          getAlumnosByGrupo(id),
-          getAsistenciaCursoPorFecha(id, hoy),
-          getConfigAsistenciaGrupo(id, hoy),
-        ]);
+          await Promise.all([
+            getCursoById(id),
+            getAlumnosByGrupo(id),
+            getAsistenciaCursoPorFecha(id, hoy),
+            getConfigAsistenciaGrupo(id, hoy),
+          ]);
 
         setCurso(cursoData);
         setAlumnos(alumnosData || []);
@@ -1328,12 +1338,12 @@ function CursoDetalleAdmin() {
     setTareasOrdenadas(tareas || []);
   }, [tareas]);
 
-useEffect(() => {
-  if (!grupoIdActual) return;
-  if (tabActiva === "resumen") {
-    cargarSesionesVivoCurso();
-  }
-}, [tabActiva, grupoIdActual]);
+  useEffect(() => {
+    if (!grupoIdActual) return;
+    if (tabActiva === "resumen") {
+      cargarSesionesVivoCurso();
+    }
+  }, [tabActiva, grupoIdActual]);
 
   const cargarTareasCurso = async () => {
     try {
@@ -1377,7 +1387,7 @@ useEffect(() => {
             alumnosCompletaronTodo: 0,
           },
           alumnos: [],
-        }
+        },
       );
 
       setProgresoCargado(true);
@@ -1418,21 +1428,21 @@ useEffect(() => {
                     materiales: materiales || [],
                     examenes: examenes || [],
                   };
-                })
+                }),
               );
 
               return {
                 ...submodulo,
                 lecciones: leccionesConMateriales || [],
               };
-            })
+            }),
           );
 
           return {
             ...modulo,
             submodulos: submodulosConDetalle || [],
           };
-        })
+        }),
       );
 
       setModulos(modulosConDetalle);
@@ -1453,13 +1463,17 @@ useEffect(() => {
       const data = await getConfigAsistenciaGrupo(id, fecha);
 
       setConfigAsistencia({
-        hora_inicio: data?.hora_inicio ? String(data.hora_inicio).slice(0, 5) : "",
+        hora_inicio: data?.hora_inicio
+          ? String(data.hora_inicio).slice(0, 5)
+          : "",
         hora_fin: data?.hora_fin ? String(data.hora_fin).slice(0, 5) : "",
         activo: data?.activo ?? false,
       });
     } catch (error) {
       console.error(error);
-      alert(error?.message || "No se pudo cargar la configuración de asistencia.");
+      alert(
+        error?.message || "No se pudo cargar la configuración de asistencia.",
+      );
     } finally {
       setCargandoConfigAsistencia(false);
     }
@@ -1490,7 +1504,9 @@ useEffect(() => {
       });
 
       setConfigAsistencia({
-        hora_inicio: data?.hora_inicio ? String(data.hora_inicio).slice(0, 5) : "",
+        hora_inicio: data?.hora_inicio
+          ? String(data.hora_inicio).slice(0, 5)
+          : "",
         hora_fin: data?.hora_fin ? String(data.hora_fin).slice(0, 5) : "",
         activo: data?.activo ?? false,
       });
@@ -1498,7 +1514,9 @@ useEffect(() => {
       alert("Configuración de asistencia guardada correctamente ✅");
     } catch (error) {
       console.error(error);
-      alert(error?.message || "No se pudo guardar la configuración de asistencia.");
+      alert(
+        error?.message || "No se pudo guardar la configuración de asistencia.",
+      );
     } finally {
       setGuardandoConfigAsistencia(false);
     }
@@ -1519,7 +1537,6 @@ useEffect(() => {
 
       setAsistenciaMap(map);
       await cargarConfigAsistenciaPorFecha(fecha);
-
     } catch (error) {
       console.error(error);
       alert(error?.message || "Error cargando asistencia");
@@ -1600,7 +1617,9 @@ useEffect(() => {
         fechaEmision: new Date().toISOString().slice(0, 10),
       });
 
-      alert(`Certificado emitido automáticamente para ${verificacion.alumno.nombreCompleto} ✅`);
+      alert(
+        `Certificado emitido automáticamente para ${verificacion.alumno.nombreCompleto} ✅`,
+      );
     } catch (error) {
       console.error("Error verificando/emitiendo certificado:", error);
     }
@@ -1802,7 +1821,9 @@ useEffect(() => {
       }
 
       if (!grupoIdActual) {
-        return alert("No se pudo identificar el grupo real para crear el módulo.");
+        return alert(
+          "No se pudo identificar el grupo real para crear el módulo.",
+        );
       }
 
       setGuardandoModulo(true);
@@ -2058,33 +2079,33 @@ useEffect(() => {
 
   //Submódulos
   const toggleFormSubModulo = (moduloId) => {
-  setMostrarFormSubModulo((prev) => ({
-    ...prev,
-    [moduloId]: !prev[moduloId],
-  }));
+    setMostrarFormSubModulo((prev) => ({
+      ...prev,
+      [moduloId]: !prev[moduloId],
+    }));
 
-  setFormSubModulo((prev) => ({
-    ...prev,
-    [moduloId]: prev[moduloId] || {
-      titulo: "",
-      descripcion: "",
-    },
-  }));
-};
+    setFormSubModulo((prev) => ({
+      ...prev,
+      [moduloId]: prev[moduloId] || {
+        titulo: "",
+        descripcion: "",
+      },
+    }));
+  };
 
-const handleChangeSubModulo = (moduloId, e) => {
-  const { name, value } = e.target;
+  const handleChangeSubModulo = (moduloId, e) => {
+    const { name, value } = e.target;
 
-  setFormSubModulo((prev) => ({
-    ...prev,
-    [moduloId]: {
-      ...(prev[moduloId] || {}),
-      [name]: value,
-    },
-  }));
-};
+    setFormSubModulo((prev) => ({
+      ...prev,
+      [moduloId]: {
+        ...(prev[moduloId] || {}),
+        [name]: value,
+      },
+    }));
+  };
 
-//Submódulos
+  //Submódulos
 
   const guardarSubModuloCurso = async (e, moduloPadreId) => {
     e.preventDefault();
@@ -2097,7 +2118,9 @@ const handleChangeSubModulo = (moduloId, e) => {
       }
 
       if (!grupoIdActual) {
-        return alert("No se pudo identificar el grupo real para crear el submódulo.");
+        return alert(
+          "No se pudo identificar el grupo real para crear el submódulo.",
+        );
       }
 
       setGuardandoSubModulo(true);
@@ -2933,39 +2956,40 @@ const handleChangeSubModulo = (moduloId, e) => {
     setEvaluacionSeleccionadaTarea("");
   };
 
-const guardarConfiguracionTarea = async () => {
-  try {
-    if (!tareaConfigActual?.id) {
-      alert("No se encontrá la tarea a configurar.");
-      return;
+  const guardarConfiguracionTarea = async () => {
+    try {
+      if (!tareaConfigActual?.id) {
+        alert("No se encontrá la tarea a configurar.");
+        return;
+      }
+
+      if (!evaluacionSeleccionadaTarea) {
+        alert("Selecciona una evaluación de tipo tarea.");
+        return;
+      }
+
+      setGuardandoConfigTarea(true);
+
+      await asignarEvaluacionATarea({
+        tareaId: tareaConfigActual.id,
+        evaluacionId: Number(evaluacionSeleccionadaTarea),
+        grupoId: curso?.idgrupo,
+      });
+
+      await cargarTareasCurso();
+
+      alert("La tarea fue vinculada correctamente a la evaluación ✅");
+      cerrarConfigTarea();
+    } catch (error) {
+      console.error(error);
+      alert(
+        error?.message || "No se pudo guardar la configuración de la tarea.",
+      );
+    } finally {
+      setGuardandoConfigTarea(false);
     }
+  };
 
-    if (!evaluacionSeleccionadaTarea) {
-      alert("Selecciona una evaluación de tipo tarea.");
-      return;
-    }
-
-    setGuardandoConfigTarea(true);
-
-    await asignarEvaluacionATarea({
-      tareaId: tareaConfigActual.id,
-      evaluacionId: Number(evaluacionSeleccionadaTarea),
-      grupoId: curso?.idgrupo,
-    });
-
-    await cargarTareasCurso();
-
-    alert("La tarea fue vinculada correctamente a la evaluación ✅");
-    cerrarConfigTarea();
-  } catch (error) {
-    console.error(error);
-    alert(error?.message || "No se pudo guardar la configuración de la tarea.");
-  } finally {
-    setGuardandoConfigTarea(false);
-  }
-};
-
-  
   const TIPOS_PREGUNTA_CON_OPCIONES = ["unica", "multiple"];
   const TIPOS_PREGUNTA_TEXTO = ["texto_corto", "texto_largo"];
 
@@ -3064,17 +3088,21 @@ const guardarConfiguracionTarea = async () => {
       enunciado: pregunta.enunciado || "",
       puntaje: Number(pregunta.puntaje || 1),
       tipo_pregunta: tipo,
-      respuesta_texto: pregunta.respuesta_texto || pregunta.respuesta_referencia || "",
+      respuesta_texto:
+        pregunta.respuesta_texto || pregunta.respuesta_referencia || "",
       texto_placeholder:
-        pregunta.texto_placeholder !== undefined && pregunta.texto_placeholder !== null
+        pregunta.texto_placeholder !== undefined &&
+        pregunta.texto_placeholder !== null
           ? pregunta.texto_placeholder
           : defaults.texto_placeholder,
       max_caracteres:
-        pregunta.max_caracteres !== undefined && pregunta.max_caracteres !== null
+        pregunta.max_caracteres !== undefined &&
+        pregunta.max_caracteres !== null
           ? Number(pregunta.max_caracteres)
           : defaults.max_caracteres,
       permitir_decimales:
-        pregunta.permitir_decimales !== undefined && pregunta.permitir_decimales !== null
+        pregunta.permitir_decimales !== undefined &&
+        pregunta.permitir_decimales !== null
           ? !!pregunta.permitir_decimales
           : defaults.permitir_decimales,
       modo_respuesta_numerica:
@@ -3084,7 +3112,8 @@ const guardarConfiguracionTarea = async () => {
           ? Number(pregunta.tamano_max_mb)
           : defaults.tamano_max_mb,
       extensiones_permitidas:
-        pregunta.extensiones_permitidas !== undefined && pregunta.extensiones_permitidas !== null
+        pregunta.extensiones_permitidas !== undefined &&
+        pregunta.extensiones_permitidas !== null
           ? pregunta.extensiones_permitidas
           : defaults.extensiones_permitidas,
       opciones: TIPOS_PREGUNTA_CON_OPCIONES.includes(tipo)
@@ -3169,7 +3198,12 @@ const guardarConfiguracionTarea = async () => {
     });
   };
 
-  const handleChangePreguntaExamen = (leccionId, preguntaIndex, field, value) => {
+  const handleChangePreguntaExamen = (
+    leccionId,
+    preguntaIndex,
+    field,
+    value,
+  ) => {
     setFormExamen((prev) => {
       const actual = prev[leccionId] || crearExamenVacio();
       const preguntas = [...(actual.preguntas || [])];
@@ -3232,8 +3266,18 @@ const guardarConfiguracionTarea = async () => {
 
     const { leccionId, preguntaIndex } = formulaNumericaTarget;
 
-    handleChangePreguntaExamen(leccionId, preguntaIndex, "respuesta_texto", latex);
-    handleChangePreguntaExamen(leccionId, preguntaIndex, "modo_respuesta_numerica", "formula");
+    handleChangePreguntaExamen(
+      leccionId,
+      preguntaIndex,
+      "respuesta_texto",
+      latex,
+    );
+    handleChangePreguntaExamen(
+      leccionId,
+      preguntaIndex,
+      "modo_respuesta_numerica",
+      "formula",
+    );
 
     cerrarFormulaNumerica();
   };
@@ -3258,7 +3302,9 @@ const guardarConfiguracionTarea = async () => {
     setFormExamen((prev) => {
       const actual = prev[leccionId] || crearExamenVacio();
       const preguntas = [...(actual.preguntas || [])];
-      const pregunta = { ...(preguntas[preguntaIndex] || crearPreguntaVacia()) };
+      const pregunta = {
+        ...(preguntas[preguntaIndex] || crearPreguntaVacia()),
+      };
 
       pregunta.enunciado = `${pregunta.enunciado || ""} ${wrappedLatex}`.trim();
       preguntas[preguntaIndex] = pregunta;
@@ -3285,7 +3331,9 @@ const guardarConfiguracionTarea = async () => {
     setFormExamen((prev) => {
       const actual = prev[leccionId] || crearExamenVacio();
       const preguntas = [...(actual.preguntas || [])];
-      const pregunta = { ...(preguntas[preguntaIndex] || crearPreguntaVacia()) };
+      const pregunta = {
+        ...(preguntas[preguntaIndex] || crearPreguntaVacia()),
+      };
       const opciones = [...(pregunta.opciones || [])];
 
       if (field === "es_correcta") {
@@ -3321,7 +3369,9 @@ const guardarConfiguracionTarea = async () => {
     setFormExamen((prev) => {
       const actual = prev[leccionId] || crearExamenVacio();
       const preguntas = [...(actual.preguntas || [])];
-      const pregunta = { ...(preguntas[preguntaIndex] || crearPreguntaVacia()) };
+      const pregunta = {
+        ...(preguntas[preguntaIndex] || crearPreguntaVacia()),
+      };
 
       if (!TIPOS_PREGUNTA_CON_OPCIONES.includes(pregunta.tipo_pregunta)) {
         return prev;
@@ -3348,7 +3398,9 @@ const guardarConfiguracionTarea = async () => {
     setFormExamen((prev) => {
       const actual = prev[leccionId] || crearExamenVacio();
       const preguntas = [...(actual.preguntas || [])];
-      const pregunta = { ...(preguntas[preguntaIndex] || crearPreguntaVacia()) };
+      const pregunta = {
+        ...(preguntas[preguntaIndex] || crearPreguntaVacia()),
+      };
 
       if (!TIPOS_PREGUNTA_CON_OPCIONES.includes(pregunta.tipo_pregunta)) {
         return prev;
@@ -3470,7 +3522,9 @@ const guardarConfiguracionTarea = async () => {
       return null;
     }
 
-    const opcionesCompletas = (pregunta.opciones || []).filter((op) => op.texto?.trim());
+    const opcionesCompletas = (pregunta.opciones || []).filter((op) =>
+      op.texto?.trim(),
+    );
 
     if (
       opcionesCompletas.length < 2 ||
@@ -3479,7 +3533,9 @@ const guardarConfiguracionTarea = async () => {
       return "Las preguntas de opciones deben tener al menos 2 opciones completas.";
     }
 
-    const correctas = (pregunta.opciones || []).filter((op) => op.es_correcta).length;
+    const correctas = (pregunta.opciones || []).filter(
+      (op) => op.es_correcta,
+    ).length;
 
     if (tipo === "unica" && correctas !== 1) {
       return "Las preguntas de opción única deben tener exactamente una respuesta correcta.";
@@ -3506,7 +3562,9 @@ const guardarConfiguracionTarea = async () => {
         return alert("Agrega al menos una pregunta.");
       }
 
-      const errorPregunta = data.preguntas.map(validarPreguntaExamen).find(Boolean);
+      const errorPregunta = data.preguntas
+        .map(validarPreguntaExamen)
+        .find(Boolean);
 
       if (errorPregunta) {
         return alert(errorPregunta);
@@ -3540,15 +3598,21 @@ const guardarConfiguracionTarea = async () => {
                 ? Number(pregunta.max_caracteres || 200)
                 : null,
           permitir_decimales:
-            pregunta.tipo_pregunta === "numerica" ? !!pregunta.permitir_decimales : true,
+            pregunta.tipo_pregunta === "numerica"
+              ? !!pregunta.permitir_decimales
+              : true,
           modo_respuesta_numerica:
             pregunta.tipo_pregunta === "numerica"
               ? pregunta.modo_respuesta_numerica || "numero"
               : "numero",
           tamano_max_mb:
-            pregunta.tipo_pregunta === "archivo" ? Number(pregunta.tamano_max_mb || 10) : 10,
+            pregunta.tipo_pregunta === "archivo"
+              ? Number(pregunta.tamano_max_mb || 10)
+              : 10,
           extensiones_permitidas:
-            pregunta.tipo_pregunta === "archivo" ? pregunta.extensiones_permitidas || null : null,
+            pregunta.tipo_pregunta === "archivo"
+              ? pregunta.extensiones_permitidas || null
+              : null,
           opciones: TIPOS_PREGUNTA_CON_OPCIONES.includes(pregunta.tipo_pregunta)
             ? (pregunta.opciones || []).map((opcion) => ({
                 id: opcion.id || null,
@@ -3651,7 +3715,8 @@ const guardarConfiguracionTarea = async () => {
 
   const abrirBancoPreguntas = async (examen = null, opciones = {}) => {
     try {
-      const modo = opciones.modo || (examen?.id ? "examen_existente" : "formulario");
+      const modo =
+        opciones.modo || (examen?.id ? "examen_existente" : "formulario");
 
       setBancoOpen(true);
       setBancoModo(modo);
@@ -3707,14 +3772,19 @@ const guardarConfiguracionTarea = async () => {
   const convertirPreguntaBancoAFormulario = (preguntaBanco) => {
     const tipo = preguntaBanco.tipo_pregunta || "unica";
     const defaults = obtenerDefaultsPorTipoPregunta(tipo);
-    const opcionesBanco = Array.isArray(preguntaBanco.opciones) ? preguntaBanco.opciones : [];
+    const opcionesBanco = Array.isArray(preguntaBanco.opciones)
+      ? preguntaBanco.opciones
+      : [];
 
     return {
       id: null,
       enunciado: preguntaBanco.enunciado || "",
       puntaje: Number(preguntaBanco.puntaje || 1),
       tipo_pregunta: tipo,
-      respuesta_texto: preguntaBanco.respuesta_referencia || preguntaBanco.respuesta_texto || "",
+      respuesta_texto:
+        preguntaBanco.respuesta_referencia ||
+        preguntaBanco.respuesta_texto ||
+        "",
       texto_placeholder: defaults.texto_placeholder,
       max_caracteres: defaults.max_caracteres,
       permitir_decimales: defaults.permitir_decimales,
@@ -3773,7 +3843,8 @@ const guardarConfiguracionTarea = async () => {
           const actual = prev[bancoLeccionActual] || crearExamenVacio();
           const preguntasActuales = actual.preguntas || [];
           const preguntasBase =
-            preguntasActuales.length === 1 && preguntaFormularioEstaVacia(preguntasActuales[0])
+            preguntasActuales.length === 1 &&
+            preguntaFormularioEstaVacia(preguntasActuales[0])
               ? []
               : preguntasActuales;
 
@@ -3786,7 +3857,9 @@ const guardarConfiguracionTarea = async () => {
           };
         });
 
-        alert(`Preguntas agregadas al formulario.\nTotal agregado: ${preguntasElegidas.length}`);
+        alert(
+          `Preguntas agregadas al formulario.\nTotal agregado: ${preguntasElegidas.length}`,
+        );
         cerrarBancoPreguntas();
         return;
       }
@@ -3811,16 +3884,19 @@ const guardarConfiguracionTarea = async () => {
       await cargarModulosCurso();
     } catch (error) {
       console.error("Error agregando preguntas desde banco:", error);
-      alert(error.message || "No se pudieron agregar las preguntas desde el banco.");
+      alert(
+        error.message || "No se pudieron agregar las preguntas desde el banco.",
+      );
     } finally {
       setAgregandoBanco(false);
     }
   };
 
   const bancoPreguntasFiltradas = bancoPreguntas.filter((pregunta) => {
-    const texto = `${pregunta.enunciado || ""} ${pregunta.tipo_pregunta || ""} ${
-      pregunta.categoria || ""
-    } ${pregunta.dificultad || ""}`.toLowerCase();
+    const texto =
+      `${pregunta.enunciado || ""} ${pregunta.tipo_pregunta || ""} ${
+        pregunta.categoria || ""
+      } ${pregunta.dificultad || ""}`.toLowerCase();
 
     return texto.includes(busquedaBanco.toLowerCase());
   });
@@ -3990,7 +4066,11 @@ const guardarConfiguracionTarea = async () => {
       };
     }
 
-    return { label: "Activa", className: "bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] text-[var(--color-primary)]" };
+    return {
+      label: "Activa",
+      className:
+        "bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] text-[var(--color-primary)]",
+    };
   };
 
   const obtenerIndicadorEvaluacionTarea = (tarea) => {
@@ -4038,9 +4118,10 @@ const guardarConfiguracionTarea = async () => {
     const textoBusqueda = busquedaProgreso.toLowerCase().trim();
 
     return alumnosProgreso.filter((fila) => {
-      const texto = `${fila.nombre || ""} ${fila.apellido || ""} ${fila.numdocumento || ""}`
-        .toLowerCase()
-        .trim();
+      const texto =
+        `${fila.nombre || ""} ${fila.apellido || ""} ${fila.numdocumento || ""}`
+          .toLowerCase()
+          .trim();
 
       return texto.includes(textoBusqueda);
     });
@@ -4059,7 +4140,8 @@ const guardarConfiguracionTarea = async () => {
 
     if (porcentaje >= 70) {
       return {
-        badge: "bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] text-[var(--color-primary)]",
+        badge:
+          "bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] text-[var(--color-primary)]",
         bar: "bg-[var(--color-primary)]",
         label: "Avanzado",
       };
@@ -4132,8 +4214,8 @@ const guardarConfiguracionTarea = async () => {
             </h2>
 
             <p className="mt-3 text-sm md:text-base text-white/75 max-w-2xl">
-              Gestiona módulos, tareas, asistencia, exámenes y materiales desde una
-              vista más clara, moderna y profesional.
+              Gestiona módulos, tareas, asistencia, exámenes y materiales desde
+              una vista más clara, moderna y profesional.
             </p>
 
             <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl">
@@ -4204,7 +4286,9 @@ const guardarConfiguracionTarea = async () => {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         <div className="group relative overflow-hidden rounded-[24px] border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-[0_12px_35px_-18px_rgba(15,23,42,0.25)] transition hover:-translate-y-1 hover:shadow-[0_20px_45px_-18px_rgba(15,23,42,0.35)]">
           <div className="absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)]" />
-          <p className="text-sm font-medium text-[var(--color-muted-text)]">Alumnos</p>
+          <p className="text-sm font-medium text-[var(--color-muted-text)]">
+            Alumnos
+          </p>
           <h3 className="mt-3 text-4xl font-black tracking-tight text-[var(--color-text)]">
             {alumnos.length}
           </h3>
@@ -4215,7 +4299,9 @@ const guardarConfiguracionTarea = async () => {
 
         <div className="group relative overflow-hidden rounded-[24px] border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-[0_12px_35px_-18px_rgba(15,23,42,0.25)] transition hover:-translate-y-1 hover:shadow-[0_20px_45px_-18px_rgba(15,23,42,0.35)]">
           <div className="absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r from-violet-500 to-fuchsia-400" />
-          <p className="text-sm font-medium text-[var(--color-muted-text)]">Módulos</p>
+          <p className="text-sm font-medium text-[var(--color-muted-text)]">
+            Módulos
+          </p>
           <h3 className="mt-3 text-4xl font-black tracking-tight text-[var(--color-text)]">
             {modulos.length}
           </h3>
@@ -4259,21 +4345,21 @@ const guardarConfiguracionTarea = async () => {
           ].map((tab) => {
             const active = tabActiva === tab.key;
 
-              return (
-                <button
-                  key={tab.key}
-                  type="button"
-                  onClick={() => setTabActiva(tab.key)}
-                  className={`px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all duration-200 ${
-                    active
-                      ? "bg-[var(--color-sidenav)] text-white shadow-lg"
-                      : "bg-[var(--color-background)] text-[var(--color-muted-text)] hover:bg-[var(--color-background)]"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setTabActiva(tab.key)}
+                className={`px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all duration-200 ${
+                  active
+                    ? "bg-[var(--color-sidenav)] text-white shadow-lg"
+                    : "bg-[var(--color-background)] text-[var(--color-muted-text)] hover:bg-[var(--color-background)]"
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -4311,7 +4397,8 @@ const guardarConfiguracionTarea = async () => {
               <div>
                 <h3 className="text-xl font-bold">Sesiones en vivo</h3>
                 <p className="text-sm text-[var(--color-muted-text)] mt-1">
-                  Programa clases en vivo con {meetingProviderInfo?.label || "Google Meet"} para este grupo.
+                  Programa clases en vivo con{" "}
+                  {meetingProviderInfo?.label || "Google Meet"} para este grupo.
                 </p>
               </div>
 
@@ -4395,7 +4482,8 @@ const guardarConfiguracionTarea = async () => {
                       className="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-border)]"
                     >
                       <option value="RESTRICTED">
-                        Con admisión: los usuarios deben pedir permiso para entrar
+                        Con admisión: los usuarios deben pedir permiso para
+                        entrar
                       </option>
                       <option value="OPEN">
                         Libre: cualquiera con el enlace puede entrar
@@ -4406,7 +4494,8 @@ const guardarConfiguracionTarea = async () => {
                     </select>
 
                     <p className="mt-2 text-xs text-[var(--color-muted-text)]">
-                      Si eliges libre, cualquier persona con el enlace podrá entrar sin pedir admisión.
+                      Si eliges libre, cualquier persona con el enlace podrá
+                      entrar sin pedir admisión.
                     </p>
                   </div>
                 )}
@@ -4454,14 +4543,16 @@ const guardarConfiguracionTarea = async () => {
                               {sesion.provider === "google"
                                 ? "Google Meet"
                                 : sesion.provider === "zoom"
-                                ? "Zoom"
-                                : sesion.provider === "teams"
-                                ? "Microsoft Teams"
-                                : "Google Meet"}
+                                  ? "Zoom"
+                                  : sesion.provider === "teams"
+                                    ? "Microsoft Teams"
+                                    : "Google Meet"}
                             </span>
                           </div>
 
-                          <p className="text-lg font-bold text-[var(--color-text)]">{sesion.titulo}</p>
+                          <p className="text-lg font-bold text-[var(--color-text)]">
+                            {sesion.titulo}
+                          </p>
                           <p className="text-sm text-[var(--color-muted-text)] mt-1">
                             {sesion.descripcion || "Sin descripción"}
                           </p>
@@ -4529,7 +4620,9 @@ const guardarConfiguracionTarea = async () => {
             <div className="bg-[var(--color-card)] p-6 rounded-[24px] shadow-[0_18px_40px_-24px_rgba(15,23,42,0.25)] border border-[var(--color-border)]">
               <h3 className="text-lg font-bold mb-4">Ausentes</h3>
               {ausentes.length === 0 ? (
-                <p className="text-[var(--color-muted-text)]">No hay alumnos ausentes.</p>
+                <p className="text-[var(--color-muted-text)]">
+                  No hay alumnos ausentes.
+                </p>
               ) : (
                 <div className="space-y-3">
                   {ausentes.map((a) => {
@@ -4556,7 +4649,9 @@ const guardarConfiguracionTarea = async () => {
             <div className="bg-[var(--color-card)] p-6 rounded-[24px] shadow-[0_18px_40px_-24px_rgba(15,23,42,0.25)] border border-[var(--color-border)]">
               <h3 className="text-lg font-bold mb-4">Tardanzas</h3>
               {tardanzas.length === 0 ? (
-                <p className="text-[var(--color-muted-text)]">No hay tardanzas.</p>
+                <p className="text-[var(--color-muted-text)]">
+                  No hay tardanzas.
+                </p>
               ) : (
                 <div className="space-y-3">
                   {tardanzas.map((a) => {
@@ -4583,7 +4678,6 @@ const guardarConfiguracionTarea = async () => {
         </div>
       )}
 
-
       {tabActiva === "progreso" && (
         <div className="space-y-6">
           <div className="rounded-[28px] border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-sm">
@@ -4593,7 +4687,8 @@ const guardarConfiguracionTarea = async () => {
                   Progreso del curso
                 </h3>
                 <p className="mt-1 text-sm text-[var(--color-muted-text)]">
-                  Seguimiento del avance por tareas, exámenes, videos y asistencia.
+                  Seguimiento del avance por tareas, exámenes, videos y
+                  asistencia.
                 </p>
               </div>
 
@@ -4653,7 +4748,8 @@ const guardarConfiguracionTarea = async () => {
                   {Number(progresoResumen.promedioVideos || 0).toFixed(0)}%
                 </p>
                 <p className="mt-2 text-xs text-[var(--color-primary)]">
-                  {progresoResumen.totalVideosListos || 0}/{progresoResumen.totalVideos || 0} listos
+                  {progresoResumen.totalVideosListos || 0}/
+                  {progresoResumen.totalVideos || 0} listos
                 </p>
               </div>
 
@@ -4683,11 +4779,21 @@ const guardarConfiguracionTarea = async () => {
           <div className="rounded-[28px] border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm overflow-hidden">
             <div className="grid grid-cols-12 gap-4 border-b border-[var(--color-border)] bg-[var(--color-background)] px-5 py-4 text-xs font-bold uppercase tracking-[0.14em] text-[var(--color-muted-text)]">
               <div className="col-span-12 2xl:col-span-3">Alumno</div>
-              <div className="col-span-6 md:col-span-3 2xl:col-span-2">Tareas</div>
-              <div className="col-span-6 md:col-span-3 2xl:col-span-2">Exámenes</div>
-              <div className="col-span-6 md:col-span-3 2xl:col-span-2">Videos</div>
-              <div className="col-span-6 md:col-span-3 2xl:col-span-1">Asistencia</div>
-              <div className="col-span-12 2xl:col-span-2 2xl:text-right">Progreso</div>
+              <div className="col-span-6 md:col-span-3 2xl:col-span-2">
+                Tareas
+              </div>
+              <div className="col-span-6 md:col-span-3 2xl:col-span-2">
+                Exámenes
+              </div>
+              <div className="col-span-6 md:col-span-3 2xl:col-span-2">
+                Videos
+              </div>
+              <div className="col-span-6 md:col-span-3 2xl:col-span-1">
+                Asistencia
+              </div>
+              <div className="col-span-12 2xl:col-span-2 2xl:text-right">
+                Progreso
+              </div>
             </div>
 
             {cargandoProgreso ? (
@@ -4717,7 +4823,8 @@ const guardarConfiguracionTarea = async () => {
                   No hay datos de progreso para mostrar.
                 </p>
                 <p className="mt-2 text-sm text-[var(--color-muted-text)]">
-                  Revisa si el grupo tiene matrículas, tareas, exámenes, videos o asistencia registrada.
+                  Revisa si el grupo tiene matrículas, tareas, exámenes, videos
+                  o asistencia registrada.
                 </p>
               </div>
             ) : (
@@ -4743,7 +4850,9 @@ const guardarConfiguracionTarea = async () => {
                                   loading="lazy"
                                 />
                               ) : (
-                                <span className="text-[11px] text-[var(--color-muted-text)]">Sin foto</span>
+                                <span className="text-[11px] text-[var(--color-muted-text)]">
+                                  Sin foto
+                                </span>
                               )}
                             </div>
 
@@ -4752,7 +4861,8 @@ const guardarConfiguracionTarea = async () => {
                                 {fila.nombre} {fila.apellido}
                               </p>
                               <p className="text-sm text-[var(--color-muted-text)]">
-                                DNI: {fila.numdocumento || "-"} Â· Matrícula #{fila.idmatricula}
+                                DNI: {fila.numdocumento || "-"} Â· Matrícula #
+                                {fila.idmatricula}
                               </p>
                             </div>
                           </div>
@@ -4764,7 +4874,8 @@ const guardarConfiguracionTarea = async () => {
                               Tareas
                             </p>
                             <p className="mt-1 text-lg font-bold text-[var(--color-text)]">
-                              {fila.tareasEntregadas || 0}/{fila.totalTareas || 0}
+                              {fila.tareasEntregadas || 0}/
+                              {fila.totalTareas || 0}
                             </p>
                             <p className="text-sm text-[var(--color-muted-text)]">
                               {Number(fila.progresoTareas || 0).toFixed(0)}%
@@ -4778,7 +4889,8 @@ const guardarConfiguracionTarea = async () => {
                               Exámenes
                             </p>
                             <p className="mt-1 text-lg font-bold text-[var(--color-text)]">
-                              {fila.examenesRendidos || 0}/{fila.totalExamenes || 0}
+                              {fila.examenesRendidos || 0}/
+                              {fila.totalExamenes || 0}
                             </p>
                             <p className="text-sm text-[var(--color-muted-text)]">
                               {Number(fila.progresoExamenes || 0).toFixed(0)}%
@@ -4792,7 +4904,8 @@ const guardarConfiguracionTarea = async () => {
                               Videos
                             </p>
                             <p className="mt-1 text-lg font-bold text-[var(--color-text)]">
-                              {fila.videosCompletados || 0}/{fila.totalVideos || 0}
+                              {fila.videosCompletados || 0}/
+                              {fila.totalVideos || 0}
                             </p>
                             <p className="text-sm text-[var(--color-muted-text)]">
                               {Number(fila.progresoVideos || 0).toFixed(0)}%
@@ -4812,7 +4925,8 @@ const guardarConfiguracionTarea = async () => {
                               {Number(fila.progresoAsistencia || 0).toFixed(0)}%
                             </p>
                             <p className="text-[11px] text-[var(--color-muted-text)] mt-1">
-                              P:{fila.presentes || 0} Â· T:{fila.tardanzas || 0} Â· F:{fila.faltas || 0}
+                              P:{fila.presentes || 0} Â· T:{fila.tardanzas || 0}{" "}
+                              Â· F:{fila.faltas || 0}
                             </p>
                           </div>
                         </div>
@@ -4848,9 +4962,7 @@ const guardarConfiguracionTarea = async () => {
         </div>
       )}
 
-      {tabActiva === "foro" && (
-        <ForoGrupoPanel grupoId={id} modo="docente" />
-      )}
+      {tabActiva === "foro" && <ForoGrupoPanel grupoId={id} modo="docente" />}
 
       {tabActiva === "asistencia" && (
         <div className="bg-[var(--color-card)] p-6 rounded-2xl shadow-sm border border-[var(--color-border)] space-y-6">
@@ -4915,7 +5027,8 @@ const guardarConfiguracionTarea = async () => {
                   Configuración para marcado del alumno
                 </h4>
                 <p className="text-sm text-amber-800">
-                  Define el horario en el que el alumno podrá marcar su propia asistencia para la fecha seleccionada.
+                  Define el horario en el que el alumno podrá marcar su propia
+                  asistencia para la fecha seleccionada.
                 </p>
               </div>
 
@@ -4973,20 +5086,23 @@ const guardarConfiguracionTarea = async () => {
                 <button
                   type="button"
                   onClick={guardarConfiguracionAsistencia}
-                  disabled={guardandoConfigAsistencia || cargandoConfigAsistencia}
+                  disabled={
+                    guardandoConfigAsistencia || cargandoConfigAsistencia
+                  }
                   className="w-full bg-amber-600 text-white px-4 py-2 rounded-xl hover:bg-amber-700 disabled:opacity-60"
                 >
                   {guardandoConfigAsistencia
                     ? "Guardando..."
                     : cargandoConfigAsistencia
-                    ? "Cargando..."
-                    : "Guardar configuración"}
+                      ? "Cargando..."
+                      : "Guardar configuración"}
                 </button>
               </div>
             </div>
 
             <p className="text-xs text-amber-700">
-              Esta configuración aplica al grupo actual y a la fecha seleccionada:{" "}
+              Esta configuración aplica al grupo actual y a la fecha
+              seleccionada:{" "}
               <span className="font-semibold">{fechaAsistencia}</span>.
             </p>
           </div>
@@ -5184,7 +5300,9 @@ const guardarConfiguracionTarea = async () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="rounded-2xl border bg-[var(--color-background)] p-4">
-                <p className="text-sm text-[var(--color-muted-text)]">Total de tareas</p>
+                <p className="text-sm text-[var(--color-muted-text)]">
+                  Total de tareas
+                </p>
                 <p className="text-2xl font-bold text-[var(--color-text)] mt-1">
                   {tareas.length}
                 </p>
@@ -5232,26 +5350,30 @@ const guardarConfiguracionTarea = async () => {
                   />
                 </div>
                 <div className="md:col-span-2">
-                <label className="inline-flex items-center gap-3 rounded-xl border border-[var(--color-border)] px-4 py-3 bg-[var(--color-background)] cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="calificable"
-                    checked={formTarea.calificable}
-                    onChange={handleChangeTarea}
-                    className="h-4 w-4"
-                  />
-                  <div>
-                    <p className="font-semibold text-[var(--color-text)]">Tarea calificada</p>
-                    <p className="text-sm text-[var(--color-muted-text)]">
-                      Si la marcas, esta tarea podrá usarse en el registro de notas.
-                    </p>
-                  </div>
-                </label>
-              </div>
-
+                  <label className="inline-flex items-center gap-3 rounded-xl border border-[var(--color-border)] px-4 py-3 bg-[var(--color-background)] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="calificable"
+                      checked={formTarea.calificable}
+                      onChange={handleChangeTarea}
+                      className="h-4 w-4"
+                    />
+                    <div>
+                      <p className="font-semibold text-[var(--color-text)]">
+                        Tarea calificada
+                      </p>
+                      <p className="text-sm text-[var(--color-muted-text)]">
+                        Si la marcas, esta tarea podrá usarse en el registro de
+                        notas.
+                      </p>
+                    </div>
+                  </label>
+                </div>
 
                 <div className="md:col-span-2">
-                  <label className="block font-semibold mb-2">Descripción</label>
+                  <label className="block font-semibold mb-2">
+                    Descripción
+                  </label>
                   <textarea
                     name="descripcion"
                     value={formTarea.descripcion}
@@ -5304,7 +5426,7 @@ const guardarConfiguracionTarea = async () => {
                     <option value="">Seleccione</option>
                     <option value="archivo">Archivo</option>
                     <option value="texto">Texto</option>
-                    <option value="link">Link</option>
+                    <option value="enlace">Enlace</option>
                   </select>
                 </div>
 
@@ -5396,7 +5518,9 @@ const guardarConfiguracionTarea = async () => {
             </div>
 
             {cargandoTareas ? (
-              <p className="text-[var(--color-muted-text)]">Cargando tareas...</p>
+              <p className="text-[var(--color-muted-text)]">
+                Cargando tareas...
+              </p>
             ) : tareas.length === 0 ? (
               <div className="border border-dashed border-[var(--color-border)] rounded-2xl p-8 text-center">
                 <p className="text-[var(--color-text)] font-medium">
@@ -5536,14 +5660,18 @@ const guardarConfiguracionTarea = async () => {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                   <div className="rounded-xl border bg-[var(--color-background)] p-3">
-                                    <p className="text-[var(--color-muted-text)]">Tipo de entrega</p>
+                                    <p className="text-[var(--color-muted-text)]">
+                                      Tipo de entrega
+                                    </p>
                                     <p className="font-medium text-[var(--color-text)]">
                                       {tarea.tipo_entrega || "-"}
                                     </p>
                                   </div>
 
                                   <div className="rounded-xl border bg-[var(--color-background)] p-3">
-                                    <p className="text-[var(--color-muted-text)]">Tipo de apoyo</p>
+                                    <p className="text-[var(--color-muted-text)]">
+                                      Tipo de apoyo
+                                    </p>
                                     <p className="font-medium text-[var(--color-text)] capitalize">
                                       {tarea.tipo_apoyo || "ninguno"}
                                     </p>
@@ -5598,7 +5726,8 @@ const guardarConfiguracionTarea = async () => {
                                           Configuración de nota de la tarea
                                         </p>
                                         <p className="text-xs text-[var(--color-primary)] mt-1">
-                                          Vincula esta tarea con una evaluación del tipo tarea.
+                                          Vincula esta tarea con una evaluación
+                                          del tipo tarea.
                                         </p>
 
                                         {indicadorEvaluacion && (
@@ -5631,34 +5760,49 @@ const guardarConfiguracionTarea = async () => {
                                     Entregas de alumnos
                                   </p>
 
-                                  {cargandoDetalleTarea && tareaDetalle?.id === tarea.id ? (
+                                  {cargandoDetalleTarea &&
+                                  tareaDetalle?.id === tarea.id ? (
                                     <p className="text-sm text-[var(--color-muted-text)]">
                                       Cargando entregas...
                                     </p>
                                   ) : tareaDetalle?.id === tarea.id ? (
                                     entregasTarea.length === 0 ? (
                                       <div className="rounded-xl border border-dashed border-[var(--color-border)] p-4 text-sm text-[var(--color-muted-text)]">
-                                        No hay alumnos ni entregas registradas para esta tarea.
+                                        No hay alumnos ni entregas registradas
+                                        para esta tarea.
                                       </div>
                                     ) : (
                                       <div className="overflow-auto rounded-2xl border border-[var(--color-border)]">
                                         <table className="w-full min-w-[900px] text-sm">
                                           <thead className="bg-[var(--color-background)]">
                                             <tr className="border-b">
-                                              <th className="px-3 py-3 text-left">Alumno</th>
-                                              <th className="px-3 py-3 text-left">Fecha</th>
-                                              <th className="px-3 py-3 text-left">Hora</th>
-                                              <th className="px-3 py-3 text-left">Entrega</th>
-                                              <th className="px-3 py-3 text-left">Nota</th>
-                                              <th className="px-3 py-3 text-left">Acción</th>
+                                              <th className="px-3 py-3 text-left">
+                                                Alumno
+                                              </th>
+                                              <th className="px-3 py-3 text-left">
+                                                Fecha
+                                              </th>
+                                              <th className="px-3 py-3 text-left">
+                                                Hora
+                                              </th>
+                                              <th className="px-3 py-3 text-left">
+                                                Entrega
+                                              </th>
+                                              <th className="px-3 py-3 text-left">
+                                                Nota
+                                              </th>
+                                              <th className="px-3 py-3 text-left">
+                                                Acción
+                                              </th>
                                             </tr>
                                           </thead>
 
                                           <tbody>
                                             {entregasTarea.map((fila) => {
-                                              const fechaEntrega = fila.fecha_entrega
-                                                ? new Date(fila.fecha_entrega)
-                                                : null;
+                                              const fechaEntrega =
+                                                fila.fecha_entrega
+                                                  ? new Date(fila.fecha_entrega)
+                                                  : null;
 
                                               return (
                                                 <tr
@@ -5667,25 +5811,32 @@ const guardarConfiguracionTarea = async () => {
                                                 >
                                                   <td className="px-3 py-3">
                                                     <div className="font-medium text-[var(--color-text)]">
-                                                      {fila.nombre} {fila.apellido}
+                                                      {fila.nombre}{" "}
+                                                      {fila.apellido}
                                                     </div>
                                                     <div className="text-xs text-[var(--color-muted-text)]">
-                                                      DNI: {fila.numdocumento || "-"}
+                                                      DNI:{" "}
+                                                      {fila.numdocumento || "-"}
                                                     </div>
                                                   </td>
 
                                                   <td className="px-3 py-3">
                                                     {fechaEntrega
-                                                      ? fechaEntrega.toLocaleDateString("es-PE")
+                                                      ? fechaEntrega.toLocaleDateString(
+                                                          "es-PE",
+                                                        )
                                                       : "—"}
                                                   </td>
 
                                                   <td className="px-3 py-3">
                                                     {fechaEntrega
-                                                      ? fechaEntrega.toLocaleTimeString("es-PE", {
-                                                          hour: "2-digit",
-                                                          minute: "2-digit",
-                                                        })
+                                                      ? fechaEntrega.toLocaleTimeString(
+                                                          "es-PE",
+                                                          {
+                                                            hour: "2-digit",
+                                                            minute: "2-digit",
+                                                          },
+                                                        )
                                                       : "—"}
                                                   </td>
 
@@ -5694,7 +5845,9 @@ const guardarConfiguracionTarea = async () => {
                                                       <div className="flex flex-wrap gap-2">
                                                         {fila.archivo_url && (
                                                           <a
-                                                            href={fila.archivo_url}
+                                                            href={
+                                                              fila.archivo_url
+                                                            }
                                                             target="_blank"
                                                             rel="noreferrer"
                                                             className="inline-flex items-center rounded-xl border border-[var(--color-primary)] bg-[color-mix(in_srgb,var(--color-primary)_8%,transparent)] px-3 py-2 text-sm font-medium text-[var(--color-primary)] hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]"
@@ -5707,12 +5860,17 @@ const guardarConfiguracionTarea = async () => {
                                                           <button
                                                             type="button"
                                                             onClick={() => {
-                                                              setEntregaSeleccionada({
-                                                                alumno: `${fila.nombre} ${fila.apellido}`,
-                                                                contenido: fila.comentario,
-                                                                tipo: "texto",
-                                                              });
-                                                              setModalEntregaOpen(true);
+                                                              setEntregaSeleccionada(
+                                                                {
+                                                                  alumno: `${fila.nombre} ${fila.apellido}`,
+                                                                  contenido:
+                                                                    fila.comentario,
+                                                                  tipo: "texto",
+                                                                },
+                                                              );
+                                                              setModalEntregaOpen(
+                                                                true,
+                                                              );
                                                             }}
                                                             className="inline-flex items-center rounded-xl border border-[var(--color-primary)] bg-[color-mix(in_srgb,var(--color-primary)_8%,transparent)] px-3 py-2 text-sm font-medium text-[var(--color-primary)] hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]"
                                                           >
@@ -5722,7 +5880,9 @@ const guardarConfiguracionTarea = async () => {
 
                                                         {fila.enlace_url && (
                                                           <a
-                                                            href={fila.enlace_url}
+                                                            href={
+                                                              fila.enlace_url
+                                                            }
                                                             target="_blank"
                                                             rel="noreferrer"
                                                             className="inline-flex items-center rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100"
@@ -5767,11 +5927,19 @@ const guardarConfiguracionTarea = async () => {
                                                   <td className="px-3 py-3">
                                                     <button
                                                       type="button"
-                                                      disabled={!!guardandoNotaEntrega[fila.idmatricula]}
-                                                      onClick={() => guardarNotaEntrega(fila)}
+                                                      disabled={
+                                                        !!guardandoNotaEntrega[
+                                                          fila.idmatricula
+                                                        ]
+                                                      }
+                                                      onClick={() =>
+                                                        guardarNotaEntrega(fila)
+                                                      }
                                                       className="rounded-xl bg-[var(--color-button-primary)] text-[var(--color-button-primary-text)] px-4 py-2 hover:brightness-95 disabled:opacity-60"
                                                     >
-                                                      {guardandoNotaEntrega[fila.idmatricula]
+                                                      {guardandoNotaEntrega[
+                                                        fila.idmatricula
+                                                      ]
                                                         ? "Guardando..."
                                                         : "Guardar"}
                                                     </button>
@@ -5785,7 +5953,8 @@ const guardarConfiguracionTarea = async () => {
                                     )
                                   ) : (
                                     <div className="rounded-xl border border-dashed border-[var(--color-border)] p-4 text-sm text-[var(--color-muted-text)]">
-                                      Abre esta tarea para cargar entregas y calificaciones.
+                                      Abre esta tarea para cargar entregas y
+                                      calificaciones.
                                     </div>
                                   )}
                                 </div>
@@ -5920,7 +6089,9 @@ const guardarConfiguracionTarea = async () => {
             )}
 
             {cargandoModulos ? (
-              <p className="text-[var(--color-muted-text)]">Cargando módulos...</p>
+              <p className="text-[var(--color-muted-text)]">
+                Cargando módulos...
+              </p>
             ) : modulos.length === 0 ? (
               <div className="rounded-[28px] border border-dashed border-[var(--color-border)] bg-gradient-to-br from-white to-slate-50 p-10 text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-sidenav)] text-white text-2xl shadow-lg">
@@ -6230,7 +6401,8 @@ const guardarConfiguracionTarea = async () => {
                                                   <div>
                                                     <div className="flex items-center gap-3 flex-wrap">
                                                       <span className="inline-flex items-center rounded-full bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] text-[var(--color-primary)] text-xs font-bold px-3 py-1.5">
-                                                        Submódulo {index + 1}.{idxSub + 1}
+                                                        Submódulo {index + 1}.
+                                                        {idxSub + 1}
                                                       </span>
 
                                                       <h5 className="text-lg font-bold text-[var(--color-text)]">
@@ -6248,7 +6420,11 @@ const guardarConfiguracionTarea = async () => {
                                                   <div className="flex flex-wrap gap-2">
                                                     <button
                                                       type="button"
-                                                      onClick={() => toggleFormLeccion(submodulo.id)}
+                                                      onClick={() =>
+                                                        toggleFormLeccion(
+                                                          submodulo.id,
+                                                        )
+                                                      }
                                                       className="inline-flex items-center justify-center rounded-2xl bg-[var(--color-button-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-button-primary-text)] hover:brightness-95 transition shadow-sm"
                                                     >
                                                       + Lección
@@ -6256,7 +6432,11 @@ const guardarConfiguracionTarea = async () => {
 
                                                     <button
                                                       type="button"
-                                                      onClick={() => iniciarEdicionModulo(submodulo)}
+                                                      onClick={() =>
+                                                        iniciarEdicionModulo(
+                                                          submodulo,
+                                                        )
+                                                      }
                                                       className="inline-flex items-center justify-center rounded-2xl bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-100 transition"
                                                     >
                                                       Editar
@@ -6264,7 +6444,11 @@ const guardarConfiguracionTarea = async () => {
 
                                                     <button
                                                       type="button"
-                                                      onClick={() => eliminarModuloCurso(submodulo.id)}
+                                                      onClick={() =>
+                                                        eliminarModuloCurso(
+                                                          submodulo.id,
+                                                        )
+                                                      }
                                                       className="inline-flex items-center justify-center rounded-2xl bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 transition"
                                                     >
                                                       Eliminar
@@ -6731,14 +6915,23 @@ const guardarConfiguracionTarea = async () => {
                                                                           </div>
 
                                                                           <div className="flex flex-wrap gap-2">
-                                                                            {!formExamen[leccion.id]?.id && (
+                                                                            {!formExamen[
+                                                                              leccion
+                                                                                .id
+                                                                            ]
+                                                                              ?.id && (
                                                                               <>
                                                                                 <a
-                                                                                  href={PLANTILLA_BANCO_PREGUNTAS_URL}
+                                                                                  href={
+                                                                                    PLANTILLA_BANCO_PREGUNTAS_URL
+                                                                                  }
                                                                                   download
                                                                                   className="rounded-2xl border border-emerald-300 bg-[var(--color-card)] px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
                                                                                 >
-                                                                                  Descargar plantilla para banco
+                                                                                  Descargar
+                                                                                  plantilla
+                                                                                  para
+                                                                                  banco
                                                                                 </a>
 
                                                                                 <label
@@ -6748,28 +6941,41 @@ const guardarConfiguracionTarea = async () => {
                                                                                       : "bg-[var(--color-button-primary)] hover:brightness-95 cursor-pointer"
                                                                                   }`}
                                                                                 >
-                                                                                  {importandoBanco ? "Importando..." : "Importar Excel al banco"}
+                                                                                  {importandoBanco
+                                                                                    ? "Importando..."
+                                                                                    : "Importar Excel al banco"}
 
                                                                                   <input
                                                                                     type="file"
                                                                                     accept=".xlsx,.xls"
                                                                                     className="hidden"
-                                                                                    disabled={importandoBanco}
-                                                                                    onChange={handleImportarExcelBanco}
+                                                                                    disabled={
+                                                                                      importandoBanco
+                                                                                    }
+                                                                                    onChange={
+                                                                                      handleImportarExcelBanco
+                                                                                    }
                                                                                   />
                                                                                 </label>
 
                                                                                 <button
                                                                                   type="button"
                                                                                   onClick={() =>
-                                                                                    abrirBancoPreguntas(null, {
-                                                                                      modo: "formulario",
-                                                                                      leccionId: leccion.id,
-                                                                                    })
+                                                                                    abrirBancoPreguntas(
+                                                                                      null,
+                                                                                      {
+                                                                                        modo: "formulario",
+                                                                                        leccionId:
+                                                                                          leccion.id,
+                                                                                      },
+                                                                                    )
                                                                                   }
                                                                                   className="rounded-2xl bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] px-4 py-2 text-sm font-semibold text-[var(--color-primary)] hover:bg-[color-mix(in_srgb,var(--color-primary)_16%,transparent)]"
                                                                                 >
-                                                                                  Agregar preguntas desde banco
+                                                                                  Agregar
+                                                                                  preguntas
+                                                                                  desde
+                                                                                  banco
                                                                                 </button>
                                                                               </>
                                                                             )}
@@ -7145,43 +7351,66 @@ const guardarConfiguracionTarea = async () => {
                                                                                 </div>
                                                                               )}
 
-                                                                              {pregunta.tipo_pregunta === "numerica" && (
+                                                                              {pregunta.tipo_pregunta ===
+                                                                                "numerica" && (
                                                                                 <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] p-4 space-y-4">
                                                                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                                                     <div>
                                                                                       <label className="block font-semibold mb-2">
-                                                                                        Tipo de respuesta numérica
+                                                                                        Tipo
+                                                                                        de
+                                                                                        respuesta
+                                                                                        numérica
                                                                                       </label>
 
                                                                                       <select
-                                                                                        value={pregunta.modo_respuesta_numerica || "numero"}
-                                                                                        onChange={(e) =>
+                                                                                        value={
+                                                                                          pregunta.modo_respuesta_numerica ||
+                                                                                          "numero"
+                                                                                        }
+                                                                                        onChange={(
+                                                                                          e,
+                                                                                        ) =>
                                                                                           handleChangePreguntaExamen(
                                                                                             leccion.id,
                                                                                             preguntaIndex,
                                                                                             "modo_respuesta_numerica",
-                                                                                            e.target.value
+                                                                                            e
+                                                                                              .target
+                                                                                              .value,
                                                                                           )
                                                                                         }
                                                                                         className="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3"
                                                                                       >
-                                                                                        <option value="numero">Número exacto</option>
-                                                                                        <option value="formula">Fórmula</option>
+                                                                                        <option value="numero">
+                                                                                          Número
+                                                                                          exacto
+                                                                                        </option>
+                                                                                        <option value="formula">
+                                                                                          Fórmula
+                                                                                        </option>
                                                                                       </select>
                                                                                     </div>
 
-                                                                                    {pregunta.modo_respuesta_numerica !== "formula" && (
+                                                                                    {pregunta.modo_respuesta_numerica !==
+                                                                                      "formula" && (
                                                                                       <div className="flex items-end">
                                                                                         <label className="inline-flex items-center gap-3 rounded-xl border border-[var(--color-border)] px-4 py-3 bg-[var(--color-card)] cursor-pointer w-full">
                                                                                           <input
                                                                                             type="checkbox"
-                                                                                            checked={!!pregunta.permitir_decimales}
-                                                                                            onChange={(e) =>
+                                                                                            checked={
+                                                                                              !!pregunta.permitir_decimales
+                                                                                            }
+                                                                                            onChange={(
+                                                                                              e,
+                                                                                            ) =>
                                                                                               handleChangePreguntaExamen(
                                                                                                 leccion.id,
                                                                                                 preguntaIndex,
                                                                                                 "permitir_decimales",
-                                                                                                e.target.checked
+                                                                                                e
+                                                                                                  .target
+                                                                                                  .checked,
                                                                                               )
                                                                                             }
                                                                                             className="h-4 w-4"
@@ -7189,17 +7418,25 @@ const guardarConfiguracionTarea = async () => {
 
                                                                                           <div>
                                                                                             <p className="font-semibold text-[var(--color-text)]">
-                                                                                              Permitir decimales
+                                                                                              Permitir
+                                                                                              decimales
                                                                                             </p>
                                                                                             <p className="text-sm text-[var(--color-muted-text)]">
-                                                                                              Si lo desactivas, solo se aceptarán enteros.
+                                                                                              Si
+                                                                                              lo
+                                                                                              desactivas,
+                                                                                              solo
+                                                                                              se
+                                                                                              aceptarán
+                                                                                              enteros.
                                                                                             </p>
                                                                                           </div>
                                                                                         </label>
                                                                                       </div>
                                                                                     )}
 
-                                                                                    {pregunta.modo_respuesta_numerica === "formula" && (
+                                                                                    {pregunta.modo_respuesta_numerica ===
+                                                                                      "formula" && (
                                                                                       <div className="flex items-end">
                                                                                         <button
                                                                                           type="button"
@@ -7207,12 +7444,14 @@ const guardarConfiguracionTarea = async () => {
                                                                                             abrirFormulaNumerica(
                                                                                               leccion.id,
                                                                                               preguntaIndex,
-                                                                                              pregunta.respuesta_texto || ""
+                                                                                              pregunta.respuesta_texto ||
+                                                                                                "",
                                                                                             )
                                                                                           }
                                                                                           className="w-full rounded-2xl bg-[var(--color-button-primary)] px-4 py-3 text-sm font-semibold text-white hover:brightness-95 transition"
                                                                                         >
-                                                                                          Insertar fórmula
+                                                                                          Insertar
+                                                                                          fórmula
                                                                                         </button>
                                                                                       </div>
                                                                                     )}
@@ -7220,7 +7459,8 @@ const guardarConfiguracionTarea = async () => {
 
                                                                                   <div>
                                                                                     <label className="block font-semibold mb-2">
-                                                                                      {pregunta.modo_respuesta_numerica === "formula"
+                                                                                      {pregunta.modo_respuesta_numerica ===
+                                                                                      "formula"
                                                                                         ? "Fórmula correcta"
                                                                                         : "Respuesta numérica correcta"}
                                                                                     </label>
@@ -7228,33 +7468,47 @@ const guardarConfiguracionTarea = async () => {
                                                                                     <div className="flex flex-col md:flex-row gap-2">
                                                                                       <input
                                                                                         type="text"
-                                                                                        value={pregunta.respuesta_texto || ""}
-                                                                                        onChange={(e) =>
+                                                                                        value={
+                                                                                          pregunta.respuesta_texto ||
+                                                                                          ""
+                                                                                        }
+                                                                                        onChange={(
+                                                                                          e,
+                                                                                        ) =>
                                                                                           handleChangePreguntaExamen(
                                                                                             leccion.id,
                                                                                             preguntaIndex,
                                                                                             "respuesta_texto",
-                                                                                            pregunta.modo_respuesta_numerica === "formula"
-                                                                                              ? e.target.value
-                                                                                              : e.target.value.replace(/[^\d.-]/g, "")
+                                                                                            pregunta.modo_respuesta_numerica ===
+                                                                                              "formula"
+                                                                                              ? e
+                                                                                                  .target
+                                                                                                  .value
+                                                                                              : e.target.value.replace(
+                                                                                                  /[^\d.-]/g,
+                                                                                                  "",
+                                                                                                ),
                                                                                           )
                                                                                         }
                                                                                         className="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3"
                                                                                         placeholder={
-                                                                                          pregunta.modo_respuesta_numerica === "formula"
+                                                                                          pregunta.modo_respuesta_numerica ===
+                                                                                          "formula"
                                                                                             ? "Ej. \\frac{x+2}{3}"
                                                                                             : "Ej. 25 o 25.5"
                                                                                         }
                                                                                       />
 
-                                                                                      {pregunta.modo_respuesta_numerica === "formula" && (
+                                                                                      {pregunta.modo_respuesta_numerica ===
+                                                                                        "formula" && (
                                                                                         <button
                                                                                           type="button"
                                                                                           onClick={() =>
                                                                                             abrirFormulaNumerica(
                                                                                               leccion.id,
                                                                                               preguntaIndex,
-                                                                                              pregunta.respuesta_texto || ""
+                                                                                              pregunta.respuesta_texto ||
+                                                                                                "",
                                                                                             )
                                                                                           }
                                                                                           className="rounded-2xl border border-[var(--color-primary)] bg-[color-mix(in_srgb,var(--color-primary)_8%,transparent)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] transition"
@@ -7264,9 +7518,21 @@ const guardarConfiguracionTarea = async () => {
                                                                                       )}
                                                                                     </div>
 
-                                                                                    {pregunta.modo_respuesta_numerica === "formula" && (
+                                                                                    {pregunta.modo_respuesta_numerica ===
+                                                                                      "formula" && (
                                                                                       <p className="mt-2 text-xs text-[var(--color-muted-text)]">
-                                                                                        La fórmula se guardará como respuesta de referencia para esta pregunta numérica.
+                                                                                        La
+                                                                                        fórmula
+                                                                                        se
+                                                                                        guardará
+                                                                                        como
+                                                                                        respuesta
+                                                                                        de
+                                                                                        referencia
+                                                                                        para
+                                                                                        esta
+                                                                                        pregunta
+                                                                                        numérica.
                                                                                       </p>
                                                                                     )}
                                                                                   </div>
@@ -7603,16 +7869,28 @@ const guardarConfiguracionTarea = async () => {
                                                                           </option>
                                                                         </select>
                                                                       </div>
-                                                                      
+
                                                                       <div className="md:col-span-2">
                                                                         <label className="block font-semibold mb-2">
-                                                                          Descripción del material
+                                                                          Descripción
+                                                                          del
+                                                                          material
                                                                         </label>
 
                                                                         <textarea
                                                                           name="descripcion"
-                                                                          value={formMat.descripcion || ""}
-                                                                          onChange={(e) => handleChangeMaterial(leccion.id, e)}
+                                                                          value={
+                                                                            formMat.descripcion ||
+                                                                            ""
+                                                                          }
+                                                                          onChange={(
+                                                                            e,
+                                                                          ) =>
+                                                                            handleChangeMaterial(
+                                                                              leccion.id,
+                                                                              e,
+                                                                            )
+                                                                          }
                                                                           className="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-border)] min-h-[90px]"
                                                                           placeholder="Ej. Revisa este material antes de la siguiente clase."
                                                                         />
@@ -7993,7 +8271,9 @@ const guardarConfiguracionTarea = async () => {
 
                                                                                         {material.descripcion && (
                                                                                           <p className="text-sm text-[var(--color-muted-text)] mt-2 whitespace-pre-line">
-                                                                                            {material.descripcion}
+                                                                                            {
+                                                                                              material.descripcion
+                                                                                            }
                                                                                           </p>
                                                                                         )}
 
@@ -8173,16 +8453,30 @@ const guardarConfiguracionTarea = async () => {
                                                                                         </div>
                                                                                         <div className="md:col-span-2">
                                                                                           <label className="block font-semibold mb-2">
-                                                                                            Descripción del material
+                                                                                            Descripción
+                                                                                            del
+                                                                                            material
                                                                                           </label>
 
                                                                                           <textarea
-                                                                                            value={formEditarMaterial.descripcion || ""}
-                                                                                            onChange={(e) =>
-                                                                                              setFormEditarMaterial((prev) => ({
-                                                                                                ...prev,
-                                                                                                descripcion: e.target.value,
-                                                                                              }))
+                                                                                            value={
+                                                                                              formEditarMaterial.descripcion ||
+                                                                                              ""
+                                                                                            }
+                                                                                            onChange={(
+                                                                                              e,
+                                                                                            ) =>
+                                                                                              setFormEditarMaterial(
+                                                                                                (
+                                                                                                  prev,
+                                                                                                ) => ({
+                                                                                                  ...prev,
+                                                                                                  descripcion:
+                                                                                                    e
+                                                                                                      .target
+                                                                                                      .value,
+                                                                                                }),
+                                                                                              )
                                                                                             }
                                                                                             className="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-border)] min-h-[90px]"
                                                                                             placeholder="Descripción breve del material"
@@ -8366,8 +8660,12 @@ const guardarConfiguracionTarea = async () => {
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-semibold text-[var(--color-text)]">{item.titulo || "Video"}</p>
-                  <p className="text-sm text-[var(--color-muted-text)] mt-1">{item.mensaje}</p>
+                  <p className="font-semibold text-[var(--color-text)]">
+                    {item.titulo || "Video"}
+                  </p>
+                  <p className="text-sm text-[var(--color-muted-text)] mt-1">
+                    {item.mensaje}
+                  </p>
                 </div>
 
                 <button
@@ -8454,7 +8752,9 @@ const guardarConfiguracionTarea = async () => {
               ) : (
                 <>
                   <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] p-4">
-                    <p className="text-sm text-[var(--color-muted-text)]">Tarea</p>
+                    <p className="text-sm text-[var(--color-muted-text)]">
+                      Tarea
+                    </p>
                     <p className="text-base font-semibold text-[var(--color-text)] mt-1">
                       {tareaConfigActual?.titulo || "-"}
                     </p>
@@ -8628,13 +8928,15 @@ const guardarConfiguracionTarea = async () => {
                 </div>
               ) : bancoPreguntasFiltradas.length === 0 ? (
                 <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-6 text-sm text-amber-700">
-                  No se encontraron preguntas en el banco. Primero importa un Excel o revisa el curso asociado.
+                  No se encontraron preguntas en el banco. Primero importa un
+                  Excel o revisa el curso asociado.
                 </div>
               ) : (
                 <div className="space-y-3">
                   {bancoPreguntasFiltradas.map((pregunta) => {
                     const preguntaId = Number(pregunta.id);
-                    const seleccionada = bancoSeleccionadas.includes(preguntaId);
+                    const seleccionada =
+                      bancoSeleccionadas.includes(preguntaId);
 
                     return (
                       <label
@@ -8780,11 +9082,15 @@ const guardarConfiguracionTarea = async () => {
 
             <div className="p-6 space-y-5">
               {cargandoConfigExamen ? (
-                <p className="text-[var(--color-muted-text)]">Cargando evaluaciones disponibles...</p>
+                <p className="text-[var(--color-muted-text)]">
+                  Cargando evaluaciones disponibles...
+                </p>
               ) : (
                 <>
                   <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] p-4">
-                    <p className="text-sm text-[var(--color-muted-text)]">Examen</p>
+                    <p className="text-sm text-[var(--color-muted-text)]">
+                      Examen
+                    </p>
                     <p className="text-base font-semibold text-[var(--color-text)] mt-1">
                       {examenConfigActual?.titulo || "-"}
                     </p>
@@ -8797,7 +9103,9 @@ const guardarConfiguracionTarea = async () => {
 
                     <select
                       value={evaluacionSeleccionadaExamen}
-                      onChange={(e) => setEvaluacionSeleccionadaExamen(e.target.value)}
+                      onChange={(e) =>
+                        setEvaluacionSeleccionadaExamen(e.target.value)
+                      }
                       className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 text-[var(--color-text)] shadow-sm outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-border)]"
                     >
                       <option value="">-- Selecciona una evaluación --</option>
@@ -8815,7 +9123,8 @@ const guardarConfiguracionTarea = async () => {
 
                   {evaluacionesExamenDisponibles.length === 0 && (
                     <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                      No hay evaluaciones de tipo examen disponibles para este grupo. Primero configúralas en Registro de Notas.
+                      No hay evaluaciones de tipo examen disponibles para este
+                      grupo. Primero configúralas en Registro de Notas.
                     </div>
                   )}
 
@@ -8844,7 +9153,9 @@ const guardarConfiguracionTarea = async () => {
                           : "bg-[var(--color-button-primary)] hover:brightness-95"
                       }`}
                     >
-                      {guardandoConfigExamen ? "Guardando..." : "Guardar asignación"}
+                      {guardandoConfigExamen
+                        ? "Guardando..."
+                        : "Guardar asignación"}
                     </button>
                   </div>
                 </>

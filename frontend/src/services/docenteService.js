@@ -3353,6 +3353,7 @@ export const crearExamen = async ({
   duracion_minutos,
   intentos_permitidos,
   nota_maxima,
+  nota_aprobatoria,
   preguntas,
 }) => {
   const { data: examen, error: errExamen } = await supabase
@@ -3365,6 +3366,7 @@ export const crearExamen = async ({
       duracion_minutos: Number(duracion_minutos || 30),
       intentos_permitidos: Number(intentos_permitidos || 1),
       nota_maxima: Number(nota_maxima || 20),
+      nota_aprobatoria: Number(nota_aprobatoria || 11),
       estado: true,
     })
     .select()
@@ -3655,6 +3657,7 @@ export const actualizarExamen = async (examenId, datosExamen) => {
       duracion_minutos: Number(datosExamen.duracion_minutos || 30),
       intentos_permitidos: Number(datosExamen.intentos_permitidos || 1),
       nota_maxima: Number(datosExamen.nota_maxima || 20),
+      nota_aprobatoria: Number(datosExamen.nota_aprobatoria || 11),
       updated_at: new Date().toISOString(),
     })
     .eq("id", idExamen);

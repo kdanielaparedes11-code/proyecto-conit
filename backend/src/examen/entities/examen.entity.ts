@@ -59,6 +59,9 @@ export class Examen {
   @Column({ type: 'timestamptz' })
   updated_at: Date;
 
+  @Column({ type: 'numeric', precision: 5, scale: 2, default: 11 })
+  nota_aprobatoria: number;
+
   @OneToMany(() => ExamenPregunta, (p) => p.examen)
   preguntas: ExamenPregunta[];
 }

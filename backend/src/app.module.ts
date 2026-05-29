@@ -56,6 +56,7 @@ import { AsistenciaConfiguracionController } from './asistencia-configuracion/as
 import { EntregaModule } from './entrega/entrega.module';
 import { EstilosModule } from './estilos/estilos.module';
 import { ForoModule } from './foro/foro.module';
+import { TareaEntregaModule } from './tarea-entrega/tarea-entrega.module';
 
 @Module({
   imports: [
@@ -135,6 +136,7 @@ import { ForoModule } from './foro/foro.module';
     AsistenciaModule,
     EntregaModule,
     ForoModule,
+    TareaEntregaModule,
   ],
 
   controllers: [AppController, AsistenciaConfiguracionController],
