@@ -40,90 +40,91 @@ export class CursoService {
     });
   }
 
-async listarCursosAlumno(idAlumno: number) {
-  console.log("ID ALUMNO BACK:", idAlumno);
+  async listarCursosAlumno(idAlumno: number) {
+    console.log('ID ALUMNO BACK:', idAlumno);
 
-  const data = await this.matriculaRepository
-    .createQueryBuilder('matricula')
+    const data = await this.matriculaRepository
+      .createQueryBuilder('matricula')
 
-    .innerJoinAndSelect('matricula.grupo', 'grupo')
-    .innerJoinAndSelect('grupo.curso', 'curso')
-    .leftJoinAndSelect('grupo.docente', 'docente')
+      .innerJoinAndSelect('matricula.grupo', 'grupo')
+      .innerJoinAndSelect('grupo.curso', 'curso')
+      .leftJoinAndSelect('grupo.docente', 'docente')
 
-    .leftJoinAndSelect('matricula.alumno', 'alumno')
+      .leftJoinAndSelect('matricula.alumno', 'alumno')
 
-    // 🔥 FILTRO CORRECTO
-    .where('alumno.id = :idAlumno', { idAlumno })
+      // 🔥 FILTRO CORRECTO
+      .where('alumno.id = :idAlumno', { idAlumno })
 
-    .getMany();
+      .getMany();
 
-  console.log("MATRICULAS ENCONTRADAS:", data.length);
+    console.log('MATRICULAS ENCONTRADAS:', data.length);
 
-  return data;
-}
-async obtenerUnoCursoAlumno(idCurso: number, idAlumno: number) {
-
-  if (!idAlumno || isNaN(idAlumno)) {
-    throw new Error('idalumno inválido');
+    return data;
   }
+  async obtenerUnoCursoAlumno(idCurso: number, idAlumno: number) {
+    if (!idAlumno || isNaN(idAlumno)) {
+      throw new Error('idalumno inválido');
+    }
 
-  const curso = await this.cursoRepository
-    .createQueryBuilder('curso')
+    // 1. Obtener el curso con toda su estructura de módulos
+    const curso = await this.cursoRepository
+      .createQueryBuilder('curso')
+      .leftJoin('curso.grupos', 'grupo')
+      .innerJoin('grupo.matriculas', 'matricula')
+      .innerJoin('matricula.alumno', 'alumno')
+      .where('curso.id = :idCurso', { idCurso })
+      .andWhere('alumno.id = :idAlumno', { idAlumno })
+      .leftJoinAndSelect(
+        'curso.modulos',
+        'modulo',
+        '(modulo.idgrupo = grupo.id)',
+      )
+      .leftJoinAndSelect('modulo.padre', 'padre')
+      .leftJoinAndSelect('modulo.hijos', 'hijos')
+      .leftJoinAndSelect('modulo.lecciones', 'leccion')
+      .leftJoinAndSelect('leccion.materiales', 'material')
+      .leftJoinAndSelect('leccion.examenes', 'examen')
+      .leftJoinAndSelect('examen.preguntas', 'pregunta')
+      .leftJoinAndSelect('pregunta.opciones', 'opcion')
+      .distinct(true)
+      .getOne();
 
-    .leftJoin('curso.grupos', 'grupo')
-    .innerJoin('grupo.matriculas', 'matricula')
-    .innerJoin('matricula.alumno', 'alumno')
+    if (curso) {
+      // 2. BUSCAR EL ID DEL GRUPO usando la relación (objeto) y no la columna (id)
+      const matricula = await this.matriculaRepository.findOne({
+        where: {
+          alumno: { id: idAlumno }, // Filtramos por el objeto alumno
+          grupo: {
+            curso: { id: idCurso }, // Filtramos por el objeto grupo y su curso
+          },
+          estado: 'pagado',
+        },
+        relations: ['grupo'], // Cargamos el grupo para acceder a su ID
+      });
 
-    .where('curso.id = :idCurso', { idCurso })
-    .andWhere('alumno.id = :idAlumno', { idAlumno })
-
-    .leftJoinAndSelect(
-  'curso.modulos',
-  'modulo',
-  '(modulo.idgrupo = grupo.id)'
-)
-.leftJoinAndSelect('modulo.padre', 'padre')
-
-
-    .leftJoinAndSelect('modulo.hijos', 'hijos')
-
-    .leftJoinAndSelect('modulo.lecciones', 'leccion')
-    .leftJoinAndSelect('leccion.materiales', 'material')
-    .leftJoinAndSelect('leccion.examenes', 'examen')
-    .leftJoinAndSelect('examen.preguntas', 'pregunta')
-    .leftJoinAndSelect('pregunta.opciones', 'opcion')
-
-    .distinct(true)
-    .getOne();
-
-  // 🔥 AQUÍ ARMAMOS PADRE → HIJOS
-  if (curso?.modulos) {
-    const mapa: any = {};
-
-    // 1. crear mapa
-    curso.modulos.forEach((m: any) => {
-      mapa[m.id] = { ...m, hijos: [] };
-    });
-
-    const arbol: any[] = [];
-
-    // 2. armar jerarquía
-    curso.modulos.forEach((m: any) => {
-      if (m.idpadre && mapa[m.idpadre]) {
-        mapa[m.idpadre].hijos.push(mapa[m.id]);
-      } else {
-        arbol.push(mapa[m.id]); // padres
+      // 3. Inyectamos el idgrupo accediendo a través de la relación
+      (curso as any).idgrupo =
+        matricula && matricula.grupo ? matricula.grupo.id : null;
+      // Lógica del árbol de módulos (la que ya tenías)
+      if (curso.modulos) {
+        const mapa: any = {};
+        curso.modulos.forEach((m: any) => {
+          mapa[m.id] = { ...m, hijos: [] };
+        });
+        const arbol: any[] = [];
+        curso.modulos.forEach((m: any) => {
+          if (m.idpadre && mapa[m.idpadre]) {
+            mapa[m.idpadre].hijos.push(mapa[m.id]);
+          } else {
+            arbol.push(mapa[m.id]);
+          }
+        });
+        curso.modulos = arbol;
       }
-    });
+    }
 
-    // 3. asignar solo padres con hijos dentro
-    curso.modulos = arbol;
-    console.dir(curso.modulos, { depth: null });
+    return curso;
   }
-  
-
-  return curso;
-}
   async remove(id: number) {
     await this.cursoRepository.update(id, { estado: false });
     return { message: 'Curso inhabilitado correctamente' };

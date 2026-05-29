@@ -1,4 +1,13 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
+import { ForoPublicacion } from './foro-publicacion.entity';
+import { ForoRespuesta } from './foro-respuesta.entity';
 
 @Entity({ name: 'foro_adjunto' })
 export class ForoAdjunto {
@@ -14,7 +23,12 @@ export class ForoAdjunto {
   @Column({ type: 'varchar', length: 30 })
   tipo: string;
 
-  @Column({ name: 'nombre_archivo', type: 'varchar', length: 255, nullable: true })
+  @Column({
+    name: 'nombre_archivo',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
   nombre_archivo: string | null;
 
   @Column({ name: 'mime_type', type: 'varchar', length: 120, nullable: true })
@@ -23,7 +37,12 @@ export class ForoAdjunto {
   @Column({ name: 'tamano_bytes', type: 'bigint', nullable: true })
   tamano_bytes: string | null;
 
-  @Column({ name: 'storage_provider', type: 'varchar', length: 30, nullable: true })
+  @Column({
+    name: 'storage_provider',
+    type: 'varchar',
+    length: 30,
+    nullable: true,
+  })
   storage_provider: string | null;
 
   @Column({ type: 'varchar', length: 150, nullable: true })
@@ -41,7 +60,12 @@ export class ForoAdjunto {
   @Column({ name: 'embed_url', type: 'text', nullable: true })
   embed_url: string | null;
 
-  @Column({ name: 'vimeo_video_id', type: 'varchar', length: 80, nullable: true })
+  @Column({
+    name: 'vimeo_video_id',
+    type: 'varchar',
+    length: 80,
+    nullable: true,
+  })
   vimeo_video_id: string | null;
 
   @Column({ name: 'vimeo_uri', type: 'text', nullable: true })
@@ -55,4 +79,16 @@ export class ForoAdjunto {
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   created_at: Date;
+
+  @ManyToOne(() => ForoPublicacion, (publicacion) => publicacion.adjuntos, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'idpublicacion' })
+  publicacion: ForoPublicacion;
+
+  @ManyToOne(() => ForoRespuesta, (respuesta) => respuesta.adjuntos, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'idrespuesta' })
+  respuesta: ForoRespuesta;
 }

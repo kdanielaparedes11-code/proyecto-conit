@@ -11,6 +11,8 @@ import { ForoReaccion } from './entities/foro-reaccion.entity';
 
 import { Grupo } from '../grupo/entities/grupo.entity';
 import { Docente } from '../docente/entities/docente.entity';
+// 👇 1. Importamos la entidad Alumno
+import { Alumno } from '../alumno/entities/alumno.entity';
 
 @Module({
   imports: [
@@ -21,6 +23,7 @@ import { Docente } from '../docente/entities/docente.entity';
       ForoReaccion,
       Grupo,
       Docente,
+      Alumno,
     ]),
   ],
   controllers: [ForoController],

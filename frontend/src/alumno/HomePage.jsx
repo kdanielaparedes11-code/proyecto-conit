@@ -274,6 +274,15 @@ export default function HomePage() {
                   nombre={curso.nombrecurso}
                   progreso={Number(curso.progreso || 0)}
                 />
+
+                {curso.idgrupo && (
+                  <button
+                    onClick={() => navigate(`/alumno/foro/${curso.idgrupo}`)}
+                    className="mt-4 w-full rounded-xl bg-slate-100 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+                  >
+                    💬 Foro del grupo
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -388,12 +397,12 @@ function normalizarCursosDesdeMatriculas(matriculas) {
 
     cursosNormalizados.push({
       id: curso.id,
+      idgrupo: grupo?.id,
       nombrecurso: curso.nombrecurso || curso.nombre || "Curso sin nombre",
       descripcion: curso.descripcion || "Sin descripción disponible",
       progreso: Number(curso.progreso || 0),
       estadoCurso: matricula?.estado || "activo",
-      docenteNombre:
-        extraerDocenteDesdeGrupo(grupo) || extraerDocenteDesdeCurso(curso),
+      docenteNombre: extraerDocenteDesdeGrupo(grupo) || extraerDocenteDesdeCurso(curso),
     });
   }
 
