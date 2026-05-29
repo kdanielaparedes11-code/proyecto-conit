@@ -51,6 +51,7 @@ const Certificados = lazy(() => import("./admin/Certificados"));
 const PerfilAdministrador = lazy(() => import("./admin/PerfilAdministrador"));
 const GestionWeb = lazy(() => import("./admin/GestionWeb"));
 const ConfigurarEstilos = lazy(() => import("./admin/ConfigurarEstilos"));
+const ConfiguracionSesionesVivo = lazy(() => import("./admin/ConfiguracionSesionesVivo"));
 
 
 
@@ -189,11 +190,13 @@ export default function App() {
               <Route path="administradores" element={<Administradores />} />
               <Route path="docentes" element={<Docentes />} />
               <Route path="cursos" element={<Cursos />} />
+              <Route path="cursos/:idCurso/grupos/:idGrupo" element={<CursoDetalleAdmin />} />
               <Route path="cursos/:id" element={<CursoDetalleAdmin />} />
               <Route path="alumnos" element={<Alumnos />} />
               <Route path="usuarios" element={<Usuarios />} />
               <Route path="pagos" element={<Pagos />} />
               <Route path="sesiones" element={<ControlSesiones />} />
+              <Route path="configuracion-sesiones-vivo" element={<ConfiguracionSesionesVivo />}/>
               <Route path="certificados" element={<Certificados />} />
               <Route path="perfil" element={<PerfilAdministrador />} />
               <Route path="gestion-web" element={<GestionWeb />} />

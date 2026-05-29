@@ -10,20 +10,46 @@ export class ZoomMeetingService implements IMeetingProviderService {
   private readonly tokenUrl = 'https://zoom.us/oauth/token';
   private readonly apiBaseUrl = 'https://api.zoom.us/v2';
 
-  private getRequiredEnv(name: string): string {
-    const value = process.env[name];
-    if (!value || !value.trim()) {
-      throw new InternalServerErrorException(
-        `Falta configurar la variable ${name} para Zoom`,
-      );
+  private getRequiredValue(
+    credentials: Record<string, any> | undefined,
+    key: string,
+    envName: string,
+  ): string {
+    const fromDb = credentials?.[key];
+
+    if (fromDb && String(fromDb).trim()) {
+      return String(fromDb).trim();
     }
-    return value.trim();
+
+    const fromEnv = process.env[envName];
+
+    if (fromEnv && fromEnv.trim()) {
+      return fromEnv.trim();
+    }
+
+    throw new InternalServerErrorException(
+      `Falta configurar ${key} para Zoom.`,
+    );
   }
 
-  private async getAccessToken(): Promise<string> {
-    const accountId = this.getRequiredEnv('ZOOM_ACCOUNT_ID');
-    const clientId = this.getRequiredEnv('ZOOM_CLIENT_ID');
-    const clientSecret = this.getRequiredEnv('ZOOM_CLIENT_SECRET');
+  private async getAccessToken(credentials?: Record<string, any>): Promise<string> {
+    const accountId = this.getRequiredValue(
+      credentials,
+      'accountId',
+      'ZOOM_ACCOUNT_ID',
+    );
+
+    const clientId = this.getRequiredValue(
+      credentials,
+      'clientId',
+      'ZOOM_CLIENT_ID',
+    );
+
+    const clientSecret = this.getRequiredValue(
+      credentials,
+      'clientSecret',
+      'ZOOM_CLIENT_SECRET',
+    );
 
     const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString(
       'base64',
@@ -55,8 +81,12 @@ export class ZoomMeetingService implements IMeetingProviderService {
   async createMeeting(
     input: CreateMeetingInput,
   ): Promise<CreateMeetingResult> {
-    const accessToken = await this.getAccessToken();
-    const zoomUser = this.getRequiredEnv('ZOOM_USER_ID_OR_EMAIL');
+    const accessToken = await this.getAccessToken(input.credentials);
+    const zoomUser = this.getRequiredValue(
+      input.credentials,
+      'userIdOrEmail',
+      'ZOOM_USER_ID_OR_EMAIL',
+    );
 
     const fechaInicio = new Date(input.fechaInicioIso);
     const fechaFin = new Date(input.fechaFinIso);

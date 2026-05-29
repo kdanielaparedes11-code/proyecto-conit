@@ -29,3 +29,8 @@ export const obtenerCursoPorId = async (id: number) => {
   const response = await api.get(`/curso/${id}`);
   return response.data;
 };
+
+export const obtenerGruposPorCurso = async (idcurso: number) => {
+  const response = await api.get(`/grupo/curso/${idcurso}`);
+  return response.data;
+};

@@ -547,7 +547,7 @@ export default function GestionWeb() {
 
   const inhabilitarCategoria = async (categoria) => {
     const confirmar = window.confirm(
-      `Â¿Seguro que deseas ocultar la categoría "${categoria.nombre}"?`
+      `·¿Seguro que deseas ocultar la categoría "${categoria.nombre}"?`
     );
 
     if (!confirmar) return;
@@ -1207,7 +1207,7 @@ export default function GestionWeb() {
 
   const eliminarMedio = async (media) => {
     const confirmar = window.confirm(
-      `Â¿Seguro que deseas eliminar la imagen "${media.nombreOriginal}"?`
+      `·¿Seguro que deseas eliminar la imagen "${media.nombreOriginal}"?`
     );
 
     if (!confirmar) return;
@@ -1387,7 +1387,7 @@ export default function GestionWeb() {
 
   const eliminarPagina = async (pagina) => {
     const confirmar = window.confirm(
-      `Â¿Seguro que deseas eliminar u ocultar la página "${pagina.titulo}"?`
+      `·¿Seguro que deseas eliminar u ocultar la página "${pagina.titulo}"?`
     );
 
     if (!confirmar) return;
@@ -4285,7 +4285,7 @@ export default function GestionWeb() {
                           </h3>
 
                           <p className="text-sm text-[var(--color-muted-text)]">
-                            Orden: {seccion.orden} Â·{" "}
+                            Orden: {seccion.orden} ·{" "}
                             {seccion.activo === false ? "Oculta" : "Visible"}
                           </p>
                         </div>

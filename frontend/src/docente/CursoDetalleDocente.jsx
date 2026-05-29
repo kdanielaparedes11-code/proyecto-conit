@@ -52,6 +52,8 @@ import {
   getSesionesVivoByGrupo,
   getMeetingProviderByGrupo,
   crearSesionVivo,
+  getMeetingProviderConfigsByEmpresa,
+  getConfiguracionSesionesVivo,
   getProgresoAlumnosByGrupo,
   importarExcelBancoPreguntas,
   PLANTILLA_BANCO_PREGUNTAS_URL,
@@ -920,6 +922,8 @@ function CursoDetalleAdmin() {
     provider: "google",
     label: "Google Meet",
   });
+  const [proveedoresSesionVivo, setProveedoresSesionVivo] = useState([]);
+  const [configSesionVivo, setConfigSesionVivo] = useState(null);
   const [cargandoSesionesVivo, setCargandoSesionesVivo] = useState(false);
   const [mostrarFormSesionVivo, setMostrarFormSesionVivo] = useState(false);
   const [guardandoSesionVivo, setGuardandoSesionVivo] = useState(false);
@@ -929,6 +933,7 @@ function CursoDetalleAdmin() {
     fecha: "",
     duracion: 60,
     accessType: "RESTRICTED",
+    providerConfigId: "",
   });  
 
   // ==============================
@@ -941,12 +946,25 @@ function CursoDetalleAdmin() {
 
       setCargandoSesionesVivo(true);
 
-      const [sesionesData, providerData] = await Promise.all([
+      const [
+        sesionesData,
+        providerData,
+        configGeneralData,
+        proveedoresData,
+      ] = await Promise.all([
         getSesionesVivoByGrupo(grupoIdActual),
         getMeetingProviderByGrupo(grupoIdActual).catch(() => null),
+        getConfiguracionSesionesVivo(1).catch(() => null),
+        getMeetingProviderConfigsByEmpresa(1).catch(() => []),
       ]);
 
       setSesionesVivo(sesionesData || []);
+
+      setConfigSesionVivo(configGeneralData);
+
+      setProveedoresSesionVivo(
+        (proveedoresData || []).filter((p) => p.activo)
+      );
 
       if (providerData) {
         setMeetingProviderInfo({
@@ -978,6 +996,7 @@ function CursoDetalleAdmin() {
       fecha: "",
       duracion: 60,
       accessType: "RESTRICTED",
+      providerConfigId: "",
     });
   };
 
@@ -1010,6 +1029,10 @@ function CursoDetalleAdmin() {
         fecha: formSesionVivo.fecha,
         duracion: Number(formSesionVivo.duracion),
         accessType: formSesionVivo.accessType || "RESTRICTED",
+        providerConfigId:
+          docentePuedeElegirProveedor && formSesionVivo.providerConfigId
+            ? Number(formSesionVivo.providerConfigId)
+            : null,
       });
 
       limpiarFormSesionVivo();
@@ -1023,6 +1046,14 @@ function CursoDetalleAdmin() {
       setGuardandoSesionVivo(false);
     }
   };
+
+  const modoSeleccionProveedor =
+    configSesionVivo?.modoSeleccionProveedor || "SOLO_PREDETERMINADO";
+
+  const docentePuedeElegirProveedor =
+    modoSeleccionProveedor === "DOCENTE_PUEDE_ELEGIR" ||
+    modoSeleccionProveedor === "TODOS_PUEDEN_ELEGIR";
+
 
   const formatearFechaSesion = (fecha) => {
     if (!fecha) return "-";
@@ -1114,7 +1145,7 @@ function CursoDetalleAdmin() {
       ["Sin registro", totalSinRegistro],
       [""],
       ["DETALLE DE ASISTENCIA"],
-      ["NÂ°", "Alumno", "DNI", "Estado", "Justificación", "Observación"],
+      ["N°", "Alumno", "DNI", "Estado", "Justificación", "Observación"],
       ...alumnosFiltradosAsistencia.map((a, index) => {
         const key = a.idalumno || a.id;
         const asistencia = asistenciaMap[key] || {};
@@ -1754,7 +1785,7 @@ useEffect(() => {
 
   const eliminarTareaCurso = async (tareaId) => {
     const confirmado = window.confirm(
-      "Â¿Seguro que deseas eliminar esta tarea?",
+      "·¿Seguro que deseas eliminar esta tarea?",
     );
     if (!confirmado) return;
 
@@ -2551,7 +2582,7 @@ const handleChangeSubModulo = (moduloId, e) => {
 
   const eliminarMaterialCurso = async (materialId) => {
     const confirmado = window.confirm(
-      "Â¿Seguro que deseas eliminar este material?",
+      "·¿Seguro que deseas eliminar este material?",
     );
     if (!confirmado) return;
 
@@ -3904,7 +3935,7 @@ const guardarConfiguracionTarea = async () => {
 
   const eliminarExamenLeccion = async (examenId) => {
     const confirmado = window.confirm(
-      "Â¿Seguro que deseas eliminar este examen?",
+      "·¿Seguro que deseas eliminar este examen?",
     );
     if (!confirmado) return;
 
@@ -4382,6 +4413,52 @@ const guardarConfiguracionTarea = async () => {
                   />
                 </div>
 
+                {docentePuedeElegirProveedor && proveedoresSesionVivo.length > 0 && (
+                  <div className="md:col-span-2">
+                    <label className="block font-semibold mb-2">
+                      Proveedor de reunión
+                    </label>
+
+                    <select
+                      name="providerConfigId"
+                      value={formSesionVivo.providerConfigId}
+                      onChange={handleChangeSesionVivo}
+                      className="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 outline-none transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-border)]"
+                    >
+                      <option value="">
+                        Usar proveedor predeterminado
+                      </option>
+
+                      {proveedoresSesionVivo.map((provider) => (
+                        <option key={provider.id} value={provider.id}>
+                          {provider.nombre}
+                          {provider.predeterminado ? " · Predeterminado" : ""}
+                        </option>
+                      ))}
+                    </select>
+
+                    <p className="mt-2 text-xs text-[var(--color-muted-text)]">
+                      El administrador permitió elegir entre proveedores activos. Si no eliges
+                      uno, se usará el proveedor predeterminado.
+                    </p>
+                  </div>
+                )}
+
+                {!docentePuedeElegirProveedor && (
+                  <div className="md:col-span-2 rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] p-4">
+                    <p className="text-sm font-semibold text-[var(--color-text)]">
+                      Proveedor predeterminado
+                    </p>
+                    <p className="mt-1 text-sm text-[var(--color-muted-text)]">
+                      Esta sesión se creará con{" "}
+                      <span className="font-semibold">
+                        {meetingProviderInfo?.label || "el proveedor configurado"}
+                      </span>
+                      . El administrador no habilitó la selección manual de proveedor para docentes.
+                    </p>
+                  </div>
+                )}
+
                 {meetingProviderInfo?.provider === "google" && (
                   <div className="md:col-span-2">
                     <label className="block font-semibold mb-2">
@@ -4752,7 +4829,7 @@ const guardarConfiguracionTarea = async () => {
                                 {fila.nombre} {fila.apellido}
                               </p>
                               <p className="text-sm text-[var(--color-muted-text)]">
-                                DNI: {fila.numdocumento || "-"} Â· Matrícula #{fila.idmatricula}
+                                DNI: {fila.numdocumento || "-"} · Matrícula #{fila.idmatricula}
                               </p>
                             </div>
                           </div>
@@ -4812,7 +4889,7 @@ const guardarConfiguracionTarea = async () => {
                               {Number(fila.progresoAsistencia || 0).toFixed(0)}%
                             </p>
                             <p className="text-[11px] text-[var(--color-muted-text)] mt-1">
-                              P:{fila.presentes || 0} Â· T:{fila.tardanzas || 0} Â· F:{fila.faltas || 0}
+                              P:{fila.presentes || 0} · T:{fila.tardanzas || 0} · F:{fila.faltas || 0}
                             </p>
                           </div>
                         </div>
@@ -5924,7 +6001,7 @@ const guardarConfiguracionTarea = async () => {
             ) : modulos.length === 0 ? (
               <div className="rounded-[28px] border border-dashed border-[var(--color-border)] bg-gradient-to-br from-white to-slate-50 p-10 text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-sidenav)] text-white text-2xl shadow-lg">
-                  ðŸ“š
+                  📚
                 </div>
                 <p className="text-lg font-bold text-[var(--color-text)]">
                   No hay módulos registrados
@@ -8477,7 +8554,7 @@ const guardarConfiguracionTarea = async () => {
                         <option key={ev.id} value={ev.id}>
                           {ev.nombre} ({Number(ev.porcentaje || 0)}%)
                           {Number(ev.idtarea) === Number(tareaConfigActual?.id)
-                            ? " Â· actualmente vinculada"
+                            ? " · actualmente vinculada"
                             : ""}
                         </option>
                       ))}
@@ -8806,7 +8883,7 @@ const guardarConfiguracionTarea = async () => {
                           {ev.nombre} ({Number(ev.porcentaje || 0)}%)
                           {Number(ev.idexamen) ===
                           Number(examenConfigActual?.id)
-                            ? " Â· actualmente vinculada"
+                            ? " · actualmente vinculada"
                             : ""}
                         </option>
                       ))}

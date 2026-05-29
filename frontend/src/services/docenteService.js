@@ -3906,6 +3906,9 @@ export const crearSesionVivo = async (payload) => {
       fecha: String(payload.fecha || ""),
       duracion: Number(payload.duracion || 60),
       accessType: payload.accessType || "RESTRICTED",
+      providerConfigId: payload.providerConfigId
+        ? Number(payload.providerConfigId)
+        : null,
     }),
   });
 
@@ -4436,4 +4439,169 @@ export const eliminarForoAdjunto = async (adjuntoId) => {
   });
 
   return true;
+};
+
+// ======================================================
+// CONFIGURACIÓN DE PROVEEDORES DE SESIONES EN VIVO
+// ======================================================
+
+export const getMeetingProviderConfigsByEmpresa = async (idempresa = 1) => {
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+  const res = await fetch(
+    `${apiUrl}/meeting-provider-config/empresa/${Number(idempresa)}`,
+    {
+      method: "GET",
+      headers: getAuthHeadersApi(),
+    }
+  );
+
+  const data = await leerRespuestaApi(res);
+
+  if (!res.ok) {
+    throw new Error(
+      data?.message || "No se pudieron cargar las configuraciones."
+    );
+  }
+
+  return Array.isArray(data) ? data : [];
+};
+
+export const crearMeetingProviderConfig = async (payload) => {
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+  const res = await fetch(`${apiUrl}/meeting-provider-config`, {
+    method: "POST",
+    headers: getAuthHeadersApi({
+      "Content-Type": "application/json",
+    }),
+    body: JSON.stringify(payload),
+  });
+
+  const data = await leerRespuestaApi(res);
+
+  if (!res.ok) {
+    throw new Error(
+      data?.message || "No se pudo crear la configuración."
+    );
+  }
+
+  return data;
+};
+
+export const actualizarMeetingProviderConfig = async (id, payload) => {
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+  const res = await fetch(`${apiUrl}/meeting-provider-config/${Number(id)}`, {
+    method: "PATCH",
+    headers: getAuthHeadersApi({
+      "Content-Type": "application/json",
+    }),
+    body: JSON.stringify(payload),
+  });
+
+  const data = await leerRespuestaApi(res);
+
+  if (!res.ok) {
+    throw new Error(
+      data?.message || "No se pudo actualizar la configuración."
+    );
+  }
+
+  return data;
+};
+
+export const marcarMeetingProviderPredeterminado = async (id) => {
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+  const res = await fetch(
+    `${apiUrl}/meeting-provider-config/${Number(id)}/predeterminado`,
+    {
+      method: "PATCH",
+      headers: getAuthHeadersApi(),
+    }
+  );
+
+  const data = await leerRespuestaApi(res);
+
+  if (!res.ok) {
+    throw new Error(
+      data?.message || "No se pudo marcar como predeterminado."
+    );
+  }
+
+  return data;
+};
+
+export const eliminarMeetingProviderConfig = async (id) => {
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+  const res = await fetch(`${apiUrl}/meeting-provider-config/${Number(id)}`, {
+    method: "DELETE",
+    headers: getAuthHeadersApi(),
+  });
+
+  const data = await leerRespuestaApi(res);
+
+  if (!res.ok) {
+    throw new Error(
+      data?.message || "No se pudo eliminar la configuración."
+    );
+  }
+
+  return true;
+};
+
+// ======================================================
+// CONFIGURACIÓN GENERAL DE SESIONES EN VIVO
+// ======================================================
+
+export const getConfiguracionSesionesVivo = async (idempresa = 1) => {
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+  const res = await fetch(
+    `${apiUrl}/configuracion-sesiones-vivo/empresa/${Number(idempresa)}`,
+    {
+      method: "GET",
+      headers: getAuthHeadersApi(),
+    }
+  );
+
+  const data = await leerRespuestaApi(res);
+
+  if (!res.ok) {
+    throw new Error(
+      data?.message || "No se pudo cargar la configuración de sesiones en vivo."
+    );
+  }
+
+  return data;
+};
+
+export const actualizarConfiguracionSesionesVivo = async (
+  idempresa = 1,
+  payload
+) => {
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+  const res = await fetch(
+    `${apiUrl}/configuracion-sesiones-vivo/empresa/${Number(idempresa)}`,
+    {
+      method: "PATCH",
+      headers: getAuthHeadersApi({
+        "Content-Type": "application/json",
+      }),
+      body: JSON.stringify(payload),
+    }
+  );
+
+  const data = await leerRespuestaApi(res);
+
+  if (!res.ok) {
+    throw new Error(
+      data?.message || "No se pudo actualizar la configuración de sesiones en vivo."
+    );
+  }
+
+  return data;
 };

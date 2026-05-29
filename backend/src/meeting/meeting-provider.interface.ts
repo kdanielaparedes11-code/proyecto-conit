@@ -8,6 +8,10 @@ export interface CreateMeetingInput {
   fechaInicioIso: string;
   fechaFinIso: string;
   accessType?: MeetingAccessType;
+  attendees?: string[];
+
+  credentials?: Record<string, any>;
+  settings?: Record<string, any>;
 }
 
 export interface CreateMeetingResult {
@@ -17,6 +21,7 @@ export interface CreateMeetingResult {
   hostUrl?: string | null;
   metadata?: any;
   accessType?: MeetingAccessType;
+  attendees?: string[];
 }
 
 export interface IMeetingProviderService {
