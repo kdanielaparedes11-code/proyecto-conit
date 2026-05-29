@@ -734,7 +734,7 @@ export default function Certificados() {
     if (!plantilla) return;
 
     const confirmado = window.confirm(
-      `Â¿Seguro que deseas eliminar la plantilla "${plantilla.nombre}"?`,
+      `·¿Seguro que deseas eliminar la plantilla "${plantilla.nombre}"?`,
     );
 
     if (!confirmado) return;

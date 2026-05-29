@@ -854,9 +854,7 @@ export default function RegistroNotas() {
 
                     <td className="px-4 py-4 text-center">
                       {a.faltantes > 0 ? (
-                        <span className="text-[var(--color-muted-text)] font-semibold">
-                          —
-                        </span>
+                        <span className="text-[var(--color-muted-text)] font-semibold">—</span>
                       ) : (
                         <span
                           className={`font-bold ${
@@ -1007,11 +1005,7 @@ export default function RegistroNotas() {
                 <InfoBox
                   label="Promedio"
                   value={modalPromedio}
-                  tone={
-                    modalPromedio !== "—" && Number(modalPromedio) >= 11
-                      ? "emerald"
-                      : "slate"
-                  }
+                  tone={modalPromedio !== "—" && Number(modalPromedio) >= 11 ? "emerald" : "slate"}
                 />
                 <InfoBox
                   label="Porcentaje total"

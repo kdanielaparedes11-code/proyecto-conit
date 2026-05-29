@@ -925,10 +925,10 @@ function PerfilDocente() {
                   {proximaClase.curso}
                 </div>
                 <div className="text-sm text-[var(--color-muted-text)]">
-                  {proximaClase.dia} Â· {proximaClase.hora}
+                  {proximaClase.dia} · {proximaClase.hora}
                 </div>
                 <div className="text-sm text-[var(--color-muted-text)]">
-                  Grupo {proximaClase.grupo} Â· {proximaClase.modalidad}
+                  Grupo {proximaClase.grupo} · {proximaClase.modalidad}
                 </div>
               </div>
             ) : (

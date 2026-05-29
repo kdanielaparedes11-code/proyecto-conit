@@ -56,6 +56,8 @@ import { AsistenciaConfiguracionController } from './asistencia-configuracion/as
 import { EntregaModule } from './entrega/entrega.module';
 import { EstilosModule } from './estilos/estilos.module';
 import { ForoModule } from './foro/foro.module';
+import { MeetingProviderConfigModule } from './meeting-provider-config/meeting-provider-config.module';
+import { ConfiguracionSesionesVivoModule } from './configuracion-sesiones-vivo/configuracion-sesiones-vivo.module';
 
 @Module({
   imports: [
@@ -106,6 +108,7 @@ import { ForoModule } from './foro/foro.module';
     RecursoModule,
     TareaModule,
     SesionVivoModule,
+    MeetingProviderConfigModule,
     HistorialLoginModule,
     CursoModuloModule,
     CursoLeccionModule,
@@ -135,6 +138,7 @@ import { ForoModule } from './foro/foro.module';
     AsistenciaModule,
     EntregaModule,
     ForoModule,
+    ConfiguracionSesionesVivoModule,
   ],
 
   controllers: [AppController, AsistenciaConfiguracionController],

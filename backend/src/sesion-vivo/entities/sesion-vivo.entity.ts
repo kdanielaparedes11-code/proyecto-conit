@@ -49,6 +49,9 @@ export class SesionVivo {
   @Column({ type: 'int', nullable: true })
   idgrupo: number | null;
 
+  @Column({ name: 'provider_config_id', type: 'int', nullable: true })
+  providerConfigId: number | null;
+
   @Column({ name: 'access_type', type: 'varchar', default: 'RESTRICTED' })
   access_type: string;
 }

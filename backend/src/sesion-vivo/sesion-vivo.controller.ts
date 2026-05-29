@@ -7,6 +7,7 @@ import {
   Post,
   BadRequestException,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -170,7 +171,10 @@ export class SesionVivoController {
     status: 401,
     description: 'No autorizado. Token JWT faltante o inválido.',
   })
-  async crear(@Body() body: any): Promise<SesionVivoResponseDto> {
+  async crear(
+    @Body() body: any,
+    @Req() req: any,
+  ): Promise<SesionVivoResponseDto> {
     if (!body) {
       throw new BadRequestException('Body vacío');
     }
@@ -186,6 +190,17 @@ export class SesionVivoController {
       fecha: body.fecha,
       duracion: Number(body.duracion || 60),
       accessType: body.accessType || body.access_type || 'RESTRICTED',
+      providerConfigId: body.providerConfigId
+        ? Number(body.providerConfigId)
+        : body.provider_config_id
+        ? Number(body.provider_config_id)
+        : null,
+      rolUsuario:
+        req.user?.rol ||
+        req.user?.role ||
+        req.user?.tipo ||
+        req.user?.perfil ||
+        null,
     });
   }
 }

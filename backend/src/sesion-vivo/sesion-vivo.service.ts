@@ -16,6 +16,8 @@ import {
   MeetingProvider,
 } from '../meeting/meeting-provider.interface';
 import { SesionVivoResponseDto } from './dto/sesion-vivo-response.dto';
+import { MeetingProviderConfigService } from '../meeting-provider-config/meeting-provider-config.service';
+import { ConfiguracionSesionesVivoService, } from '../configuracion-sesiones-vivo/configuracion-sesiones-vivo.service';
 
 @Injectable()
 export class SesionVivoService {
@@ -31,6 +33,8 @@ export class SesionVivoService {
 
     private readonly empresaService: EmpresaService,
     private readonly meetingProviderFactory: MeetingProviderFactory,
+    private readonly meetingProviderConfigService: MeetingProviderConfigService,
+    private readonly configuracionSesionesVivoService: ConfiguracionSesionesVivoService,
   ) {}
 
   private toResponseDto(sesion: SesionVivo): SesionVivoResponseDto {
@@ -59,6 +63,7 @@ export class SesionVivoService {
       external_meeting_id: sesion.external_meeting_id,
       estado: sesion.estado,
       idgrupo: sesion.idgrupo ?? null,
+      provider_config_id: sesion.providerConfigId ?? null,
       access_type: sesion.access_type ?? 'RESTRICTED',
     };
   }
@@ -101,6 +106,38 @@ export class SesionVivoService {
     throw new BadRequestException(
       `Tipo de acceso de reunión no válido: ${accessType}`,
     );
+  }
+
+  private puedeElegirProveedor(
+    modoSeleccionProveedor: string,
+    rolUsuario?: string | null,
+  ): boolean {
+    const rol = String(rolUsuario || '').toUpperCase().trim();
+
+    const esAdmin =
+      rol === 'ADMIN' ||
+      rol === 'ADMINISTRADOR' ||
+      rol === 'SUPERADMIN';
+
+    const esDocente = rol === 'DOCENTE';
+
+    if (modoSeleccionProveedor === 'SOLO_PREDETERMINADO') {
+      return false;
+    }
+
+    if (modoSeleccionProveedor === 'DOCENTE_PUEDE_ELEGIR') {
+      return esDocente || esAdmin;
+    }
+
+    if (modoSeleccionProveedor === 'ADMIN_PUEDE_ELEGIR') {
+      return esAdmin;
+    }
+
+    if (modoSeleccionProveedor === 'TODOS_PUEDEN_ELEGIR') {
+      return esDocente || esAdmin;
+    }
+
+    return false;
   }
 
   private async obtenerGrupoConCurso(idgrupo: number): Promise<Grupo> {
@@ -216,6 +253,31 @@ export class SesionVivoService {
     };
   }
 
+  private async obtenerCorreosInvitadosGrupo(idgrupo: number): Promise<string[]> {
+    const rows = await this.sesionVivoRepository.manager.query(
+      `
+      SELECT DISTINCT LOWER(TRIM(a.correo)) AS correo
+      FROM matricula m
+      INNER JOIN alumno a ON a.id = m.idalumno
+      WHERE m.idgrupo = $1
+        AND a.correo IS NOT NULL
+        AND TRIM(a.correo) <> ''
+        AND LOWER(COALESCE(m.estado, '')) IN ('pagado', 'activo', 'matriculado')
+      `,
+      [Number(idgrupo)],
+    );
+
+    const correoRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    return Array.from(
+      new Set(
+        (rows || [])
+          .map((row: any) => String(row.correo || '').trim().toLowerCase())
+          .filter((correo: string) => correoRegex.test(correo)),
+      ),
+    );
+  }
+
   async crearSesion(payload: {
     idgrupo: number;
     titulo: string;
@@ -223,6 +285,8 @@ export class SesionVivoService {
     fecha: string;
     duracion: number;
     accessType?: string;
+    providerConfigId?: number | null;
+    rolUsuario?: string | null;
   }): Promise<SesionVivoResponseDto> {
     if (!payload.idgrupo) {
       throw new BadRequestException('Falta idgrupo');
@@ -257,11 +321,65 @@ export class SesionVivoService {
       throw new NotFoundException('No se pudo resolver el curso del grupo');
     }
 
-    const provider = await this.obtenerProviderDesdeGrupo(
-      Number(payload.idgrupo),
-    );
+    const idempresa = curso?.idempresa ? Number(curso.idempresa) : null;
+
+    let provider: MeetingProvider;
+    let providerConfigId: number | null = null;
+    let credentials: Record<string, any> = {};
+    let settings: Record<string, any> = {};
+
+    const providerConfigIdSolicitado = payload.providerConfigId
+      ? Number(payload.providerConfigId)
+      : null;
+
+    let providerConfigIdPermitido = providerConfigIdSolicitado;
+
+    if (idempresa) {
+      const modoSeleccionProveedor =
+        await this.configuracionSesionesVivoService.obtenerModoPorEmpresa(
+          idempresa,
+        );
+
+      const puedeElegir = this.puedeElegirProveedor(
+        modoSeleccionProveedor,
+        payload.rolUsuario,
+      );
+
+      if (providerConfigIdSolicitado && !puedeElegir) {
+        throw new BadRequestException(
+          'No tienes permiso para elegir el proveedor de la sesión. Se debe usar el proveedor predeterminado.',
+        );
+      }
+
+      if (!puedeElegir) {
+        providerConfigIdPermitido = null;
+      }
+
+      const configResult =
+        await this.meetingProviderConfigService.obtenerConfigParaCrearSesion({
+          idempresa,
+          providerConfigId: providerConfigIdPermitido,
+        });
+
+      if (configResult) {
+        provider = this.normalizarProvider(configResult.config.provider);
+        providerConfigId = configResult.config.id;
+        credentials = configResult.credentials || {};
+        settings = configResult.config.settings || {};
+      } else {
+        provider = await this.obtenerProviderDesdeGrupo(Number(payload.idgrupo));
+      }
+    } else {
+      provider = await this.obtenerProviderDesdeGrupo(Number(payload.idgrupo));
+    }
+
     const providerService = this.meetingProviderFactory.getProvider(provider);
     const accessType = this.normalizarAccessType(payload.accessType);
+
+    const invitados =
+      provider === 'google' && accessType === 'TRUSTED'
+        ? await this.obtenerCorreosInvitadosGrupo(Number(payload.idgrupo))
+        : [];
 
     const meetingInput: CreateMeetingInput = {
       titulo: payload.titulo.trim(),
@@ -269,6 +387,9 @@ export class SesionVivoService {
       fechaInicioIso: fechaInicio.toISOString(),
       fechaFinIso: fechaFin.toISOString(),
       accessType,
+      attendees: invitados,
+      credentials,
+      settings,
     };
 
     const meeting = await providerService.createMeeting(meetingInput);
@@ -277,6 +398,7 @@ export class SesionVivoService {
       ...new SesionVivo(),
       curso: { id: Number(curso.id) } as any,
       idgrupo: Number(payload.idgrupo),
+      providerConfigId,
       titulo: payload.titulo.trim(),
       descripcion: payload.descripcion?.trim() || '',
       fecha: fechaInicio,

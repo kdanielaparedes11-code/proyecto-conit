@@ -73,20 +73,41 @@ export class GoogleMeetService implements IMeetingProviderService {
     fechaInicioIso: string;
     fechaFinIso: string;
     accessType?: MeetingAccessType;
+    attendees?: string[];
   }) {
     try {
       const auth = this.getAuthorizedClient();
       const accessType = this.normalizarAccessType(params.accessType);
 
+      const correoRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      const attendeeEmails = Array.from(
+        new Set(
+          (params.attendees || [])
+            .map((correo) => String(correo || '').trim().toLowerCase())
+            .filter((correo) => correoRegex.test(correo)),
+        ),
+      );
+
+const calendarAttendees = attendeeEmails.map((email) => ({ email }));
+
       // 1. Crear espacio de Google Meet con configuración de acceso
+      const meetConfig: any = {
+        entryPointAccess: 'ALL',
+      };
+
+      // IMPORTANTE:
+      // Algunas cuentas de Google no permiten enviar RESTRICTED explícitamente.
+      // Si es RESTRICTED, dejamos que Google aplique el valor por defecto.
+      if (accessType !== 'RESTRICTED') {
+        meetConfig.accessType = accessType;
+      }
+
       const meetResponse = await auth.request<any>({
         url: 'https://meet.googleapis.com/v2/spaces',
         method: 'POST',
         data: {
-          config: {
-            accessType,
-            entryPointAccess: 'ALL',
-          },
+          config: meetConfig,
         },
       });
 
@@ -115,21 +136,31 @@ Acceso de la reunión:
 ${this.descripcionAccessType(accessType)}
 `;
 
+      const requestBody: any = {
+        summary: params.titulo,
+        description: descripcionConMeet,
+        location: meetLink,
+        start: {
+          dateTime: params.fechaInicioIso,
+          timeZone: 'America/Lima',
+        },
+        end: {
+          dateTime: params.fechaFinIso,
+          timeZone: 'America/Lima',
+        },
+      };
+
+      if (calendarAttendees.length > 0) {
+        requestBody.attendees = calendarAttendees;
+        requestBody.guestsCanInviteOthers = false;
+        requestBody.guestsCanModify = false;
+        requestBody.guestsCanSeeOtherGuests = true;
+      }
+
       const calendarResponse = await calendar.events.insert({
         calendarId: 'primary',
-        requestBody: {
-          summary: params.titulo,
-          description: descripcionConMeet,
-          location: meetLink,
-          start: {
-            dateTime: params.fechaInicioIso,
-            timeZone: 'America/Lima',
-          },
-          end: {
-            dateTime: params.fechaFinIso,
-            timeZone: 'America/Lima',
-          },
-        },
+        sendUpdates: calendarAttendees.length > 0 ? 'all' : 'none',
+        requestBody,
       });
 
       const createdEvent = calendarResponse.data;
@@ -141,10 +172,12 @@ ${this.descripcionAccessType(accessType)}
         spaceName: meetSpace?.name || null,
         meetingCode: meetSpace?.meetingCode || null,
         accessType,
+        attendees: attendeeEmails,
         meetSpace,
       };
-    } catch (error) {
-      const googleError = error?.response?.data || error;
+    } catch (error: unknown) {
+      const err = error as any;
+      const googleError = err?.response?.data || err;
 
       console.error('Error creando sesión en Google Meet:', googleError);
 
@@ -174,6 +207,7 @@ ${this.descripcionAccessType(accessType)}
       fechaInicioIso: input.fechaInicioIso,
       fechaFinIso: input.fechaFinIso,
       accessType: input.accessType || 'RESTRICTED',
+      attendees: input.attendees || [],
     });
 
     return {
@@ -183,6 +217,7 @@ ${this.descripcionAccessType(accessType)}
       hostUrl: meet?.htmlLink || null,
       metadata: meet,
       accessType: meet?.accessType || input.accessType || 'RESTRICTED',
+      attendees: meet?.attendees || input.attendees || [],
     };
   }
 }
