@@ -57,6 +57,30 @@ export class MatriculaController {
     );
   }
 
+  @Post('masiva/:idgrupo/preview')
+  @ApiOperation({
+    summary: 'Previsualizar matrícula masiva por grupo',
+  })
+  @ApiParam({ name: 'idgrupo', description: 'ID del grupo' })
+  previsualizarMasiva(
+    @Param('idgrupo', ParseIntPipe) idgrupo: number,
+    @Body('alumnos') alumnos: any[],
+  ) {
+    return this.matriculaService.previsualizarMatriculaMasiva(idgrupo, alumnos);
+  }
+
+  @Post('masiva/:idgrupo/confirmar')
+  @ApiOperation({
+    summary: 'Confirmar matrícula masiva por grupo',
+  })
+  @ApiParam({ name: 'idgrupo', description: 'ID del grupo' })
+  confirmarMasiva(
+    @Param('idgrupo', ParseIntPipe) idgrupo: number,
+    @Body('alumnos') alumnos: any[],
+  ) {
+    return this.matriculaService.confirmarMatriculaMasiva(idgrupo, alumnos);
+  }
+
   @Get('alumno/:id')
   @ApiOperation({
     summary: 'Listar matrículas de un alumno',

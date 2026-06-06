@@ -23,10 +23,44 @@ export const obtenerAlumnosPorCursoAdmin = async (idcurso: number) => {
   return response.data;
 };
 
-export const actualizarPermisosCertificado = async (idMatricula, puedeVer, puedeDescargar) => {
+export const actualizarPermisosCertificado = async (
+  idMatricula: number,
+  puedeVer: boolean,
+  puedeDescargar: boolean
+) => {
   const response = await api.patch(`/matricula/${idMatricula}/permisos-certificado`, {
     puedeVer,
-    puedeDescargar
+    puedeDescargar,
   });
   return response.data;
 };
+
+export type AlumnoMatriculaMasiva = {
+  dni: string;
+  nombres: string;
+  apellidos: string;
+  correo: string;
+};
+
+export const previsualizarMatriculaMasiva = async (
+  idgrupo: number,
+  alumnos: AlumnoMatriculaMasiva[]
+) => {
+  const response = await api.post(`/matricula/masiva/${idgrupo}/preview`, {
+    alumnos,
+  });
+
+  return response.data;
+};
+
+export const confirmarMatriculaMasiva = async (
+  idgrupo: number,
+  alumnos: AlumnoMatriculaMasiva[]
+) => {
+  const response = await api.post(`/matricula/masiva/${idgrupo}/confirmar`, {
+    alumnos,
+  });
+
+  return response.data;
+};
+
