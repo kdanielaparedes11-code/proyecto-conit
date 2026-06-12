@@ -4937,7 +4937,7 @@ function CursoDetalleAdmin() {
                                 {fila.nombre} {fila.apellido}
                               </p>
                               <p className="text-sm text-[var(--color-muted-text)]">
-                                DNI: {fila.numdocumento || "-"} Â· Matrícula #{fila.idmatricula}
+                                DNI: {fila.numdocumento || "-"} · Matrícula #{fila.idmatricula}
                               </p>
                             </div>
                           </div>
@@ -5000,7 +5000,7 @@ function CursoDetalleAdmin() {
                               {Number(fila.progresoAsistencia || 0).toFixed(0)}%
                             </p>
                             <p className="text-[11px] text-[var(--color-muted-text)] mt-1">
-                              P:{fila.presentes || 0} Â· T:{fila.tardanzas || 0} Â· F:{fila.faltas || 0}
+                              P:{fila.presentes || 0} · T:{fila.tardanzas || 0} · F:{fila.faltas || 0}
                             </p>
                           </div>
                         </div>

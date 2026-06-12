@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { crearCurso, actualizarCurso } from "../services/curso.service";
+import MatriculaMasivaModal from "./MatriculaMasivaModal";
 import {
   crearGrupo,
   obtenerGruposPorCurso,
@@ -51,6 +52,8 @@ export default function CursoModal({ onClose, onSuccess, cursoEditar }) {
     modalidad: "Virtual Asincrónico",
     cantidadpersonas: 30,
   });
+
+  const [grupoMatriculaMasiva, setGrupoMatriculaMasiva] = useState(null);
 
   const cursoIdActual = cursoEditar?.id || cursoCreadoId;
 
@@ -632,6 +635,17 @@ export default function CursoModal({ onClose, onSuccess, cursoEditar }) {
                                 Cerrar grupo
                               </button>
                             )}
+
+                            {g.estado !== "CERRADO" && (
+                              <button
+                                type="button"
+                                onClick={() => setGrupoMatriculaMasiva(g)}
+                                disabled={isLoading}
+                                className="rounded-xl bg-[var(--color-button-primary)] px-4 py-2 text-sm font-bold text-[var(--color-button-primary-text)] transition hover:brightness-95 disabled:opacity-50"
+                              >
+                                Matrícula masiva
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -642,6 +656,17 @@ export default function CursoModal({ onClose, onSuccess, cursoEditar }) {
             </div>
           )}
         </div>
+
+        {grupoMatriculaMasiva && (
+          <MatriculaMasivaModal
+            grupo={grupoMatriculaMasiva}
+            onClose={() => setGrupoMatriculaMasiva(null)}
+            onSuccess={async () => {
+              setGrupoMatriculaMasiva(null);
+              await cargarGruposDelCurso();
+            }}
+          />
+        )}
 
         {/* FOOTER */}
         <div className="flex shrink-0 justify-end gap-3 border-t border-[var(--color-border)] bg-[var(--color-card)] px-8 py-5">

@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   Param,
   Delete,
@@ -14,30 +15,17 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt.auth.guard';
 
 @ApiTags('Configuración de Pasarelas')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard) // Solo los administradores deberían tocar esto
+@UseGuards(JwtAuthGuard)
 @Controller('config-pago')
 export class ConfiguracionPagoController {
   constructor(private readonly configService: ConfiguracionPagoService) {}
 
   // ============================
-  // PASARELAS (MP, Yape, Izipay)
+  // LISTADO GENERAL DE PASARELAS
   // ============================
-  @Get(':pasarela')
-  obtenerConfig(@Param('pasarela') pasarela: string) {
-    // pasarela puede ser 'mercadopago', 'yape', 'paypal', 'izipay'
-    return this.configService.obtenerConfiguracion(pasarela);
-  }
-
-  @Post(':pasarela')
-  guardarConfig(@Param('pasarela') pasarela: string, @Body() body: any) {
-    /* El body esperado sería algo como:
-       {
-         "activa": true,
-         "entorno": "produccion",
-         "credenciales": { "access_token": "...", "public_key": "..." }
-       }
-    */
-    return this.configService.guardarPasarela(pasarela, body);
+  @Get('pasarelas')
+  listarPasarelas() {
+    return this.configService.listarPasarelas();
   }
 
   // ============================
@@ -53,8 +41,33 @@ export class ConfiguracionPagoController {
     return this.configService.agregarCuentaBancaria(body);
   }
 
+  @Patch('cuentas/bancarias/:id')
+  actualizarCuenta(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: any,
+  ) {
+    return this.configService.actualizarCuentaBancaria(id, body);
+  }
+
   @Delete('cuentas/bancarias/:id')
   eliminarCuenta(@Param('id', ParseIntPipe) id: number) {
     return this.configService.eliminarCuentaBancaria(id);
+  }
+
+  // ============================
+  // PASARELAS ÚNICAS
+  // YAPE, MERCADOPAGO, PAYPAL, IZIPAY
+  // ============================
+  @Get(':pasarela')
+  obtenerConfig(@Param('pasarela') pasarela: string) {
+    return this.configService.obtenerConfiguracion(pasarela);
+  }
+
+  @Post(':pasarela')
+  guardarConfig(
+    @Param('pasarela') pasarela: string,
+    @Body() body: any,
+  ) {
+    return this.configService.guardarPasarela(pasarela, body);
   }
 }
