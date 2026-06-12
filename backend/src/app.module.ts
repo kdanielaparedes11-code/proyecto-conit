@@ -59,6 +59,7 @@ import { ForoModule } from './foro/foro.module';
 import { TareaEntregaModule } from './tarea-entrega/tarea-entrega.module';
 import { MeetingProviderConfigModule } from './meeting-provider-config/meeting-provider-config.module';
 import { ConfiguracionSesionesVivoModule } from './configuracion-sesiones-vivo/configuracion-sesiones-vivo.module';
+import { ComprobantePagoModule } from './comprobante-pago/comprobante-pago.module';
 
 @Module({
   imports: [
@@ -106,6 +107,7 @@ import { ConfiguracionSesionesVivoModule } from './configuracion-sesiones-vivo/c
     GrupoModule,
     MatriculaModule,
     PagoModule,
+    ComprobantePagoModule,
     RecursoModule,
     TareaModule,
     SesionVivoModule,

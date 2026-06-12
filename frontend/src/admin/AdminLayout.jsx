@@ -75,6 +75,8 @@ export default function AdminLayout() {
     { to: "/admin/usuarios", label: "Lista de Usuarios", icon: Users },
     { to: "/admin/certificados", label: "Certificados", icon: Award },
     { to: "/admin/pagos", label: "Pagos", icon: CreditCard },
+    { to: "/admin/pasarelas-pago", label: "Pasarelas de pago", icon: CreditCard },
+    { to: "/admin/comprobantes-pago", label: "Comprobantes de pago", icon: FileText },
     { to: "/admin/sesiones", label: "Control de Sesiones", icon: Shield },
   ];
 

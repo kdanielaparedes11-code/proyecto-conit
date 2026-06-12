@@ -27,6 +27,9 @@ type FilaPreviewMatricula = {
   nombres: string;
   apellidos: string;
   correo: string;
+  metodo_pago: string;
+  numero_operacion: string;
+  monto: number;
   estado: EstadoPreviewMatricula;
   observacion: string;
 };
@@ -294,12 +297,34 @@ export class MatriculaService {
           item.correo ?? item.email ?? item.Correo ?? item.Email,
         );
 
+        const metodo_pago = this.limpiarTexto(
+          item.metodo_pago ?? item.metodo ?? item.tipopago,
+        );
+
+        const numero_operacion = this.limpiarTexto(
+          item.numero_operacion ??
+            item.operacion ??
+            item.codigo_operacion,
+        );
+
+        const monto = Number(
+          item.monto_pagado ??
+          item.monto ??
+          item.precio ??
+          0,
+        );
+
         const errores: string[] = [];
 
         if (!dni) errores.push('Falta DNI');
         if (!nombres) errores.push('Faltan nombres');
         if (!apellidos) errores.push('Faltan apellidos');
         if (!correo) errores.push('Falta correo');
+        if (!metodo_pago) errores.push('Falta método de pago');
+        if (!numero_operacion)
+          errores.push('Falta número de operación');
+        if (!monto || monto <= 0)
+          errores.push('Monto inválido');
         if (correo && !this.correoValido(correo)) errores.push('Correo inválido');
 
         if (dni && vistosDni.has(dni)) errores.push('DNI repetido en el Excel');
@@ -353,6 +378,9 @@ export class MatriculaService {
           nombres,
           apellidos,
           correo,
+          metodo_pago,
+          numero_operacion,
+          monto,
           estado,
           observacion,
         });
@@ -538,6 +566,40 @@ export class MatriculaService {
 
         await this.matriculaRepo.save(matricula);
         matriculados++;
+        await this.matriculaRepo.query(
+          `
+          INSERT INTO pago (
+            fechapago,
+            igv,
+            precioinicial,
+            preciofinal,
+            preciodescuento,
+            tipopago,
+            descripcion,
+            estado,
+            matricula_id,
+            codigo_aprobacion
+          )
+          VALUES (
+            CURRENT_DATE,
+            0,
+            $1,
+            $1,
+            0,
+            $2,
+            'Pago registrado desde matrícula masiva',
+            'PAGADO',
+            $3,
+            $4
+          )
+          `,
+          [
+            fila.monto,
+            fila.metodo_pago,
+            matricula.id,
+            fila.numero_operacion,
+          ],
+        );
       }
 
       for (const correo of correosVerificacion) {

@@ -36,11 +36,28 @@ export default function MatriculaMasivaModal({ grupo, onClose, onSuccess }) {
         nombres: "Juan Carlos",
         apellidos: "Pérez López",
         correo: "juan@gmail.com",
+        metodo_pago: "YAPE",
+        monto_pagado: 150,
+        numero_operacion: "987654",
+        fecha_pago: "2026-06-06",
+        observacion_pago: "Pago matrícula junio",
+        celular: "987654321",
       },
     ];
 
     const worksheet = XLSX.utils.json_to_sheet(data, {
-      header: ["dni", "nombres", "apellidos", "correo"],
+      header: [
+        "dni",
+        "nombres",
+        "apellidos",
+        "correo",
+        "metodo_pago",
+        "monto_pagado",
+        "numero_operacion",
+        "fecha_pago",
+        "observacion_pago",
+        "celular",
+      ],
     });
 
     const workbook = XLSX.utils.book_new();
@@ -60,10 +77,62 @@ export default function MatriculaMasivaModal({ grupo, onClose, onSuccess }) {
       fila.documento ||
       fila.numdocumento ||
       "",
-    nombres: fila.nombres || fila.Nombres || fila.nombre || fila.Nombre || "",
+
+    nombres:
+      fila.nombres ||
+      fila.Nombres ||
+      fila.nombre ||
+      fila.Nombre ||
+      "",
+
     apellidos:
-      fila.apellidos || fila.Apellidos || fila.apellido || fila.Apellido || "",
-    correo: fila.correo || fila.Correo || fila.email || fila.Email || "",
+      fila.apellidos ||
+      fila.Apellidos ||
+      fila.apellido ||
+      fila.Apellido ||
+      "",
+
+    correo:
+      fila.correo ||
+      fila.Correo ||
+      fila.email ||
+      fila.Email ||
+      "",
+
+    metodo_pago:
+      fila.metodo_pago ||
+      fila["metodo pago"] ||
+      fila["Método de pago"] ||
+      fila.tipopago ||
+      "",
+
+    monto_pagado:
+      fila.monto_pagado ||
+      fila["monto pagado"] ||
+      fila.monto ||
+      "",
+
+    numero_operacion:
+      fila.numero_operacion ||
+      fila["numero operacion"] ||
+      fila["número operación"] ||
+      fila.codigo_aprobacion ||
+      "",
+
+    fecha_pago:
+      fila.fecha_pago ||
+      fila["fecha pago"] ||
+      "",
+
+    observacion_pago:
+      fila.observacion_pago ||
+      fila["observacion pago"] ||
+      "",
+
+    celular:
+      fila.celular ||
+      fila.telefono ||
+      "",
   });
 
   const leerExcel = async (event) => {
@@ -246,6 +315,9 @@ export default function MatriculaMasivaModal({ grupo, onClose, onSuccess }) {
                         <th className="px-4 py-3">Apellidos</th>
                         <th className="px-4 py-3">Correo</th>
                         <th className="px-4 py-3">Observación</th>
+                        <th className="px-4 py-3">Método Pago</th>
+                        <th className="px-4 py-3">Monto</th>
+                        <th className="px-4 py-3">N° Operación</th>
                       </tr>
                     </thead>
 
@@ -268,6 +340,17 @@ export default function MatriculaMasivaModal({ grupo, onClose, onSuccess }) {
                           <td className="px-4 py-3">{fila.nombres}</td>
                           <td className="px-4 py-3">{fila.apellidos}</td>
                           <td className="px-4 py-3">{fila.correo}</td>
+                          <td className="px-4 py-3">
+                            {fila.metodo_pago || "-"}
+                          </td>
+
+                          <td className="px-4 py-3">
+                            {fila.monto_pagado || "-"}
+                          </td>
+
+                          <td className="px-4 py-3">
+                            {fila.numero_operacion || "-"}
+                          </td>
                           <td className="px-4 py-3 text-[var(--color-muted-text)]">
                             {fila.observacion}
                           </td>
